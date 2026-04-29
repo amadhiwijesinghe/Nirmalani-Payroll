@@ -10,10 +10,11 @@ app.use(express.json());
 // ================= DATABASE =================
 
 const db = mysql.createConnection({
-  host: "localhost",
+  host: "mysql.railway.internal",
   user: "root",
-  password: "root123",
-  database: "nirmalani_payroll_system"
+  password: "neUFWiVhKMWfrDERuKKSFmnaYjwyheky",
+  database: "railway",
+  port: 3306
 });
 
 db.connect(err => {
