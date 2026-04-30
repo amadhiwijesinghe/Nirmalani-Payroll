@@ -219,6 +219,60 @@ app.get("/payroll/:month?", (req, res) => {
   }
 });
 
+// ================= PLANTATION WORKERS =================
+// 🌿 Plantation Workers
+app.get('/plantation-workers', (req, res) => {
+  db.query("SELECT * FROM plantation_workers", (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.json(result);
+  });
+});
+
+app.post('/plantation-workers', (req, res) => {
+  const { name, rate_per_day } = req.body;
+
+  db.query(
+    "INSERT INTO plantation_workers (name, rate_per_day) VALUES (?, ?)",
+    [name, rate_per_day],
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.json({ message: "Worker added" });
+    }
+  );
+});
+
+
+// 🌿 Attendance
+app.post('/plantation-attendance', (req, res) => {
+  const { worker_id, days_worked, month } = req.body;
+
+  db.query(
+    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?)",
+    [worker_id, days_worked, month],
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.json({ message: "Attendance added" });
+    }
+  );
+});
+
+
+// 🌿 Combined Data
+app.get('/plantation-data', (req, res) => {
+  const sql = `
+    SELECT pw.id, pw.name, pw.rate_per_day,
+           pa.days_worked, pa.month
+    FROM plantation_workers pw
+    LEFT JOIN plantation_attendance pa
+    ON pw.id = pa.worker_id
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.json(result);
+  });
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
