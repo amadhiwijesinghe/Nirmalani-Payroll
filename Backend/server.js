@@ -4,7 +4,11 @@ const cors = require("cors");
 
 const app = express(); // ✅ FIXED
 
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json());
 
 // ================= DATABASE =================
@@ -36,7 +40,7 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  if (username === "admin" && password === "1234") {
+  if (username === "admin" && password === "Admin@2026") {
     res.send({ success: true });
   } else {
     res.send({ success: false });

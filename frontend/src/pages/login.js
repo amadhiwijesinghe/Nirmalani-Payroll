@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { TextField, Button, Paper, Typography } from '@mui/material';
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Login({ setIsLoggedIn }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const login = () => {
-    axios.post('http://localhost:5000/login', {
+    axios.post(`${API}/login`, {
       username,
       password
     }).then(res => {

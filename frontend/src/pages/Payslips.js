@@ -14,6 +14,7 @@ import {
   Box
 } from '@mui/material';
 import jsPDF from "jspdf";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Payslips() {
   const [data, setData] = useState([]);
@@ -21,10 +22,10 @@ export default function Payslips() {
 
   useEffect(() => {
     if (month) {
-      axios.get(`http://localhost:5000/payroll/${month}`)
+      axios.get(`${API}/payroll/${month}`)
         .then(res => setData(res.data));
     } else {
-      axios.get(`http://localhost:5000/payroll`)
+      axios.get(`${API}/payroll`)
         .then(res => setData(res.data));
     }
   }, [month]);

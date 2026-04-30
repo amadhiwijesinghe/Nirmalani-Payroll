@@ -13,6 +13,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 function Payroll() {
   const [data, setData] = useState([]);
@@ -20,10 +21,10 @@ function Payroll() {
 
   const fetchPayroll = async () => {
     if (month) {
-      const res = await axios.get(`http://localhost:5000/payroll/${month}`);
+      const res = await axios.get(`${API}/payroll/${month}`)
       setData(res.data);
     } else {
-      const res = await axios.get("http://localhost:5000/payroll");
+      const res = await axios.get(`${API}/payroll`)
       setData(res.data);
     }
   };

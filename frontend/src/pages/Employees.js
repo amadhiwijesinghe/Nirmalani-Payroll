@@ -13,6 +13,7 @@ import {
   Grid,
   Box
 } from '@mui/material';
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 
 export default function Employees() {
@@ -31,7 +32,7 @@ export default function Employees() {
   }, []);
 
   const fetchEmployees = () => {
-    axios.get('http://localhost:5000/employees')
+    axios.get(`${API}/employees`)
       .then(res => {
         setEmployees(res.data);
         setFiltered(res.data);
@@ -63,13 +64,13 @@ export default function Employees() {
     };
 
     if (editId) {
-      axios.put(`http://localhost:5000/employees/${editId}`, payload)
+      axios.put(`${API}/employees/${editId}`, payload)
         .then(() => {
           resetForm();
           fetchEmployees();
         });
     } else {
-      axios.post('http://localhost:5000/employees', payload)
+      axios.post(`${API}/employees`, payload)
         .then(() => {
           resetForm();
           fetchEmployees();
@@ -95,7 +96,7 @@ export default function Employees() {
 
   const deleteEmployee = (id) => {
     if (!window.confirm("Delete employee?")) return;
-    axios.delete(`http://localhost:5000/employees/${id}`)
+    axios.delete(`${API}/employees/${id}`)
       .then(fetchEmployees);
   };
 

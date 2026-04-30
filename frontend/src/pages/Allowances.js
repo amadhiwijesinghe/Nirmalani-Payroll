@@ -14,6 +14,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 function Allowance() {
   const [employees, setEmployees] = useState([]);
@@ -25,7 +26,7 @@ function Allowance() {
   const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/employees")
+    axios.get(`${API}/employees`)
       .then(res => setEmployees(res.data));
 
     fetchAllowance();
@@ -36,7 +37,7 @@ function Allowance() {
   }, [filterMonth]);
 
   const fetchAllowance = async () => {
-    let url = "http://localhost:5000/allowance-summary";
+    let url = `${API}/allowance-summary`;
     if (filterMonth) url += `?month=${filterMonth}`;
 
     const res = await axios.get(url);
@@ -49,7 +50,7 @@ function Allowance() {
       return;
     }
 
-    axios.post("http://localhost:5000/allowance", {
+    axios.post(`${API}/allowance`, {
       memberid: selectedEmployee.memberid,
       month,
       amount

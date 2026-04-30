@@ -14,6 +14,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 function Attendance() {
   const [employees, setEmployees] = useState([]);
@@ -24,14 +25,14 @@ function Attendance() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/employees")
+    axios.get(`${API}/employees`)
       .then(res => setEmployees(res.data));
 
     fetchAttendance();
   }, []);
 
   const fetchAttendance = () => {
-    axios.get("http://localhost:5000/attendance")
+    axios.get(`${API}/attendance`)
       .then(res => setAttendanceList(res.data));
   };
 
@@ -43,7 +44,7 @@ function Attendance() {
 
     const monthName = new Date(date).toLocaleString('default', { month: 'long' });
 
-    axios.post("http://localhost:5000/attendance", {
+    axios.post(`${API}/attendance`, {
       memberid: selectedEmployee.memberid,
       date,
       present,
