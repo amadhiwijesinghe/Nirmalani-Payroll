@@ -4,7 +4,7 @@ const cors = require("cors");
 
 const app = express();
 
-// ✅ CORS FIX
+// ✅ CORS
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -12,21 +12,27 @@ app.use(cors({
 
 app.use(express.json());
 
+// ================= DEBUG ENV =================
+console.log("ENV CHECK:", {
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  db: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT
+});
+
 // ================= DATABASE =================
 
-// ✅ Railway + Local support
+// ✅ Railway + Local support (FINAL)
 const db = mysql.createPool({
   host: process.env.MYSQLHOST || "localhost",
   user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "root123",
+  password: process.env.MYSQLPASSWORD || "root123", // 🔥 change if needed
   database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
   port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
-
-
 
 // ================= ROOT =================
 
@@ -50,7 +56,7 @@ app.post("/login", (req, res) => {
 
 // GET
 app.get("/employees", (req, res) => {
-  console.log("REQUEST RECEIVED"); // 👈 add this
+  console.log("GET /employees");
 
   db.query("SELECT * FROM employees", (err, result) => {
     if (err) {
@@ -58,7 +64,7 @@ app.get("/employees", (req, res) => {
       return res.status(500).json(err);
     }
 
-    console.log("RESULT:", result); // 👈 add this
+    console.log("RESULT:", result);
     res.json(result);
   });
 });
@@ -67,12 +73,17 @@ app.get("/employees", (req, res) => {
 app.post("/employees", (req, res) => {
   const { name, memberid, NIC, basic_salary } = req.body;
 
+  console.log("ADD EMPLOYEE:", req.body);
+
   db.query(
     "INSERT INTO employees (name, memberid, NIC, basic_salary) VALUES (?, ?, ?, ?)",
     [name, memberid, NIC, basic_salary],
     (err, result) => {
-      if (err) return res.send(err);
-      res.send(result);
+      if (err) {
+        console.error("INSERT ERROR:", err);
+        return res.status(500).json(err);
+      }
+      res.json(result);
     }
   );
 });
@@ -85,8 +96,11 @@ app.put("/employees/:id", (req, res) => {
     "UPDATE employees SET name=?, memberid=?, NIC=?, basic_salary=? WHERE id=?",
     [name, memberid, NIC, basic_salary, req.params.id],
     (err, result) => {
-      if (err) return res.send(err);
-      res.send(result);
+      if (err) {
+        console.error("UPDATE ERROR:", err);
+        return res.status(500).json(err);
+      }
+      res.json(result);
     }
   );
 });
@@ -97,15 +111,17 @@ app.delete("/employees/:id", (req, res) => {
     "DELETE FROM employees WHERE memberid=?",
     [req.params.id],
     (err, result) => {
-      if (err) return res.send(err);
-      res.send({ success: true });
+      if (err) {
+        console.error("DELETE ERROR:", err);
+        return res.status(500).json(err);
+      }
+      res.json({ success: true });
     }
   );
 });
 
 // ================= ATTENDANCE =================
 
-// ADD
 app.post("/attendance", (req, res) => {
   const { memberid, date, present, month } = req.body;
 
@@ -113,13 +129,15 @@ app.post("/attendance", (req, res) => {
     "INSERT INTO attendance (memberid, date, present, month) VALUES (?, ?, ?, ?)",
     [memberid, date, present, month],
     (err, result) => {
-      if (err) return res.send(err);
+      if (err) {
+        console.error("ATTENDANCE ERROR:", err);
+        return res.status(500).json(err);
+      }
       res.send("Attendance Saved");
     }
   );
 });
 
-// GET
 app.get("/attendance", (req, res) => {
   const query = `
     SELECT a.*, e.name
@@ -128,14 +146,16 @@ app.get("/attendance", (req, res) => {
   `;
 
   db.query(query, (err, result) => {
-    if (err) return res.send(err);
+    if (err) {
+      console.error("ATTENDANCE FETCH ERROR:", err);
+      return res.status(500).json(err);
+    }
     res.json(result);
   });
 });
 
 // ================= ALLOWANCE =================
 
-// ADD
 app.post("/allowance", (req, res) => {
   const { memberid, month, amount } = req.body;
 
@@ -143,13 +163,15 @@ app.post("/allowance", (req, res) => {
     "INSERT INTO allowances (memberid, month, amount) VALUES (?, ?, ?)",
     [memberid, month, amount],
     (err, result) => {
-      if (err) return res.send(err);
+      if (err) {
+        console.error("ALLOWANCE ERROR:", err);
+        return res.status(500).json(err);
+      }
       res.send("Allowance Saved");
     }
   );
 });
 
-// SUMMARY
 app.get("/allowance-summary", (req, res) => {
   const month = req.query.month;
 
@@ -162,12 +184,18 @@ app.get("/allowance-summary", (req, res) => {
   if (month) {
     query += " WHERE a.month = ?";
     db.query(query, [month], (err, result) => {
-      if (err) return res.send(err);
+      if (err) {
+        console.error("ALLOWANCE ERROR:", err);
+        return res.status(500).json(err);
+      }
       res.json(result);
     });
   } else {
     db.query(query, (err, result) => {
-      if (err) return res.send(err);
+      if (err) {
+        console.error("ALLOWANCE ERROR:", err);
+        return res.status(500).json(err);
+      }
       res.json(result);
     });
   }
@@ -175,7 +203,6 @@ app.get("/allowance-summary", (req, res) => {
 
 // ================= PAYROLL =================
 
-// ALL
 app.get("/payroll", (req, res) => {
   const query = `
     SELECT 
@@ -201,56 +228,10 @@ app.get("/payroll", (req, res) => {
   `;
 
   db.query(query, (err, result) => {
-    if (err) return res.send(err);
-
-    const data = result.map(row => {
-      const basic = Number(row.basic_salary) || 0;
-      const allowance = Number(row.total_allowance) || 0;
-
-      const epf = basic * 0.08;
-      const net = basic + allowance - epf;
-
-      return {
-        ...row,
-        epf: epf.toFixed(2),
-        net_salary: net.toFixed(2)
-      };
-    });
-
-    res.json(data);
-  });
-});
-
-// BY MONTH
-app.get("/payroll/:month", (req, res) => {
-  const month = req.params.month;
-
-  const query = `
-    SELECT 
-      e.memberid,
-      e.name,
-      e.basic_salary,
-      IFNULL(att.days_worked, 0) AS days_worked,
-      IFNULL(al.total_allowance, 0) AS total_allowance,
-      att.month
-    FROM employees e
-    LEFT JOIN (
-      SELECT memberid, month,
-      SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
-      FROM attendance
-      GROUP BY memberid, month
-    ) att ON e.memberid = att.memberid
-    LEFT JOIN (
-      SELECT memberid, month,
-      SUM(amount) AS total_allowance
-      FROM allowances
-      GROUP BY memberid, month
-    ) al ON e.memberid = al.memberid AND att.month = al.month
-    WHERE att.month = ?
-  `;
-
-  db.query(query, [month], (err, result) => {
-    if (err) return res.send(err);
+    if (err) {
+      console.error("PAYROLL ERROR:", err);
+      return res.status(500).json(err);
+    }
 
     const data = result.map(row => {
       const basic = Number(row.basic_salary) || 0;
