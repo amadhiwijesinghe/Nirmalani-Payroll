@@ -15,15 +15,13 @@ app.use(express.json());
 // ================= DATABASE =================
 
 // ✅ Railway + Local support
-const db = process.env.MYSQL_URL
-  ? mysql.createConnection(process.env.MYSQL_URL)
-  : mysql.createConnection({
-      host: "localhost",
-      user: "root",
-      password: "",
-      database: "nirmalani_payroll_system", // 🔥 change this
-      port: 3306
-    });
+const db = mysql.createConnection({
+  host: process.env.MYSQLHOST || "localhost",
+  user: process.env.MYSQLUSER || "root",
+  password: process.env.MYSQLPASSWORD || "",
+  database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
+  port: process.env.MYSQLPORT || 3306
+});
 
 db.connect(err => {
   if (err) {
@@ -56,7 +54,10 @@ app.post("/login", (req, res) => {
 // GET
 app.get("/employees", (req, res) => {
   db.query("SELECT * FROM employees", (err, result) => {
-    if (err) return res.send(err);
+    if (err) {
+      console.error("DB ERROR:", err);   // 👈 ADD THIS
+      return res.status(500).send(err);
+    }
     res.json(result);
   });
 });
