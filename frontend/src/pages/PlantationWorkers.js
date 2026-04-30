@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  TextField,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  TableHead,
+  Typography,
+  Grid,
+  Box
+} from "@mui/material";
+
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
 export default function PlantationPayroll() {
@@ -29,27 +43,33 @@ export default function PlantationPayroll() {
   };
 
   const addWorker = async () => {
+    if (!name || !rate) return alert("Enter name and rate");
+
     await axios.post(`${API}/plantation-workers`, {
       name,
       rate_per_day: rate,
     });
+
     setName("");
     setRate("");
     fetchWorkers();
   };
 
   const addAttendance = async () => {
+    if (!workerId || !days || !month) return alert("Fill all fields");
+
     await axios.post(`${API}/plantation-attendance`, {
       worker_id: workerId,
       days_worked: days,
       month,
     });
+
     setDays("");
     setMonth("");
     fetchData();
   };
 
-  // 🔥 FULL PAYROLL CALCULATION
+  // 🔥 CALCULATION
   const calculate = (days, rate) => {
     const amount = days * rate;
 
@@ -72,7 +92,7 @@ export default function PlantationPayroll() {
     };
   };
 
-  // 🔥 GRAND TOTAL
+  // 🔥 TOTALS
   const totals = data.reduce(
     (acc, row) => {
       const c = calculate(row.days_worked || 0, row.rate_per_day);
@@ -99,82 +119,293 @@ export default function PlantationPayroll() {
   );
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>🌿 Plantation Workers</h2>
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #0f172a, #1e293b)",
+      }}
+    >
+      {/* HEADER */}
+      <Typography
+        variant="h4"
+        sx={{ mb: 3, fontWeight: 800, color: "#fff" }}
+      >
+        🌿 Plantation Payroll Dashboard
+      </Typography>
 
       {/* ADD WORKER */}
-      <h3>Add Worker</h3>
-      <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <input placeholder="Rate" value={rate} onChange={(e) => setRate(e.target.value)} />
-      <button onClick={addWorker}>Add</button>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(20px)",
+        }}
+      >
+        <Typography sx={{ color: "#fff", mb: 2 }}>
+          Add Worker
+        </Typography>
 
-      {/* ADD ATTENDANCE */}
-      <h3>Add Attendance</h3>
-      <select onChange={(e) => setWorkerId(e.target.value)}>
-        <option>Select Worker</option>
-        {workers.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.name}
-          </option>
-        ))}
-      </select>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={5}>
+            <TextField
+              label="Name"
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              sx={{ '& .MuiOutlinedInput-root': {
+                height: 56,
+                width: 300,
+                paddingRight: '14px',
+                color: '#fff' // text color inside input
+              },
+              '& .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
+                height: '100%',
+                boxSizing: 'border-box',
+                padding: '16.5px 14px',
+                color: '#fff' // select text color
+              },
+              '& .MuiInputLabel-root': {
+                color: '#aaa' // label color
+              },
+              '& .MuiSvgIcon-root': {
+                color: '#fff' // dropdown arrow color
+              }
+            }}
+            />
+          </Grid>
 
-      <input placeholder="Days" value={days} onChange={(e) => setDays(e.target.value)} />
-      <input placeholder="Month (2026-04)" value={month} onChange={(e) => setMonth(e.target.value)} />
-      <button onClick={addAttendance}>Add Attendance</button>
+          <Grid item xs={12} md={5}>
+            <TextField
+              label="Rate per Day"
+              fullWidth
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+            />
+          </Grid>
 
-      {/* PAYROLL TABLE */}
-      <h3>Payroll Table</h3>
-      <table border="1" cellPadding="5">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Days</th>
-            <th>Rate</th>
-            <th>Amount</th>
-            <th>EPF 8%</th>
-            <th>Total Deduction</th>
-            <th>Balance Pay</th>
-            <th>EPF 12%</th>
-            <th>EPF 20%</th>
-            <th>ETF 3%</th>
-          </tr>
-        </thead>
+          <Grid item xs={12} md={2}>
+            <Button
+              fullWidth
+              onClick={addWorker}
+              sx={{
+                height: "100%",
+                borderRadius: 3,
+                background: "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                fontWeight: 700,
+              }}
+            >
+              Add
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
-        <tbody>
-          {data.map((row) => {
-            const c = calculate(row.days_worked || 0, row.rate_per_day);
+      {/* ATTENDANCE */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)",
+        }}
+      >
+        <Typography sx={{ color: "#fff", mb: 2 }}>
+          Add Attendance
+        </Typography>
 
-            return (
-              <tr key={row.id}>
-                <td>{row.name}</td>
-                <td>{row.days_worked}</td>
-                <td>{row.rate_per_day}</td>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <TextField
+              select
+              fullWidth
+              label="Worker"
+              SelectProps={{ native: true }}
+              onChange={(e) => setWorkerId(e.target.value)}
+              sx={{ '& .MuiOutlinedInput-root': {
+                height: 56,
+                width: 250,
+                paddingRight: '14px',
+                color: '#fff' // text color inside input
+              },
+              '& .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
+                height: '100%',
+                boxSizing: 'border-box',
+                padding: '16.5px 14px',
+                color: '#fff' // select text color
+              },
+              '& .MuiInputLabel-root': {
+                color: '#aaa' // label color
+              },
+              '& .MuiSvgIcon-root': {
+                color: '#fff' // dropdown arrow color
+              }
+            }}
+            >
+              <option>Select Worker</option>
+              {workers.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </TextField>
+          </Grid>
 
-                <td>{c.amount.toFixed(2)}</td>
-                <td>{c.epf_8.toFixed(2)}</td>
-                <td>{c.total_deduction.toFixed(2)}</td>
-                <td>{c.balance.toFixed(2)}</td>
-                <td>{c.epf_12.toFixed(2)}</td>
-                <td>{c.epf_20.toFixed(2)}</td>
-                <td>{c.etf.toFixed(2)}</td>
-              </tr>
-            );
-          })}
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Days Worked"
+              fullWidth
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+            />
+          </Grid>
 
-          {/* 🔥 GRAND TOTAL ROW */}
-          <tr style={{ fontWeight: "bold", background: "#eee" }}>
-            <td colSpan="3">GRAND TOTAL</td>
-            <td>{totals.amount.toFixed(2)}</td>
-            <td>{totals.epf_8.toFixed(2)}</td>
-            <td>{totals.total_deduction.toFixed(2)}</td>
-            <td>{totals.balance.toFixed(2)}</td>
-            <td>{totals.epf_12.toFixed(2)}</td>
-            <td>{totals.epf_20.toFixed(2)}</td>
-            <td>{totals.etf.toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Month"
+              fullWidth
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Button
+              fullWidth
+              onClick={addAttendance}
+              sx={{
+                height: "100%",
+                borderRadius: 3,
+                background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                color: "#fff",
+                fontWeight: 700,
+              }}
+            >
+              Save
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* TABLE */}
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)",
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow>
+              {[
+                "Name",
+                "Days",
+                "Rate",
+                "Amount",
+                "EPF 8%",
+                "Deduction",
+                "Balance",
+                "EPF 12%",
+                "EPF 20%",
+                "ETF",
+              ].map((h) => (
+                <TableCell key={h} sx={{ color: "#aaa" }}>
+                  {h}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {data.map((row) => {
+              const c = calculate(
+                row.days_worked || 0,
+                row.rate_per_day
+              );
+
+              return (
+                <TableRow key={row.id}>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {row.name}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {row.days_worked}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {row.rate_per_day}
+                  </TableCell>
+
+                  <TableCell sx={{ color: "#22c55e" }}>
+                    {c.amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {c.epf_8.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {c.total_deduction.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#22c55e" }}>
+                    {c.balance.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {c.epf_12.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {c.epf_20.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                    {c.etf.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+
+            {/* TOTAL ROW */}
+            <TableRow
+              sx={{
+                background: "rgba(255,255,255,0.1)",
+                fontWeight: "bold",
+              }}
+            >
+              <TableCell colSpan={3} sx={{ color: "#fff" }}>
+                GRAND TOTAL
+              </TableCell>
+              <TableCell sx={{ color: "#22c55e" }}>
+                {totals.amount.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fff" }}>
+                {totals.epf_8.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fff" }}>
+                {totals.total_deduction.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#22c55e" }}>
+                {totals.balance.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fff" }}>
+                {totals.epf_12.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fff" }}>
+                {totals.epf_20.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fff" }}>
+                {totals.etf.toFixed(2)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
+    </Box>
   );
 }
