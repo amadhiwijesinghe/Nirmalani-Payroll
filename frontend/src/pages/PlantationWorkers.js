@@ -226,37 +226,27 @@ export default function PlantationPayroll() {
               select
               fullWidth
               label="Worker"
-              SelectProps={{ native: true }}
+              value={workerId}
               onChange={(e) => setWorkerId(e.target.value)}
-              sx={{ '& .MuiOutlinedInput-root': {
-                height: 56,
-                width: 250,
-                paddingRight: '14px',
-                color: '#fff' // text color inside input
-              },
-              '& .MuiSelect-select': {
-                display: 'flex',
-                alignItems: 'center',
-                height: '100%',
-                boxSizing: 'border-box',
-                padding: '16.5px 14px',
-                color: '#fff' // select text color
-              },
-              '& .MuiInputLabel-root': {
-                color: '#aaa' // label color
-              },
-              '& .MuiSvgIcon-root': {
-                color: '#fff' // dropdown arrow color
-              }
-            }}
+              SelectProps={{ native: true }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  height: 56,
+                  color: '#fff'
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#aaa'
+                }
+              }}
             >
-              <option>Select Worker</option>
+              <option value="">Select Worker</option>
+
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>
               ))}
-            </TextField>
+          </TextField>
           </Grid>
 
           <Grid item xs={12} md={3}>
