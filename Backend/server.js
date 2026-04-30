@@ -18,7 +18,7 @@ app.use(express.json());
 const db = mysql.createConnection({
   host: process.env.MYSQLHOST || "localhost",
   user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "",
+  password: process.env.MYSQLPASSWORD || "root123",
   database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
   port: process.env.MYSQLPORT || 3306
 });
@@ -28,6 +28,14 @@ db.connect(err => {
     console.error("DB Connection Failed:", err);
   } else {
     console.log("Connected to MySQL ✅");
+  }
+});
+
+db.query("USE railway", (err) => {
+  if (err) {
+    console.error("USE DB ERROR:", err);
+  } else {
+    console.log("Using railway DB ✅");
   }
 });
 
