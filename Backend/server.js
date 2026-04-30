@@ -2,24 +2,28 @@ const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 
-const app = express(); // ✅ FIXED
+const app = express();
 
+// ✅ CORS FIX
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
 }));
+
 app.use(express.json());
 
 // ================= DATABASE =================
 
-const db = mysql.createConnection({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
-});
+// ✅ Railway + Local support
+const db = process.env.MYSQL_URL
+  ? mysql.createConnection(process.env.MYSQL_URL)
+  : mysql.createConnection({
+      host: "localhost",
+      user: "root",
+      password: "",
+      database: "nirmalani_payroll_system", // 🔥 change this
+      port: 3306
+    });
 
 db.connect(err => {
   if (err) {
@@ -92,9 +96,6 @@ app.delete("/employees/:id", (req, res) => {
     [req.params.id],
     (err, result) => {
       if (err) return res.send(err);
-
-      console.log("Deleted memberid:", req.params.id); // debug
-
       res.send({ success: true });
     }
   );
@@ -172,42 +173,29 @@ app.get("/allowance-summary", (req, res) => {
 
 // ================= PAYROLL =================
 
-// ALL PAYROLL
+// ALL
 app.get("/payroll", (req, res) => {
-
   const query = `
     SELECT 
       e.memberid,
       e.name,
       e.basic_salary,
-
       IFNULL(att.days_worked, 0) AS days_worked,
       IFNULL(al.total_allowance, 0) AS total_allowance,
-
       att.month
-
     FROM employees e
-
     LEFT JOIN (
-      SELECT 
-        memberid,
-        month,
-        SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
+      SELECT memberid, month,
+      SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
       FROM attendance
       GROUP BY memberid, month
-    ) att 
-    ON e.memberid = att.memberid
-
+    ) att ON e.memberid = att.memberid
     LEFT JOIN (
-      SELECT 
-        memberid,
-        month,
-        SUM(amount) AS total_allowance
+      SELECT memberid, month,
+      SUM(amount) AS total_allowance
       FROM allowances
       GROUP BY memberid, month
-    ) al 
-    ON e.memberid = al.memberid 
-    AND att.month = al.month
+    ) al ON e.memberid = al.memberid AND att.month = al.month
   `;
 
   db.query(query, (err, result) => {
@@ -231,8 +219,7 @@ app.get("/payroll", (req, res) => {
   });
 });
 
-
-// PAYROLL BY MONTH
+// BY MONTH
 app.get("/payroll/:month", (req, res) => {
   const month = req.params.month;
 
@@ -241,35 +228,22 @@ app.get("/payroll/:month", (req, res) => {
       e.memberid,
       e.name,
       e.basic_salary,
-
       IFNULL(att.days_worked, 0) AS days_worked,
       IFNULL(al.total_allowance, 0) AS total_allowance,
-
       att.month
-
     FROM employees e
-
     LEFT JOIN (
-      SELECT 
-        memberid,
-        month,
-        SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
+      SELECT memberid, month,
+      SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
       FROM attendance
       GROUP BY memberid, month
-    ) att 
-    ON e.memberid = att.memberid
-
+    ) att ON e.memberid = att.memberid
     LEFT JOIN (
-      SELECT 
-        memberid,
-        month,
-        SUM(amount) AS total_allowance
+      SELECT memberid, month,
+      SUM(amount) AS total_allowance
       FROM allowances
       GROUP BY memberid, month
-    ) al 
-    ON e.memberid = al.memberid 
-    AND att.month = al.month
-
+    ) al ON e.memberid = al.memberid AND att.month = al.month
     WHERE att.month = ?
   `;
 
