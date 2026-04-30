@@ -22,11 +22,10 @@ console.log("ENV CHECK:", {
 
 // ================= DATABASE =================
 
-// ✅ Railway + Local support (FINAL)
 const db = mysql.createPool({
   host: process.env.MYSQLHOST || "localhost",
   user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "root123", // 🔥 change if needed
+  password: process.env.MYSQLPASSWORD || "root123",
   database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
   port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
@@ -54,41 +53,26 @@ app.post("/login", (req, res) => {
 
 // ================= EMPLOYEES =================
 
-// GET
 app.get("/employees", (req, res) => {
-  console.log("GET /employees");
-
   db.query("SELECT * FROM employees", (err, result) => {
-    if (err) {
-      console.error("DB ERROR:", err);
-      return res.status(500).json(err);
-    }
-
-    console.log("RESULT:", result);
+    if (err) return res.status(500).json(err);
     res.json(result);
   });
 });
 
-// ADD
 app.post("/employees", (req, res) => {
   const { name, memberid, NIC, basic_salary } = req.body;
-
-  console.log("ADD EMPLOYEE:", req.body);
 
   db.query(
     "INSERT INTO employees (name, memberid, NIC, basic_salary) VALUES (?, ?, ?, ?)",
     [name, memberid, NIC, basic_salary],
     (err, result) => {
-      if (err) {
-        console.error("INSERT ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.json(result);
     }
   );
 });
 
-// UPDATE
 app.put("/employees/:id", (req, res) => {
   const { name, memberid, NIC, basic_salary } = req.body;
 
@@ -96,25 +80,18 @@ app.put("/employees/:id", (req, res) => {
     "UPDATE employees SET name=?, memberid=?, NIC=?, basic_salary=? WHERE id=?",
     [name, memberid, NIC, basic_salary, req.params.id],
     (err, result) => {
-      if (err) {
-        console.error("UPDATE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.json(result);
     }
   );
 });
 
-// DELETE
 app.delete("/employees/:id", (req, res) => {
   db.query(
     "DELETE FROM employees WHERE memberid=?",
     [req.params.id],
     (err, result) => {
-      if (err) {
-        console.error("DELETE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.json({ success: true });
     }
   );
@@ -129,10 +106,7 @@ app.post("/attendance", (req, res) => {
     "INSERT INTO attendance (memberid, date, present, month) VALUES (?, ?, ?, ?)",
     [memberid, date, present, month],
     (err, result) => {
-      if (err) {
-        console.error("ATTENDANCE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.send("Attendance Saved");
     }
   );
@@ -146,10 +120,7 @@ app.get("/attendance", (req, res) => {
   `;
 
   db.query(query, (err, result) => {
-    if (err) {
-      console.error("ATTENDANCE FETCH ERROR:", err);
-      return res.status(500).json(err);
-    }
+    if (err) return res.status(500).json(err);
     res.json(result);
   });
 });
@@ -163,10 +134,7 @@ app.post("/allowance", (req, res) => {
     "INSERT INTO allowances (memberid, month, amount) VALUES (?, ?, ?)",
     [memberid, month, amount],
     (err, result) => {
-      if (err) {
-        console.error("ALLOWANCE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.send("Allowance Saved");
     }
   );
@@ -184,27 +152,23 @@ app.get("/allowance-summary", (req, res) => {
   if (month) {
     query += " WHERE a.month = ?";
     db.query(query, [month], (err, result) => {
-      if (err) {
-        console.error("ALLOWANCE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.json(result);
     });
   } else {
     db.query(query, (err, result) => {
-      if (err) {
-        console.error("ALLOWANCE ERROR:", err);
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
       res.json(result);
     });
   }
 });
 
-// ================= PAYROLL =================
+// ================= PAYROLL (FIXED) =================
 
-app.get("/payroll", (req, res) => {
-  const query = `
+app.get("/payroll/:month?", (req, res) => {
+  const month = req.params.month;
+
+  let query = `
     SELECT 
       e.memberid,
       e.name,
@@ -227,11 +191,15 @@ app.get("/payroll", (req, res) => {
     ) al ON e.memberid = al.memberid AND att.month = al.month
   `;
 
-  db.query(query, (err, result) => {
-    if (err) {
-      console.error("PAYROLL ERROR:", err);
-      return res.status(500).json(err);
-    }
+  if (month) {
+    query += " WHERE att.month = ?";
+    db.query(query, [month], handleResult);
+  } else {
+    db.query(query, handleResult);
+  }
+
+  function handleResult(err, result) {
+    if (err) return res.status(500).json(err);
 
     const data = result.map(row => {
       const basic = Number(row.basic_salary) || 0;
@@ -248,7 +216,7 @@ app.get("/payroll", (req, res) => {
     });
 
     res.json(data);
-  });
+  }
 });
 
 // ================= SERVER =================
