@@ -255,7 +255,7 @@ function Allowance() {
           <MenuItem value="">All Months</MenuItem>
           {["January","February","March","April","May","June",
             "July","August","September","October","November","December"]
-            .map(m => <MenuItem key={m}>{m}</MenuItem>)}
+            .map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)
         </TextField>
 
         {/* Table */}
