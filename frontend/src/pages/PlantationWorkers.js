@@ -13,6 +13,7 @@ import {
   Grid,
   Box
 } from "@mui/material";
+import { MenuItem } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
@@ -228,7 +229,6 @@ export default function PlantationPayroll() {
               label="Worker"
               value={workerId}
               onChange={(e) => setWorkerId(e.target.value)}
-              SelectProps={{ native: true }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   height: 56,
@@ -239,14 +239,14 @@ export default function PlantationPayroll() {
                 }
               }}
             >
-              <option value="">Select Worker</option>
+              <MenuItem value="">Select Worker</MenuItem>
 
               {workers.map((w) => (
-                <option key={w.id} value={w.id}>
+                <MenuItem key={w.id} value={w.id}>
                   {w.name}
-                </option>
+                </MenuItem>
               ))}
-          </TextField>
+            </TextField>
           </Grid>
 
           <Grid item xs={12} md={3}>
