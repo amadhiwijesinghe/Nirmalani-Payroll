@@ -55,8 +55,8 @@ app.post("/login", (req, res) => {
 app.get("/employees", (req, res) => {
   db.query("SELECT * FROM employees", (err, result) => {
     if (err) {
-      console.error("DB ERROR:", err);   // 👈 ADD THIS
-      return res.status(500).send(err);
+      console.error("FULL DB ERROR:", err); // 👈 VERY IMPORTANT
+      return res.status(500).json(err);     // 👈 SEND REAL ERROR
     }
     res.json(result);
   });
