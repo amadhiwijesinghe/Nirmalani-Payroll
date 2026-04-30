@@ -1,6 +1,12 @@
 const express = require("express");
 const mysql = require("mysql2");
-const cors = require("cors");
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://nirmalani-payroll.vercel.app",
+    "https://nirmalani-payroll-e04l6n8m9-amadhikaveendaya-1694s-projects.vercel.app"
+  ]
+}));
 
 const app = express();
 
