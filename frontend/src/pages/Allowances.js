@@ -14,13 +14,14 @@ import {
   Typography,
   Box
 } from "@mui/material";
+
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
 function Allowance() {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [month, setMonth] = useState("");
-  const [amount, setAmount] = "";
+  const [amount, setAmount] = useState("");
 
   const [data, setData] = useState([]);
   const [filterMonth, setFilterMonth] = useState("");
@@ -44,7 +45,15 @@ function Allowance() {
     setData(res.data);
   };
 
+  // ✅ FIXED HANDLE SAVE
   const handleSave = () => {
+
+    console.log("SENDING:", {
+      memberid: selectedEmployee?.memberid,
+      month,
+      amount
+    });
+
     if (!selectedEmployee || !month || !amount) {
       alert("Fill all fields");
       return;
@@ -55,6 +64,7 @@ function Allowance() {
       month,
       amount
     }).then(() => {
+      alert("Saved successfully ✅");
       setAmount("");
       setMonth("");
       setSelectedEmployee(null);
@@ -64,37 +74,6 @@ function Allowance() {
 
   const formatMemberId = (id) => {
     return String(id).padStart(6, "0");
-  };
-
-  const selectStyle = {
-    '& .MuiOutlinedInput-root': {
-      height: 56,
-      paddingRight: '14px',
-      color: '#fff'
-    },
-    '& .MuiSelect-select': {
-      display: 'flex',
-      alignItems: 'center',
-      height: '100%',
-      padding: '16.5px 14px',
-      color: '#fff'
-    },
-    '& .MuiInputLabel-root': {
-      color: '#aaa'
-    },
-    '& .MuiSvgIcon-root': {
-      color: '#fff'
-    }
-  };
-
-  const inputStyle = {
-    '& .MuiOutlinedInput-root': {
-      height: 56,
-      color: '#fff'
-    },
-    '& .MuiInputLabel-root': {
-      color: '#aaa'
-    }
   };
 
   return (
@@ -159,7 +138,7 @@ function Allowance() {
             </TextField>
           </Grid>
 
-          {/* Month */}
+          {/* Month (🔥 FIXED) */}
           <Grid item xs={12} md={3}>
             <TextField
               select
@@ -169,7 +148,7 @@ function Allowance() {
               onChange={(e) => setMonth(e.target.value)}
               sx={{ '& .MuiOutlinedInput-root': {
                 height: 56,
-                width: 160,
+                width: 120,
                 paddingRight: '14px',
                 color: '#fff' // text color inside input
               },
@@ -189,10 +168,17 @@ function Allowance() {
               }
             }}
             >
+              
+              
               <MenuItem value="">Select Month</MenuItem>
-              {["January","February","March","April","May","June",
-                "July","August","September","October","November","December"]
-                .map(m => <MenuItem key={m}>{m}</MenuItem>)}
+              {[
+                "January","February","March","April","May","June",
+                "July","August","September","October","November","December"
+              ].map(m => (
+                <MenuItem key={m} value={m}>
+                  {m}
+                </MenuItem>
+              ))}
             </TextField>
           </Grid>
 
@@ -203,7 +189,6 @@ function Allowance() {
               fullWidth
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              sx={inputStyle}
             />
           </Grid>
 
@@ -212,19 +197,7 @@ function Allowance() {
             <Button
               fullWidth
               onClick={handleSave}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#f59e0b,#f97316)",
-                color: "#000",
-                boxShadow: "0 5px 20px rgba(245,158,11,0.4)",
-                transition: "0.2s ease",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                  boxShadow: "0 10px 25px rgba(99,102,241,0.5)"
-                }
-              }}
+              variant="contained"
             >
               Save
             </Button>
@@ -233,7 +206,7 @@ function Allowance() {
         </Grid>
       </Paper>
 
-      {/* 🔥 ALLOWANCE SUMMARY BACK */}
+      {/* SUMMARY */}
       <Paper sx={{
         p: 2,
         borderRadius: 5,
@@ -250,22 +223,27 @@ function Allowance() {
           label="Filter Month"
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
-          sx={{ ...selectStyle, mt: 2, width: 220 }}
+          sx={{ mt: 2, width: 220 }}
         >
           <MenuItem value="">All Months</MenuItem>
-          {["January","February","March","April","May","June",
-            "July","August","September","October","November","December"]
-            .map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)
+          {[
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ].map(m => (
+            <MenuItem key={m} value={m}>
+              {m}
+            </MenuItem>
+          ))}
         </TextField>
 
         {/* Table */}
         <Table sx={{ mt: 2 }}>
           <TableHead>
-            <TableRow sx={{ background: "rgba(255,255,255,0.05)" }}>
-              <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
+            <TableRow>
+              <TableCell>Month</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Member ID</TableCell>
+              <TableCell>Allowance</TableCell>
             </TableRow>
           </TableHead>
 
@@ -273,17 +251,15 @@ function Allowance() {
             {data.length > 0 ? (
               data.map((row, i) => (
                 <TableRow key={i}>
-                  <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{formatMemberId(row.memberid)}</TableCell>
-                  <TableCell sx={{ color: "#f59e0b", fontWeight: 600 }}>
-                    Rs. {row.amount}
-                  </TableCell>
+                  <TableCell>{row.month}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{formatMemberId(row.memberid)}</TableCell>
+                  <TableCell>Rs. {row.amount}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} sx={{ color: "#aaa" }}>
+                <TableCell colSpan={4}>
                   No data available
                 </TableCell>
               </TableRow>
