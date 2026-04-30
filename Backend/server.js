@@ -10,11 +10,11 @@ app.use(express.json());
 // ================= DATABASE =================
 
 const db = mysql.createConnection({
-  host: "mysql.railway.internal",
-  user: "root",
-  password: "neUFWiVhKMWfrDERuKKSFmnaYjwyheky",
-  database: "railway",
-  port: 3306
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT
 });
 
 db.connect(err => {
@@ -292,6 +292,8 @@ app.get("/payroll/:month", (req, res) => {
 
 // ================= SERVER =================
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000 🔥");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
