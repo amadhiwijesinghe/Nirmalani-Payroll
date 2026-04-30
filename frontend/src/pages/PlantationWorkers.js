@@ -33,14 +33,15 @@ export default function PlantationPayroll() {
   }, []);
 
   const fetchWorkers = async () => {
-    try {
-      const res = await axios.get(`${API}/plantation-workers`);
-      console.log("workers:", res.data);
-      setWorkers(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  try {
+    const res = await axios.get(`${API}/plantation-workers`);
+    console.log("✅ SUCCESS:", res.data);
+    setWorkers(res.data);
+  } catch (err) {
+    console.error("❌ ERROR:", err);
+    alert("API FAILED");
+  }
+};
 
   const fetchData = async () => {
     try {
