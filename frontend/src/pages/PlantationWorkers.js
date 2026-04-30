@@ -11,8 +11,7 @@ import {
   TableHead,
   Typography,
   Grid,
-  Box,
-  MenuItem
+  Box
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -90,7 +89,7 @@ export default function PlantationPayroll() {
     }
   };
 
-  // 🔥 CALCULATE
+  // 🔥 CALCULATION
   const calculate = (days, rate) => {
     const amount = days * rate;
 
@@ -182,21 +181,26 @@ export default function PlantationPayroll() {
 
         <Grid container spacing={2}>
           <Grid item xs={3}>
-            <TextField
-              select
-              fullWidth
-              label="Worker"
+            {/* 🔥 WORKING DROPDOWN */}
+            <select
               value={workerId}
               onChange={(e) => setWorkerId(e.target.value)}
+              style={{
+                width: "100%",
+                height: "56px",
+                borderRadius: "4px",
+                padding: "10px",
+                fontSize: "16px"
+              }}
             >
-              <MenuItem value="">Select Worker</MenuItem>
+              <option value="">Select Worker</option>
 
               {workers.map((w) => (
-                <MenuItem key={w.id} value={w.id}>
+                <option key={w.id} value={w.id}>
                   {w.name}
-                </MenuItem>
+                </option>
               ))}
-            </TextField>
+            </select>
           </Grid>
 
           <Grid item xs={3}>
