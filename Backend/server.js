@@ -15,29 +15,18 @@ app.use(express.json());
 // ================= DATABASE =================
 
 // ✅ Railway + Local support
-const db = mysql.createConnection({
-  host: process.env.MYSQLHOST || "localhost",
-  user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "root123",
-  database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
-  port: process.env.MYSQLPORT || 3306
+const db = mysql.createPool({
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect(err => {
-  if (err) {
-    console.error("DB Connection Failed:", err);
-  } else {
-    console.log("Connected to MySQL ✅");
-  }
-});
 
-db.query("USE railway", (err) => {
-  if (err) {
-    console.error("USE DB ERROR:", err);
-  } else {
-    console.log("Using railway DB ✅");
-  }
-});
 
 // ================= ROOT =================
 
@@ -61,11 +50,15 @@ app.post("/login", (req, res) => {
 
 // GET
 app.get("/employees", (req, res) => {
+  console.log("REQUEST RECEIVED"); // 👈 add this
+
   db.query("SELECT * FROM employees", (err, result) => {
     if (err) {
-      console.error("FULL DB ERROR:", err); // 👈 VERY IMPORTANT
-      return res.status(500).json(err);     // 👈 SEND REAL ERROR
+      console.error("DB ERROR:", err);
+      return res.status(500).json(err);
     }
+
+    console.log("RESULT:", result); // 👈 add this
     res.json(result);
   });
 });
