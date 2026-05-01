@@ -100,14 +100,16 @@ app.delete("/employees/:id", (req, res) => {
 app.post("/attendance", (req, res) => {
   const { memberid, date, present, month } = req.body;
 
-  db.query(
-    "INSERT INTO attendance (memberid, date, present, month) VALUES (?, ?, ?, ?)",
-    [memberid, date, present, month],
-    (err, result) => {
-      if (err) return res.status(500).json(err);
-      res.send("Attendance Saved");
-    }
-  );
+  const sql = `
+    INSERT INTO attendance (memberid, date, present, month)
+    VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE present = VALUES(present)
+  `;
+
+  db.query(sql, [memberid, date, present, month], (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.send("Saved");
+  });
 });
 
 app.get("/attendance", (req, res) => {

@@ -37,24 +37,36 @@ function Attendance() {
       .then(res => setAttendanceList(res.data));
   };
 
-  const handleSubmit = () => {
-    if (!selectedEmployee || !date || present === "") {
-      alert("Fill all fields");
-      return;
-    }
+const handleSubmit = () => {
+  if (!selectedEmployee || !date || present === "") {
+    alert("Fill all fields");
+    return;
+  }
 
-    const monthName = new Date(date).toLocaleString('default', { month: 'long' });
+  // 🔥 CHECK DUPLICATE
+  const exists = attendanceList.some(
+    row =>
+      row.memberid === selectedEmployee.memberid &&
+      row.date === date
+  );
 
-    axios.post(`${API}/attendance`, {
-      memberid: selectedEmployee.memberid,
-      date,
-      present,
-      month: monthName
-    }).then(() => {
-      resetForm();
-      fetchAttendance();
-    });
-  };
+  if (exists) {
+    alert("⚠️ Attendance already marked for this date");
+    return; // 🚨 STOP here
+  }
+
+  const monthName = new Date(date).toLocaleString('default', { month: 'long' });
+
+  axios.post(`${API}/attendance`, {
+    memberid: selectedEmployee.memberid,
+    date,
+    present,
+    month: monthName
+  }).then(() => {
+    resetForm();
+    fetchAttendance();
+  });
+};
 
   const resetForm = () => {
     setDate("");
