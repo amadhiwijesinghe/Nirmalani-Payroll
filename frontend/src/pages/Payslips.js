@@ -48,7 +48,7 @@ export default function Payslips() {
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text("NIRMALANI CINNAMON PLANTATION 🌿", 14, 15);
+      doc.text("NIRMALANI PLANTATION 🌿", 14, 15);
 
       doc.setFontSize(10);
       doc.text("Employee Payslip", 150, 15);
