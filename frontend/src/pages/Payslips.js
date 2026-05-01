@@ -57,12 +57,13 @@ export default function Payslips() {
 
       // EMPLOYEE BOX
       doc.setDrawColor(200);
-      doc.rect(10, 35, 190, 40);
+      doc.rect(10, 35, 190, 45);
 
       doc.setFontSize(12);
       doc.text(`Name: ${emp.name}`, 15, 45);
       doc.text(`Member ID: ${formatMemberId(emp.memberid)}`, 15, 55);
       doc.text(`Month: ${emp.month || "-"}`, 15, 65);
+      doc.text(`Working Days: ${emp.days_worked || 0}`, 15, 75);
 
       // SALARY SECTION
       let y = 90;
