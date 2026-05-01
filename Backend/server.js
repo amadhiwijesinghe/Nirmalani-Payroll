@@ -311,21 +311,18 @@ app.get('/plantation-data', (req, res) => {
 
 // 🌿 Get Working Dates
 app.get("/plantation-attendance-dates", (req, res) => {
-  const { worker_id, month } = req.query;
+  const { epf_no, month } = req.query;
 
   const sql = `
     SELECT date
     FROM plantation_daily_attendance
-    WHERE worker_id = ?
+    WHERE epf_no = ?
     AND DATE_FORMAT(date, '%Y-%m') = ?
     ORDER BY date ASC
   `;
 
-  db.query(sql, [worker_id, month], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send(err);
-    }
+  db.query(sql, [epf_no, month], (err, result) => {
+    if (err) return res.status(500).send(err);
     res.json(result);
   });
 });

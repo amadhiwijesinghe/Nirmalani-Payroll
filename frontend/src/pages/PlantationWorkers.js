@@ -38,6 +38,8 @@ export default function PlantationPayroll() {
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
 
+  const [epf, setEpf] = useState("");
+
   useEffect(() => {
     fetchWorkers();
     fetchData();
@@ -86,6 +88,7 @@ export default function PlantationPayroll() {
     await axios.post(`${API}/plantation-workers`, {
       name,
       rate_per_day: rate,
+      epf_no: epf
     });
 
     setName("");
@@ -108,11 +111,11 @@ export default function PlantationPayroll() {
     fetchData();
   };
 
-  const viewAttendance = async (workerId, month) => {
+const viewAttendance = async (epf, month) => {
   try {
     const res = await axios.get(`${API}/plantation-attendance-dates`, {
       params: {
-        worker_id: workerId,
+        epf_no: epf,
         month: month,
       },
     });
@@ -195,7 +198,12 @@ const addDailyAttendance = async () => {
   };
 
   // 🔥 GRAND TOTAL
-  const totals = data.reduce(
+const totals = groupedData
+  .filter((row) =>
+    row.days_worked > 0 &&
+    (!filterMonth || row.month === filterMonth)
+  )
+  .reduce(
     (acc, row) => {
       const c = calculate(row.days_worked || 0, row.rate_per_day);
 
@@ -279,6 +287,16 @@ const addDailyAttendance = async () => {
               fullWidth
               value={rate}
               onChange={(e) => setRate(e.target.value)}
+              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={5}>
+            <TextField
+              label="EPF Number"
+              fullWidth
+              value={epf}
+              onChange={(e) => setEpf(e.target.value)}
               sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
@@ -460,7 +478,7 @@ const addDailyAttendance = async () => {
                   </TableCell>
                   <TableCell>
                     <Button
-                      onClick={() => viewAttendance(row.worker_id, row.month)}
+                      onClick={() => viewAttendance(row.epf_no, row.month)}
                       sx={{ background: "#38bdf8", color: "#000" }}
                     >
                       View
