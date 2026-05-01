@@ -174,7 +174,8 @@ const addDailyAttendance = async () => {
     });
 
     // 5. Refresh table
-    fetchData();
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await fetchData();
 
     alert("✅ Attendance marked & updated!");
 

@@ -245,7 +245,7 @@ app.post('/plantation-attendance', (req, res) => {
   const { worker_id, days_worked, month } = req.body;
 
   db.query(
-    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?)",
+    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE days_worked = VALUES(days_worked)"
     [worker_id, days_worked, month],
     (err, result) => {
       if (err) return res.status(500).send(err);
