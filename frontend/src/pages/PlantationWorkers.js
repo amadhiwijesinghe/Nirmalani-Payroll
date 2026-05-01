@@ -189,9 +189,11 @@ export default function PlantationPayroll() {
               style={{
                 width: "100%",
                 height: "56px",
-                borderRadius: "4px",
+                borderRadius: "6px",
                 padding: "10px",
-                fontSize: "16px"
+                fontSize: "16px",
+                position: "relative",
+                zIndex: 9999   // 🔥 THIS FIXES IT
               }}
             >
               <option value="">Select Worker</option>
