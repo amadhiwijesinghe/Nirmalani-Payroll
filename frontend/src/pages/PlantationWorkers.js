@@ -204,32 +204,14 @@ export default function PlantationPayroll() {
       >
         <Grid container spacing={2}>
           <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
+            <FormControl ss={{ width: 250 }}>
               <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
               <Select
                 value={workerId}
                 onChange={(e) => setWorkerId(e.target.value)}
-                sx={{ '& .MuiOutlinedInput-root': {
-                height: 56,
-                width: 250,
-                paddingRight: '14px',
-                color: '#fff' // text color inside input
-              },
-              '& .MuiSelect-select': {
-                display: 'flex',
-                alignItems: 'center',
-                height: '100%',
-                boxSizing: 'border-box',
-                padding: '16.5px 14px',
-                color: '#fff' // select text color
-              },
-              '& .MuiInputLabel-root': {
-                color: '#aaa' // label color
-              },
-              '& .MuiSvgIcon-root': {
-                color: '#fff' // dropdown arrow color
-              }
-            }}
+                sx={{ 
+                  width: 250,
+                  color: "#fff" }}
               >
                 <MenuItem value="">Select Worker</MenuItem>
                 {workers.map((w) => (
