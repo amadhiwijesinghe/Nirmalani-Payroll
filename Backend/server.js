@@ -299,15 +299,16 @@ app.get("/plantation-attendance-days", (req, res) => {
 app.get('/plantation-data', (req, res) => {
   const sql = `
     SELECT 
-      pw.id,
+      pw.id AS worker_id,
       pw.name,
       pw.rate_per_day,
       pw.epf_no,
       COUNT(pda.date) AS days_worked,
-      IFNULL(DATE_FORMAT(pda.date, '%Y-%m'), '') AS month
+      DATE_FORMAT(pda.date, '%Y-%m') AS month
     FROM plantation_workers pw
-    LEFT JOIN plantation_daily_attendance pda
-      ON pw.id = pda.worker_id AND pda.status = 'present'
+    JOIN plantation_daily_attendance pda   -- 🔥 CHANGE LEFT → JOIN
+      ON pw.id = pda.worker_id
+    WHERE pda.status = 'present'
     GROUP BY pw.id, DATE_FORMAT(pda.date, '%Y-%m')
   `;
 
