@@ -360,11 +360,7 @@ const printSlip = () => {
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 10px;
-            page-break-after: auto;
-          }
-
-          .page:last-child {
-            page-break-after: avoid; /* 🔥 stop extra blank page */
+            page-break-after: always; /* 🔥 IMPORTANT */
           }
 
           .slip {
