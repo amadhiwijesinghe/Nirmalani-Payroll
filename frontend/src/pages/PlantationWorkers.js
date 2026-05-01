@@ -171,15 +171,14 @@ const addDailyAttendance = async () => {
 
     const daysWorked = res.data.days;
 
-    // 4. SAVE / UPDATE monthly attendance automatically
+ // 4. SAVE / UPDATE monthly attendance automatically
     await axios.post(`${API}/plantation-attendance`, {
       worker_id: workerId,
       days_worked: daysWorked,
       month: selectedMonth
     });
 
-    // 5. Refresh table
-    await new Promise(resolve => setTimeout(resolve, 300));
+   // 🔥 Refresh table ONLY ONCE (clean way)
     await fetchData();
 
     alert("✅ Attendance marked & updated!");
