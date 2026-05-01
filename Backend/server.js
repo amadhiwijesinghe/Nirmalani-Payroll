@@ -296,11 +296,16 @@ app.get("/plantation-attendance-days", (req, res) => {
 // 🌿 Combined Data
 app.get('/plantation-data', (req, res) => {
   const sql = `
-    SELECT pw.id, pw.name, pw.rate_per_day,
-           pa.days_worked, pa.month
+    SELECT 
+      pw.id,
+      pw.name,
+      pw.rate_per_day,
+      COUNT(pda.date) AS days_worked,
+      DATE_FORMAT(pda.date, '%Y-%m') AS month
     FROM plantation_workers pw
-    LEFT JOIN plantation_attendance pa
-    ON pw.id = pa.worker_id
+    LEFT JOIN plantation_daily_attendance pda
+      ON pw.id = pda.worker_id AND pda.status = 'present'
+    GROUP BY pw.id, month
   `;
 
   db.query(sql, (err, result) => {

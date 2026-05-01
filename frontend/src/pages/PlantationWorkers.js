@@ -57,11 +57,15 @@ export default function PlantationPayroll() {
     setWorkers(res.data);
   };
 
-  const fetchData = async () => {
+const fetchData = async () => {
+  try {
     const res = await axios.get(`${API}/plantation-data`);
+    console.log("NEW DATA:", res.data); // 👈 ADD THIS
     setData(res.data);
-  };
-
+  } catch (err) {
+    console.error(err);
+  }
+};
   const fetchDaysWorked = async (worker, monthVal) => {
   if (!worker || !monthVal) return;
 
