@@ -1,5 +1,6 @@
 const express = require("express");
 const mysql = require("mysql2");
+const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -8,7 +9,7 @@ app.use(cors({
   ]
 }));
 
-const app = express();
+
 
 // ✅ CORS
 app.use(cors({
