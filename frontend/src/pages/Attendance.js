@@ -23,6 +23,7 @@ function Attendance() {
   const [present, setPresent] = useState("");
   const [attendanceList, setAttendanceList] = useState([]);
   const [search, setSearch] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
     axios.get(`${API}/employees`)
@@ -66,9 +67,17 @@ function Attendance() {
   };
 
   // 🔍 Filter
-  const filtered = attendanceList.filter(row =>
-    row.name?.toLowerCase().includes(search.toLowerCase())
-  );
+ const filtered = attendanceList.filter(row => {
+
+  const matchesSearch =
+    row.name?.toLowerCase().includes(search.toLowerCase());
+
+  const matchesMonth =
+    !filterMonth ||
+    (row.date && row.date.startsWith(filterMonth));
+
+  return matchesSearch && matchesMonth;
+});
 
   return (
     <Box sx={{
@@ -235,6 +244,28 @@ function Attendance() {
           borderRadius: 3,
         }}
       />
+
+      <TextField
+        type="month"
+        label="Filter by Month"
+        value={filterMonth}
+        onChange={(e) => setFilterMonth(e.target.value)}
+        sx={{
+          mb: 3,
+          input: { color: "#fff" },
+          label: { color: "#aaa" },
+          background: "rgba(255,255,255,0.05)",
+          borderRadius: 3,
+          width: 200
+        }}
+      />
+
+      <Button
+        onClick={() => setFilterMonth("")}
+        sx={{ ml: 2, background: "#475569", color: "#fff" }}
+      >
+        Clear
+      </Button>
 
       {/* TABLE */}
       <Paper sx={{
