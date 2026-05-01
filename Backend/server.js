@@ -254,6 +254,44 @@ app.post('/plantation-attendance', (req, res) => {
   );
 });
 
+// 🌿 Daily Attendance
+app.post("/plantation-daily-attendance", (req, res) => {
+  const { worker_id, date, status } = req.body;
+
+  const sql = `
+    INSERT INTO plantation_daily_attendance (worker_id, date, status)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(sql, [worker_id, date, status], (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send(err);
+    }
+    res.send("Attendance saved");
+  });
+});
+
+app.get("/plantation-attendance-days", (req, res) => {
+  const { worker_id, month } = req.query;
+
+  const sql = `
+    SELECT COUNT(*) AS days
+    FROM plantation_daily_attendance
+    WHERE worker_id = ?
+    AND DATE_FORMAT(date, '%Y-%m') = ?
+    AND status = 'present'
+  `;
+
+  db.query(sql, [worker_id, month], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send(err);
+    }
+    res.json(result[0]);
+  });
+});
+
 
 // 🌿 Combined Data
 app.get('/plantation-data', (req, res) => {
