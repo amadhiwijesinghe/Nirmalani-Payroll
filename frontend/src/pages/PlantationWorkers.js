@@ -31,6 +31,8 @@ export default function PlantationPayroll() {
   const [days, setDays] = useState("");
   const [month, setMonth] = useState("");
 
+  const [date, setDate] = useState("");
+
   useEffect(() => {
     fetchWorkers();
     fetchData();
@@ -73,6 +75,8 @@ export default function PlantationPayroll() {
     setMonth("");
     fetchData();
   };
+
+
 
   // 🔥 CALCULATE
   const calculate = (days, rate) => {

@@ -265,9 +265,12 @@ app.post("/plantation-daily-attendance", (req, res) => {
 
   db.query(sql, [worker_id, date, status], (err) => {
     if (err) {
-      console.error(err);
+      if (err.code === "ER_DUP_ENTRY") {
+        return res.status(400).send("Already marked for this date");
+      }
       return res.status(500).send(err);
     }
+
     res.send("Attendance saved");
   });
 });
@@ -284,10 +287,7 @@ app.get("/plantation-attendance-days", (req, res) => {
   `;
 
   db.query(sql, [worker_id, month], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send(err);
-    }
+    if (err) return res.status(500).send(err);
     res.json(result[0]);
   });
 });
