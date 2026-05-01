@@ -309,6 +309,27 @@ app.get('/plantation-data', (req, res) => {
   });
 });
 
+// 🌿 Get Working Dates
+app.get("/plantation-attendance-dates", (req, res) => {
+  const { worker_id, month } = req.query;
+
+  const sql = `
+    SELECT date
+    FROM plantation_daily_attendance
+    WHERE worker_id = ?
+    AND DATE_FORMAT(date, '%Y-%m') = ?
+    ORDER BY date ASC
+  `;
+
+  db.query(sql, [worker_id, month], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send(err);
+    }
+    res.json(result);
+  });
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;

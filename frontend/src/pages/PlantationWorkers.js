@@ -33,10 +33,22 @@ export default function PlantationPayroll() {
 
   const [date, setDate] = useState("");
 
+  const [filterMonth, setFilterMonth] = useState("");
+
+  const [attendanceDates, setAttendanceDates] = useState([]);
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
     fetchWorkers();
     fetchData();
+    
   }, []);
+
+  useEffect(() => {
+  if (workerId && month) {
+    fetchDaysWorked(workerId, month);
+  }
+}, [workerId, month]);
 
   const fetchWorkers = async () => {
     const res = await axios.get(`${API}/plantation-workers`);
@@ -47,6 +59,26 @@ export default function PlantationPayroll() {
     const res = await axios.get(`${API}/plantation-data`);
     setData(res.data);
   };
+
+  const fetchDaysWorked = async (worker, monthVal) => {
+  if (!worker || !monthVal) return;
+
+  try {
+    const res = await axios.get(
+      `${API}/plantation-attendance-days`,
+      {
+        params: {
+          worker_id: worker,
+          month: monthVal,
+        },
+      }
+    );
+
+    setDays(res.data.days);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const addWorker = async () => {
     if (!name || !rate) return alert("Enter name and rate");
@@ -76,6 +108,69 @@ export default function PlantationPayroll() {
     fetchData();
   };
 
+  const viewAttendance = async (workerId, month) => {
+  try {
+    const res = await axios.get(`${API}/plantation-attendance-dates`, {
+      params: {
+        worker_id: workerId,
+        month: month,
+      },
+    });
+
+    setAttendanceDates(res.data);
+    setOpen(true);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const addDailyAttendance = async () => {
+  if (!workerId || !date) {
+    alert("Select worker and date");
+    return;
+  }
+
+  try {
+    // 1. Save daily attendance
+    await axios.post(`${API}/plantation-daily-attendance`, {
+      worker_id: workerId,
+      date,
+      status: "present"
+    });
+
+    // 2. Extract month from date
+    const selectedMonth = date.substring(0, 7); // "2026-05"
+
+    // 3. Get total days for that month
+    const res = await axios.get(`${API}/plantation-attendance-days`, {
+      params: {
+        worker_id: workerId,
+        month: selectedMonth
+      }
+    });
+
+    const daysWorked = res.data.days;
+
+    // 4. SAVE / UPDATE monthly attendance automatically
+    await axios.post(`${API}/plantation-attendance`, {
+      worker_id: workerId,
+      days_worked: daysWorked,
+      month: selectedMonth
+    });
+
+    // 5. Refresh table
+    fetchData();
+
+    alert("✅ Attendance marked & updated!");
+
+  } catch (err) {
+    if (err.response?.data === "Already marked for this date") {
+      alert("⚠️ Already marked for this date");
+    } else {
+      console.error(err);
+    }
+  }
+};
 
 
   // 🔥 CALCULATE
@@ -124,6 +219,17 @@ export default function PlantationPayroll() {
       balance: 0,
     }
   );
+
+  const groupedData = Object.values(
+  data.reduce((acc, row) => {
+    const key = `${row.worker_id}-${row.month}`;
+
+    // keep latest record (overwrite duplicates)
+    acc[key] = row;
+
+    return acc;
+  }, {})
+);
 
   return (
     <Box
@@ -195,75 +301,71 @@ export default function PlantationPayroll() {
         </Grid>
       </Paper>
 
-      {/* ATTENDANCE */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
-            <FormControl ss={{ width: 250 }}>
-              <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
-              <Select
-                value={workerId}
-                onChange={(e) => setWorkerId(e.target.value)}
-                sx={{ 
-                  width: 250,
-                  color: "#fff" }}
+      {/* DAILY ATTENDANCE */}
+        <Paper
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 5,
+            backdropFilter: "blur(20px)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <Typography sx={{ color: "#fff", mb: 2 }}>
+            📅 Daily Attendance
+          </Typography>
+
+          <Grid container spacing={2}>
+
+            {/* Worker */}
+            <Grid item xs={12} md={3}>
+              <FormControl sx={{ width: 250 }}>
+                <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
+                <Select
+                  value={workerId}
+                  onChange={(e) => setWorkerId(e.target.value)}
+                  sx={{ width: 250, color: "#fff" }}
+                >
+                  <MenuItem value="">Select Worker</MenuItem>
+                  {workers.map((w) => (
+                    <MenuItem key={w.id} value={w.id}>
+                      {w.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Date */}
+            <Grid item xs={12} md={3}>
+              <TextField
+                type="date"
+                fullWidth
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                sx={{ input: { color: "#fff" } }}
+              />
+            </Grid>
+
+            {/* Button */}
+            <Grid item xs={12} md={3}>
+              <Button
+                fullWidth
+                onClick={addDailyAttendance}
+                sx={{
+                  height: "100%",
+                  borderRadius: 3,
+                  background: "linear-gradient(135deg,#22c55e,#4ade80)",
+                  color: "#000",
+                }}
               >
-                <MenuItem value="">Select Worker</MenuItem>
-                {workers.map((w) => (
-                  <MenuItem key={w.id} value={w.id}>
-                    {w.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+                Mark Present
+              </Button>
+            </Grid>
 
-          <Grid item xs={12} md={3}>
-            <TextField
-              label="Days"
-              fullWidth
-              value={days}
-              onChange={(e) => setDays(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
           </Grid>
-
-          <Grid item xs={12} md={3}>
-            <TextField
-              label="Month"
-              fullWidth
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Button
-              fullWidth
-              onClick={addAttendance}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                color: "#fff",
-              }}
-            >
-              Save
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
 
       {/* TABLE */}
       <Paper
@@ -273,11 +375,39 @@ export default function PlantationPayroll() {
           background: "rgba(255,255,255,0.05)",
           backdropFilter: "blur(20px)",
         }}
+        
       >
+        <Box sx={{ mb: 2 }}>
+          <TextField
+            type="month"
+            label="Filter by Month"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+            sx={{
+              input: { color: "#fff" },
+              label: { color: "#aaa" },
+              width: 200
+            }}
+          />
+
+            {/* Clear Button */}
+            <Button
+              onClick={() => setFilterMonth("")}
+              sx={{
+                ml: 2,
+                background: "#475569",
+                color: "#fff",
+                height: "56px"
+              }}
+            >
+              Clear
+            </Button>
+        </Box>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
@@ -287,16 +417,23 @@ export default function PlantationPayroll() {
               <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
+              <TableCell>View</TableCell> 
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {data.map((row) => {
+            {groupedData
+              .filter((row) =>
+                row.days_worked > 0 &&
+                (!filterMonth || row.month === filterMonth)
+              )
+              .map((row) => {
               const c = calculate(row.days_worked || 0, row.rate_per_day);
 
               return (
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate_per_day}</TableCell>
 
@@ -321,13 +458,22 @@ export default function PlantationPayroll() {
                   <TableCell sx={{ color: "#34d399" }}>
                     {c.etf.toFixed(2)}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      onClick={() => viewAttendance(row.worker_id, row.month)}
+                      sx={{ background: "#38bdf8", color: "#000" }}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
+
                 </TableRow>
               );
             })}
 
             {/* 🔥 GRAND TOTAL */}
             <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
-              <TableCell colSpan={3} sx={{ color: "#fff", fontWeight: "bold" }}>
+              <TableCell colSpan={4} sx={{ color: "#fff", fontWeight: "bold" }}>
                 TOTAL
               </TableCell>
 
@@ -356,6 +502,32 @@ export default function PlantationPayroll() {
           </TableBody>
         </Table>
       </Paper>
+      {open && (
+  <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
+    <Typography sx={{ color: "#fff", mb: 1 }}>
+      Worked Days:
+    </Typography>
+
+    {attendanceDates.length === 0 ? (
+      <Typography sx={{ color: "#aaa" }}>
+        No attendance found
+      </Typography>
+    ) : (
+      attendanceDates.map((d, i) => (
+        <Typography key={i} sx={{ color: "#38bdf8" }}>
+          {d.date}
+        </Typography>
+      ))
+    )}
+
+    <Button
+      onClick={() => setOpen(false)}
+      sx={{ mt: 1, background: "#475569", color: "#fff" }}
+    >
+      Close
+    </Button>
+  </Paper>
+)}
     </Box>
   );
 }
