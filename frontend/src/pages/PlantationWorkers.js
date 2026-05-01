@@ -47,26 +47,34 @@ export default function PlantationPayroll() {
   };
 
   const addWorker = async () => {
+    if (!name || !rate) return alert("Enter name and rate");
+
     await axios.post(`${API}/plantation-workers`, {
       name,
       rate_per_day: rate,
     });
+
     setName("");
     setRate("");
     fetchWorkers();
   };
 
   const addAttendance = async () => {
+    if (!workerId || !days || !month)
+      return alert("Fill all fields");
+
     await axios.post(`${API}/plantation-attendance`, {
       worker_id: workerId,
       days_worked: days,
       month,
     });
+
     setDays("");
     setMonth("");
     fetchData();
   };
 
+  // 🔥 CALCULATE
   const calculate = (days, rate) => {
     const amount = days * rate;
     const epf_8 = amount * 0.08;
@@ -76,35 +84,74 @@ export default function PlantationPayroll() {
     const total_deduction = epf_8;
     const balance = amount - total_deduction;
 
-    return { amount, epf_8, epf_12, epf_20, etf, total_deduction, balance };
+    return {
+      amount,
+      epf_8,
+      epf_12,
+      epf_20,
+      etf,
+      total_deduction,
+      balance,
+    };
   };
 
-  return (
-    <Box sx={{
-      p: 3,
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f172a, #1e293b)"
-    }}>
+  // 🔥 GRAND TOTAL
+  const totals = data.reduce(
+    (acc, row) => {
+      const c = calculate(row.days_worked || 0, row.rate_per_day);
 
+      acc.amount += c.amount;
+      acc.epf_8 += c.epf_8;
+      acc.epf_12 += c.epf_12;
+      acc.epf_20 += c.epf_20;
+      acc.etf += c.etf;
+      acc.total_deduction += c.total_deduction;
+      acc.balance += c.balance;
+
+      return acc;
+    },
+    {
+      amount: 0,
+      epf_8: 0,
+      epf_12: 0,
+      epf_20: 0,
+      etf: 0,
+      total_deduction: 0,
+      balance: 0,
+    }
+  );
+
+  return (
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #0f172a, #1e293b)",
+      }}
+    >
       {/* HEADER */}
-      <Typography sx={{
-        mb: 3,
-        fontWeight: 800,
-        color: "#fff",
-        fontSize: "28px"
-      }}>
+      <Typography
+        variant="h4"
+        sx={{
+          mb: 3,
+          fontWeight: 800,
+          color: "#fff",
+        }}
+      >
         🌿 Plantation Payroll Dashboard
       </Typography>
 
       {/* ADD WORKER */}
-      <Paper sx={{
-        p: 3,
-        mb: 4,
-        borderRadius: 5,
-        backdropFilter: "blur(20px)",
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
@@ -135,7 +182,7 @@ export default function PlantationPayroll() {
                 borderRadius: 3,
                 fontWeight: 700,
                 background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000"
+                color: "#000",
               }}
             >
               Add
@@ -145,16 +192,17 @@ export default function PlantationPayroll() {
       </Paper>
 
       {/* ATTENDANCE */}
-      <Paper sx={{
-        p: 3,
-        mb: 4,
-        borderRadius: 5,
-        backdropFilter: "blur(20px)",
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         <Grid container spacing={2}>
-
           <Grid item xs={12} md={3}>
             <FormControl fullWidth>
               <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
@@ -164,7 +212,7 @@ export default function PlantationPayroll() {
                 sx={{ color: "#fff" }}
               >
                 <MenuItem value="">Select Worker</MenuItem>
-                {workers.map(w => (
+                {workers.map((w) => (
                   <MenuItem key={w.id} value={w.id}>
                     {w.name}
                   </MenuItem>
@@ -202,23 +250,24 @@ export default function PlantationPayroll() {
                 borderRadius: 3,
                 fontWeight: 700,
                 background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                color: "#fff"
+                color: "#fff",
               }}
             >
               Save
             </Button>
           </Grid>
-
         </Grid>
       </Paper>
 
       {/* TABLE */}
-      <Paper sx={{
-        p: 2,
-        borderRadius: 5,
-        background: "rgba(255,255,255,0.05)",
-        backdropFilter: "blur(20px)"
-      }}>
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(20px)",
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
@@ -227,28 +276,80 @@ export default function PlantationPayroll() {
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Balance</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {data.map(row => {
+            {data.map((row) => {
               const c = calculate(row.days_worked || 0, row.rate_per_day);
+
               return (
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate_per_day}</TableCell>
-                  <TableCell sx={{ color: "#22c55e" }}>{c.amount.toFixed(2)}</TableCell>
-                  <TableCell sx={{ color: "#facc15" }}>{c.epf_8.toFixed(2)}</TableCell>
-                  <TableCell sx={{ color: "#38bdf8" }}>{c.balance.toFixed(2)}</TableCell>
+
+                  <TableCell sx={{ color: "#22c55e" }}>
+                    {c.amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#facc15" }}>
+                    {c.epf_8.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#f87171" }}>
+                    {c.total_deduction.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#38bdf8" }}>
+                    {c.balance.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#a78bfa" }}>
+                    {c.epf_12.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fb7185" }}>
+                    {c.epf_20.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#34d399" }}>
+                    {c.etf.toFixed(2)}
+                  </TableCell>
                 </TableRow>
               );
             })}
+
+            {/* 🔥 GRAND TOTAL */}
+            <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
+              <TableCell colSpan={3} sx={{ color: "#fff", fontWeight: "bold" }}>
+                TOTAL
+              </TableCell>
+
+              <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
+                {totals.amount.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#facc15", fontWeight: "bold" }}>
+                {totals.epf_8.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
+                {totals.total_deduction.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
+                {totals.balance.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
+                {totals.epf_12.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#fb7185", fontWeight: "bold" }}>
+                {totals.epf_20.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
+                {totals.etf.toFixed(2)}
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </Paper>
-
     </Box>
   );
 }
