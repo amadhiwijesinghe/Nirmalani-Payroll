@@ -247,7 +247,7 @@ app.post('/plantation-attendance', (req, res) => {
   const { worker_id, days_worked, month } = req.body;
 
   db.query(
-    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE days_worked = VALUES(days_worked)"
+    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE days_worked = VALUES(days_worked)",
     [worker_id, days_worked, month],
     (err, result) => {
       if (err) return res.status(500).send(err);
@@ -307,7 +307,7 @@ app.get('/plantation-data', (req, res) => {
     FROM plantation_workers pw
     LEFT JOIN plantation_daily_attendance pda
       ON pw.id = pda.worker_id AND pda.status = 'present'
-    GROUP BY pw.id, month
+    GROUP BY pw.id, DATE_FORMAT(pda.date, '%Y-%m')
   `;
 
   db.query(sql, (err, result) => {
