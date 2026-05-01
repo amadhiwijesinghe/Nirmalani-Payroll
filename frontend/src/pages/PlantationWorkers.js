@@ -209,7 +209,27 @@ export default function PlantationPayroll() {
               <Select
                 value={workerId}
                 onChange={(e) => setWorkerId(e.target.value)}
-                sx={{ color: "#fff" }}
+                sx={{ '& .MuiOutlinedInput-root': {
+                height: 56,
+                width: 250,
+                paddingRight: '14px',
+                color: '#fff' // text color inside input
+              },
+              '& .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
+                height: '100%',
+                boxSizing: 'border-box',
+                padding: '16.5px 14px',
+                color: '#fff' // select text color
+              },
+              '& .MuiInputLabel-root': {
+                color: '#aaa' // label color
+              },
+              '& .MuiSvgIcon-root': {
+                color: '#fff' // dropdown arrow color
+              }
+            }}
               >
                 <MenuItem value="">Select Worker</MenuItem>
                 {workers.map((w) => (
