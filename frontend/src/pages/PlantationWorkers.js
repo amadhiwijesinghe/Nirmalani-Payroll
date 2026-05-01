@@ -256,6 +256,129 @@ const totals = groupedData
     }
   );
 
+  const generateSlipHTML = (row, c) => {
+  return `
+    <div class="slip">
+      <h3 style="text-align:center; margin-bottom:5px;">
+        NIRMALANI PLANTATION
+      </h3>
+
+      <p><b>Name:</b> ${row.name}</p>
+      <p><b>EPF No:</b> ${row.epf_no || "-"}</p>
+      <p><b>Month:</b> ${row.month}</p>
+
+      <hr/>
+
+      <table style="width:100%; font-size:12px;">
+        <tr>
+          <td>Days Worked</td>
+          <td style="text-align:right;">${row.days_worked}</td>
+        </tr>
+        <tr>
+          <td>Rate per Day</td>
+          <td style="text-align:right;">${row.rate_per_day}</td>
+        </tr>
+        <tr>
+          <td><b>Total Pay</b></td>
+          <td style="text-align:right;">${c.amount.toFixed(2)}</td>
+        </tr>
+      </table>
+
+      <hr/>
+
+      <table style="width:100%; font-size:12px;">
+        <tr>
+          <td>EPF 8%</td>
+          <td style="text-align:right;">${c.epf_8.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td>EPF 12%</td>
+          <td style="text-align:right;">${c.epf_12.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td>ETF 3%</td>
+          <td style="text-align:right;">${c.etf.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td><b>Balance Pay</b></td>
+          <td style="text-align:right;"><b>${c.balance.toFixed(2)}</b></td>
+        </tr>
+      </table>
+
+      <hr/>
+
+      <div style="
+        border: 1px solid black;
+        height: 30px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: left;
+        font-size: 11px;
+        margin-top: auto;
+      ">
+        Signature
+      </div>
+    </div>
+  `;
+};
+
+
+const printSlip = () => {
+
+  const rowsToPrint = groupedData
+    .filter(row => row.days_worked > 0 && (!filterMonth || row.month === filterMonth))
+    .slice(0, 4); // 👈 first 4 workers
+
+  const slips = rowsToPrint.map(row => {
+    const c = calculate(row.days_worked || 0, row.rate_per_day);
+    return generateSlipHTML(row, c);
+  }).join("");
+
+  const html = `
+    <html>
+      <head>
+        <title>Payslip</title>
+        <style>
+          body {
+            font-family: Arial;
+            padding: 10px;
+          }
+
+          .page {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+          }
+
+          .slip {
+            border: 2px solid black;
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="page">
+          ${slips}
+        </div>
+
+        <script>
+          window.print();
+        </script>
+      </body>
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+  win.document.write(html);
+  win.document.close();
+};
+
   return (
     <Box
       sx={{
@@ -515,6 +638,12 @@ const totals = groupedData
                       sx={{ background: "#38bdf8", color: "#000" }}
                     >
                       View
+                    </Button>
+                    <Button
+                      onClick={printSlip}
+                      sx={{ background: "#22c55e", color: "#000" }}
+                    >
+                      Print
                     </Button>
                   </TableCell>
 
