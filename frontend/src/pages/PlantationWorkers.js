@@ -325,14 +325,25 @@ const totals = groupedData
 
 const printSlip = () => {
 
-  const rowsToPrint = groupedData
-    .filter(row => row.days_worked > 0 && (!filterMonth || row.month === filterMonth))
-    .slice(0, 4); // 👈 first 4 workers
+  const rows = groupedData
+    .filter(row => row.days_worked > 0 && (!filterMonth || row.month === filterMonth));
 
-  const slips = rowsToPrint.map(row => {
-    const c = calculate(row.days_worked || 0, row.rate_per_day);
-    return generateSlipHTML(row, c);
-  }).join("");
+  let pagesHTML = "";
+
+  for (let i = 0; i < rows.length; i += 4) {
+    const chunk = rows.slice(i, i + 4);
+
+    const slips = chunk.map(row => {
+      const c = calculate(row.days_worked || 0, row.rate_per_day);
+      return generateSlipHTML(row, c);
+    }).join("");
+
+    pagesHTML += `
+      <div class="page">
+        ${slips}
+      </div>
+    `;
+  }
 
   const html = `
     <html>
@@ -349,6 +360,7 @@ const printSlip = () => {
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 10px;
+            page-break-after: always; /* 🔥 IMPORTANT */
           }
 
           .slip {
@@ -363,9 +375,7 @@ const printSlip = () => {
       </head>
 
       <body>
-        <div class="page">
-          ${slips}
-        </div>
+        ${pagesHTML}
 
         <script>
           window.print();
