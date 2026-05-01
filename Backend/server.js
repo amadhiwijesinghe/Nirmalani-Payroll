@@ -302,8 +302,9 @@ app.get('/plantation-data', (req, res) => {
       pw.id,
       pw.name,
       pw.rate_per_day,
+      pw.epf_no,
       COUNT(pda.date) AS days_worked,
-      DATE_FORMAT(pda.date, '%Y-%m') AS month
+      IFNULL(DATE_FORMAT(pda.date, '%Y-%m'), '') AS month
     FROM plantation_workers pw
     LEFT JOIN plantation_daily_attendance pda
       ON pw.id = pda.worker_id AND pda.status = 'present'

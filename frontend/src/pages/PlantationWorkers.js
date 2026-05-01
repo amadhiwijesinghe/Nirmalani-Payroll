@@ -228,6 +228,7 @@ const addDailyAttendance = async () => {
 const totals = groupedData
   .filter((row) =>
     row.days_worked > 0 &&
+    row.month && 
     (!filterMonth || row.month === filterMonth)
   )
   .reduce(
