@@ -311,18 +311,27 @@ app.get('/plantation-data', (req, res) => {
 
 // 🌿 Get Working Dates
 app.get("/plantation-attendance-dates", (req, res) => {
-  const { epf_no, month } = req.query;
+  const { worker_id, month } = req.query;
+
+  // 🔴 IMPORTANT: check inputs
+  if (!worker_id || !month) {
+    return res.status(400).json({ error: "Missing worker_id or month" });
+  }
 
   const sql = `
     SELECT date
     FROM plantation_daily_attendance
-    WHERE epf_no = ?
-    AND DATE_FORMAT(date, '%Y-%m') = ?
+    WHERE worker_id = ?
+    AND date LIKE CONCAT(?, '%')
     ORDER BY date ASC
   `;
 
-  db.query(sql, [epf_no, month], (err, result) => {
-    if (err) return res.status(500).send(err);
+  db.query(sql, [worker_id, month], (err, result) => {
+    if (err) {
+      console.error("SQL ERROR:", err); // 👈 VERY IMPORTANT
+      return res.status(500).json({ error: "Database error" });
+    }
+
     res.json(result);
   });
 });

@@ -111,19 +111,31 @@ export default function PlantationPayroll() {
     fetchData();
   };
 
-const viewAttendance = async (epf, month) => {
+const viewAttendance = async (workerId, month) => {
+
+  console.log("CLICKED →", workerId, month); // 👈 ADD THIS
+
+  if (!workerId) {
+    alert("Worker ID is missing!");
+    return;
+  }
+
   try {
     const res = await axios.get(`${API}/plantation-attendance-dates`, {
       params: {
-        epf_no: epf,
+        worker_id: workerId,
         month: month,
       },
     });
 
+    console.log("DATA:", res.data); // 👈 ADD THIS
+
     setAttendanceDates(res.data);
     setOpen(true);
+
   } catch (err) {
     console.error(err);
+    alert("Server error");
   }
 };
 
@@ -237,7 +249,7 @@ const totals = groupedData
       balance: 0,
     }
   );
-  
+
   return (
     <Box
       sx={{
@@ -477,7 +489,7 @@ const totals = groupedData
                   </TableCell>
                   <TableCell>
                     <Button
-                      onClick={() => viewAttendance(row.epf_no, row.month)}
+                      onClick={() => viewAttendance(row.id, row.month)}
                       sx={{ background: "#38bdf8", color: "#000" }}
                     >
                       View
