@@ -198,6 +198,16 @@ const addDailyAttendance = async () => {
   };
 
   // 🔥 GRAND TOTAL
+
+  const groupedData = Object.values(
+  data.reduce((acc, row) => {
+    const key = `${row.worker_id}-${row.month}`;
+    acc[key] = row;
+    return acc;
+  }, {})
+);
+
+
 const totals = groupedData
   .filter((row) =>
     row.days_worked > 0 &&
@@ -227,18 +237,7 @@ const totals = groupedData
       balance: 0,
     }
   );
-
-  const groupedData = Object.values(
-  data.reduce((acc, row) => {
-    const key = `${row.worker_id}-${row.month}`;
-
-    // keep latest record (overwrite duplicates)
-    acc[key] = row;
-
-    return acc;
-  }, {})
-);
-
+  
   return (
     <Box
       sx={{
