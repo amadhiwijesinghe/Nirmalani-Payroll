@@ -37,7 +37,8 @@ export default function PlantationPayroll() {
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
-
+  
+  const [selectedEpf, setSelectedEpf] = useState("");
   const [epf, setEpf] = useState("");
 
   useEffect(() => {
@@ -358,7 +359,13 @@ const totals = groupedData
                 <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
                 <Select
                   value={workerId}
-                  onChange={(e) => setWorkerId(e.target.value)}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setWorkerId(id);
+
+                    const selectedWorker = workers.find(w => w.id === id);
+                    setSelectedEpf(selectedWorker?.epf_no || "");
+                  }}
                   sx={{ width: 250, color: "#fff" }}
                 >
                   <MenuItem value="">Select Worker</MenuItem>
@@ -369,6 +376,16 @@ const totals = groupedData
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="EPF Number"
+                value={selectedEpf}
+                fullWidth
+                InputProps={{ readOnly: true }}
+                sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              />
             </Grid>
 
             {/* Date */}
