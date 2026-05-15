@@ -5,7 +5,10 @@ const mysql = require("mysql2");
 const app = express();
 
 app.use(cors({
-  origin: "*"
+  origin: [
+    "http://localhost:3000",
+    "https://nirmalani-payroll.vercel.app"
+  ]
 }));
 
 app.use(express.json());
@@ -24,8 +27,13 @@ const db = mysql.createPool({
   host: process.env.MYSQLHOST || "localhost",
   user: process.env.MYSQLUSER || "root",
   password: process.env.MYSQLPASSWORD || "root123",
-  database: process.env.MYSQLDATABASE || "nirmalani_payroll_system",
+  database: process.env.MYSQLDATABASE || "railway",
   port: process.env.MYSQLPORT || 3306,
+
+  ssl: {
+    rejectUnauthorized: false
+  },
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
