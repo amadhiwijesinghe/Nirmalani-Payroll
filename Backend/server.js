@@ -345,6 +345,44 @@ app.get("/plantation-attendance-dates", (req, res) => {
   });
 });
 
+
+// ================= RUBBER TAPPERS ============
+//ADD
+
+app.get('/rubber-tappers', (req, res) => {
+  db.query("SELECT * FROM rubber_tappers", (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.json(result);
+  });
+});
+
+app.post('/rubber-tappers', (req, res) => {
+  const { name, rate_per_day, liter, allowance} = req.body;
+
+  db.query(
+    "INSERT INTO rubber_tappers (name, rate_per_day, liter, allowance) VALUES (?, ?, ?, ?)",
+    [name, rate_per_day, liter, allowance],
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+      res.json({ message: "Worker added" });
+    }
+  );
+});
+
+app.get('/rubber-tappers-data', (req, res) => {
+
+  db.query(
+    "SELECT * FROM rubber_tappers ORDER BY id DESC",
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+
+      res.json(result);
+    }
+  );
+
+});
+
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;

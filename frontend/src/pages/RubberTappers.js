@@ -26,6 +26,7 @@ export default function PlantationPayroll() {
 
   const [name, setName] = useState("");
   const [rate, setRate] = useState("");
+  const [liter, setLiter] = useState("");
 
   const [workerId, setWorkerId] = useState("");
   const [days, setDays] = useState("");
@@ -38,9 +39,6 @@ export default function PlantationPayroll() {
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
-  
-  const [selectedEpf, setSelectedEpf] = useState("");
-  const [epf, setEpf] = useState("");
 
   useEffect(() => {
     fetchWorkers();
@@ -61,8 +59,8 @@ export default function PlantationPayroll() {
 
 const fetchData = async () => {
   try {
-    const res = await axios.get(`${API}/plantation-data`);
-    console.log("NEW DATA:", res.data); // 👈 ADD THIS
+    const res = await axios.get(`${API}/rubber-tappers-data`);
+    console.log("NEW DATA:", res.data); 
     setData(res.data);
   } catch (err) {
     console.error(err);
@@ -89,16 +87,19 @@ const fetchData = async () => {
 };
 
   const addWorker = async () => {
-    if (!name || !rate) return alert("Enter name and rate");
+    if (!name) return alert("Enter name and rate");
 
-    await axios.post(`${API}/plantation-workers`, {
+    await axios.post(`${API}/rubber-tappers`, {
       name,
+      liter: liter,
       rate_per_day: rate,
-      epf_no: epf
+      allowance
     });
 
     setName("");
+    setLiter("");
     setRate("");
+    setAllowance("");
     fetchWorkers();
   };
 
@@ -121,7 +122,7 @@ const fetchData = async () => {
 
 const viewAttendance = async (workerId, month) => {
 
-  console.log("CLICKED →", workerId, month); // 👈 ADD THIS
+  console.log("CLICKED →", workerId, month); 
 
   if (!workerId) {
     alert("Worker ID is missing!");
@@ -136,7 +137,7 @@ const viewAttendance = async (workerId, month) => {
       },
     });
 
-    console.log("DATA:", res.data); // 👈 ADD THIS
+    console.log("DATA:", res.data); 
 
     setAttendanceDates(res.data);
     setOpen(true);
@@ -197,24 +198,14 @@ const addDailyAttendance = async () => {
 
 
   // 🔥 CALCULATE
-  const calculate = (days, rate, allowance = 0) => {
-    const amount = (days * rate) + Number(allowance || 0);
-    const epf_8 = amount * 0.08;
-    const epf_12 = amount * 0.12;
-    const epf_20 = epf_8 + epf_12;
-    const etf = amount * 0.03;
-    const total_deduction = epf_8;
-    const balance = amount - total_deduction;
+  const calculate = (liter, rate, allowance = 0) => {
+    const amount = (Number(liter || 0) * Number(rate || 0)) +
+    Number(allowance || 0);
+    const balance = amount;
 
     return {
       amount,
-      epf_8,
-      epf_12,
-      epf_20,
-      etf,
-      allowance,
-      total_deduction,
-      balance,
+      balance: amount,
     };
   };
 
@@ -240,22 +231,12 @@ const totals = groupedData
       const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
 
       acc.amount += c.amount;
-      acc.epf_8 += c.epf_8;
-      acc.epf_12 += c.epf_12;
-      acc.epf_20 += c.epf_20;
-      acc.etf += c.etf;
-      acc.total_deduction += c.total_deduction;
       acc.balance += c.balance;
 
       return acc;
     },
     {
       amount: 0,
-      epf_8: 0,
-      epf_12: 0,
-      epf_20: 0,
-      etf: 0,
-      total_deduction: 0,
       balance: 0,
     }
   );
@@ -291,18 +272,6 @@ const totals = groupedData
       <hr/>
 
       <table style="width:100%; font-size:12px;">
-        <tr>
-          <td>EPF 8%</td>
-          <td style="text-align:right;">${c.epf_8.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>EPF 12%</td>
-          <td style="text-align:right;">${c.epf_12.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>ETF 3%</td>
-          <td style="text-align:right;">${c.etf.toFixed(2)}</td>
-        </tr>
         <tr>
           <td><b>Balance Pay</b></td>
           <td style="text-align:right;"><b>${c.balance.toFixed(2)}</b></td>
@@ -428,7 +397,7 @@ const printSlip = () => {
           color: "#fff",
         }}
       >
-        🌿 Plantation Payroll Dashboard
+        🌿 Rubber Tappers Dashboard
       </Typography>
 
       {/* ADD WORKER */}
@@ -449,26 +418,6 @@ const printSlip = () => {
               fullWidth
               value={name}
               onChange={(e) => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={5}>
-            <TextField
-              label="Rate per Day"
-              fullWidth
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={5}>
-            <TextField
-              label="EPF Number"
-              fullWidth
-              value={epf}
-              onChange={(e) => setEpf(e.target.value)}
               sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
@@ -508,39 +457,24 @@ const printSlip = () => {
 
           <Grid container spacing={2}>
 
-            {/* Worker */}
-            <Grid item xs={12} md={3}>
-              <FormControl sx={{ width: 250 }}>
-                <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
-                <Select
-                  value={workerId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setWorkerId(id);
-
-                    const selectedWorker = workers.find(w => w.id === id);
-                    setSelectedEpf(selectedWorker?.epf_no || "");
-                  }}
-                  sx={{ width: 250, color: "#fff" }}
-                >
-                  <MenuItem value="">Select Worker</MenuItem>
-                  {workers.map((w) => (
-                    <MenuItem key={w.id} value={w.id}>
-                      {w.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Grid item xs={12} md={5}>
+                <TextField
+                label="Enter the amount of liter"
+                fullWidth
+                value={liter}
+                onChange={(e) => setLiter(e.target.value)}
+                sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+                />
             </Grid>
 
-            <Grid item xs={12} md={3}>
-              <TextField
-                label="EPF Number"
-                value={selectedEpf}
+             <Grid item xs={12} md={5}>
+                <TextField
+                label="Rate Per Day"
                 fullWidth
-                InputProps={{ readOnly: true }}
+                value={rate}
+                onChange={(e) => setRate(e.target.value)}
                 sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-              />
+                />
             </Grid>
 
             {/* Allowance */}
@@ -628,14 +562,9 @@ const printSlip = () => {
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Balance</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Liter Amount</TableCell>
+              
               <TableCell>View</TableCell> 
             </TableRow>
           </TableHead>
@@ -651,32 +580,15 @@ const printSlip = () => {
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.rate_per_day}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.liter}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
                     {c.amount.toFixed(2)}
                   </TableCell>
-                  <TableCell sx={{ color: "#facc15" }}>
-                    {c.epf_8.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#f87171" }}>
-                    {c.total_deduction.toFixed(2)}
-                  </TableCell>
                   <TableCell sx={{ color: "#38bdf8" }}>
-                    {c.balance.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#a78bfa" }}>
-                    {c.epf_12.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#fb7185" }}>
-                    {c.epf_20.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#34d399" }}>
-                    {c.etf.toFixed(2)}
+                    {c.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -706,23 +618,8 @@ const printSlip = () => {
               <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
                 {totals.amount.toFixed(2)}
               </TableCell>
-              <TableCell sx={{ color: "#facc15", fontWeight: "bold" }}>
-                {totals.epf_8.toFixed(2)}
-              </TableCell>
-              <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
-                {totals.total_deduction.toFixed(2)}
-              </TableCell>
               <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
                 {totals.balance.toFixed(2)}
-              </TableCell>
-              <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
-                {totals.epf_12.toFixed(2)}
-              </TableCell>
-              <TableCell sx={{ color: "#fb7185", fontWeight: "bold" }}>
-                {totals.epf_20.toFixed(2)}
-              </TableCell>
-              <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
-                {totals.etf.toFixed(2)}
               </TableCell>
             </TableRow>
           </TableBody>

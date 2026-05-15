@@ -13,6 +13,7 @@ import Attendance from './pages/Attendance';
 import Payroll from './pages/Payroll';
 import Allowance from './pages/Allowances';
 import PlantationPayroll from './pages/PlantationWorkers';
+import RubberTappers from './pages/RubberTappers';
 
 function App() {
   const [page, setPage] = useState("employees");
@@ -137,6 +138,18 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                   <PlantationPayroll />
+                </motion.div>
+              )}
+
+              {page === "rubbertappers" && (
+                <motion.div
+                  key="rubbertappers"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <RubberTappers />
                 </motion.div>
               )}
 

@@ -15,7 +15,7 @@ import {
   Box
 } from "@mui/material";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = "http://localhost:5000";
 
 function Allowance() {
   const [employees, setEmployees] = useState([]);

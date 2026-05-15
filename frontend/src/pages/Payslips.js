@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import jsPDF from "jspdf";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = "http://localhost:5000";
 
 export default function Payslips() {
   const [data, setData] = useState([]);

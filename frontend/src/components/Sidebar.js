@@ -15,6 +15,7 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AgricultureIcon from '@mui/icons-material/Agriculture';
+import HailIcon from '@mui/icons-material/Hail';
 
 const drawerWidth = 240;
 
@@ -26,7 +27,8 @@ export default function Sidebar({ setPage, currentPage }) {
     { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
     { label: "Payroll", value: "payroll", icon: <PaymentsIcon /> },
     { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
-    { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> }
+    { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
+    { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />}
   ];
 
   return (
