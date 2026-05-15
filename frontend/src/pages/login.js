@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { TextField, Button, Paper, Typography } from '@mui/material';
-const API = "http://localhost:5000";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Login({ setIsLoggedIn }) {
   const [username, setUsername] = useState('');

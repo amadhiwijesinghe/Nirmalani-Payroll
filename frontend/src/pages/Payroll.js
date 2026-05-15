@@ -13,7 +13,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
-const API = "http://localhost:5000";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
 function Payroll() {
   const [data, setData] = useState([]);

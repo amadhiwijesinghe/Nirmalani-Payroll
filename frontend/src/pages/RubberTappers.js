@@ -18,9 +18,9 @@ import {
   InputLabel
 } from "@mui/material";
 
-const API = "http://localhost:5000";
+const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function PlantationPayroll() {
+export default function RubberTappers() {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
