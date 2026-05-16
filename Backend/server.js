@@ -492,18 +492,23 @@ app.get("/backup-db", async (req, res) => {
 
   try {
 
+    console.log("STEP 1 - Backup route started");
+
     const backupDir = path.join(__dirname, "backups");
 
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
 
+    console.log("STEP 2 - Backup folder ready");
+
     const fileName =
       `backup-${new Date().toISOString().split("T")[0]}.sql`;
 
     const filePath = path.join(backupDir, fileName);
 
-    // MYSQL EXPORT
+    console.log("STEP 3 - Starting mysqldump");
+
     await mysqldump({
       connection: {
         host: process.env.MYSQLHOST,
@@ -516,7 +521,8 @@ app.get("/backup-db", async (req, res) => {
       dumpToFile: filePath,
     });
 
-    // EMAIL TRANSPORT
+    console.log("STEP 4 - mysqldump completed");
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
 
@@ -526,7 +532,8 @@ app.get("/backup-db", async (req, res) => {
       },
     });
 
-    // SEND EMAIL
+    console.log("STEP 5 - Sending email");
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
@@ -543,6 +550,8 @@ app.get("/backup-db", async (req, res) => {
       ],
     });
 
+    console.log("STEP 6 - Email sent");
+
     res.json({
       success: true,
       message: "Backup emailed successfully"
@@ -550,6 +559,7 @@ app.get("/backup-db", async (req, res) => {
 
   } catch (err) {
 
+    console.log("BACKUP ERROR:");
     console.log(err);
 
     res.status(500).json({
