@@ -59,44 +59,34 @@ const fetchData = async () => {
   }
 };
 
-  const addWorker = async () => {
-    if (!name) return alert("Enter name and rate");
+const addWorker = async () => {
+
+  if (!name) {
+    return alert("Enter worker name");
+  }
 
     await axios.post(`${API}/rubber-tappers`, {
-      name,
-      rate_per_day: rate
+      name
     });
 
     setName("");
-    setLiter("");
-    setRate("");
-    setAllowance("");
-    fetchWorkers();
   };
 
 const viewAttendance = async (workerId, month) => {
 
-  console.log("CLICKED →", workerId, month); 
-
-  if (!workerId) {
-    alert("Worker ID is missing!");
-    return;
-  }
-
   try {
-    const res = await axios.get(`${API}/plantation-attendance-dates`, {
-      params: {
-        worker_id: workerId,
-        month: month,
-      },
-    });
 
-    console.log("DATA:", res.data); 
+    const filtered = data.filter(
+      (row) =>
+        row.worker_id === workerId &&
+        row.month === month
+    );
 
-    setAttendanceDates(res.data);
+    setAttendanceDates(filtered);
     setOpen(true);
 
   } catch (err) {
+
     console.error(err);
     alert("Server error");
   }
@@ -209,7 +199,7 @@ const totals = groupedData
         </tr>
         <tr>
           <td>Rate per Day</td>
-          <td style="text-align:right;">${row.rate_per_day}</td>
+          <td style="text-align:right;">${row.rate}</td>
         </tr>
         <tr>
           <td>Allowance</td>
@@ -255,7 +245,7 @@ const printSlip = () => {
     const chunk = rows.slice(i, i + 2);
 
     const slips = chunk.map(row => {
-      const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+      const c = calculate(row.liter, row.rate, row.allowance || 0);
       return generateSlipHTML(row, c);
     }).join("");
 

@@ -366,11 +366,11 @@ app.get('/rubber-tappers', (req, res) => {
 
 app.post('/rubber-tappers', (req, res) => {
 
-  const { name, rate_per_day } = req.body;
+  const { name } = req.body;
 
   db.query(
-    "INSERT INTO rubber_tappers (name, rate_per_day) VALUES (?, ?)",
-    [name, rate_per_day],
+    "INSERT INTO rubber_tappers (name) VALUES (?)",
+    [name],
     (err, result) => {
 
       if (err) {
