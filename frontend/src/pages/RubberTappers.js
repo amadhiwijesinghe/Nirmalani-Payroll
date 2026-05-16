@@ -65,12 +65,25 @@ const addWorker = async () => {
     return alert("Enter worker name");
   }
 
+  try {
+
     await axios.post(`${API}/rubber-tappers`, {
       name
     });
 
     setName("");
-  };
+
+    fetchWorkers();
+
+    alert("Worker Added");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Failed to add worker");
+  }
+};
 
 const viewAttendance = async (workerId, month) => {
 
@@ -406,6 +419,7 @@ const printSlip = () => {
                 value={workerId}
                 onChange={(e) => setWorkerId(e.target.value)}
                 sx={{
+                  width: 250,
                   color: "#fff",
                 }}
               >
@@ -542,7 +556,6 @@ const printSlip = () => {
               <TableCell sx={{ color: "#aaa" }}>Total Earnings</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Actions</TableCell>
               
-              <TableCell>View</TableCell> 
             </TableRow>
           </TableHead>
 
