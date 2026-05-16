@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");   // ✅ FIXED
 const mysql = require("mysql2");
 
-const nodemailer = require("nodemailer");
 const mysqldump = require("mysqldump");
 const fs = require("fs");
 const path = require("path");
@@ -492,7 +491,7 @@ app.get("/backup-db", async (req, res) => {
 
   try {
 
-    console.log("STEP 1 - Backup route started");
+    console.log("STEP 1 - Backup started");
 
     const backupDir = path.join(__dirname, "backups");
 
@@ -500,14 +499,12 @@ app.get("/backup-db", async (req, res) => {
       fs.mkdirSync(backupDir);
     }
 
-    console.log("STEP 2 - Backup folder ready");
-
     const fileName =
       `backup-${new Date().toISOString().split("T")[0]}.sql`;
 
     const filePath = path.join(backupDir, fileName);
 
-    console.log("STEP 3 - Starting mysqldump");
+    console.log("STEP 2 - Running mysqldump");
 
     await mysqldump({
       connection: {
@@ -521,55 +518,14 @@ app.get("/backup-db", async (req, res) => {
       dumpToFile: filePath,
     });
 
-    console.log("STEP 4 - mysqldump completed");
+    console.log("STEP 3 - Backup completed");
 
-    const transporter = nodemailer.createTransport({
-
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false,
-
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    console.log("STEP 5 - Sending email");
-
-    await transporter.sendMail({
-
-      from: process.env.SMTP_USER,
-
-      to: "nirmalaniplantation@gmail.com",
-
-      subject: "Monthly Payroll Backup",
-
-      text: "Attached is your payroll database backup.",
-
-      attachments: [
-    {
-      filename: fileName,
-      path: filePath,
-    },
-  ],
-});
-
-    console.log("STEP 6 - Email sent");
-
-    res.json({
-      success: true,
-      message: "Backup emailed successfully"
-    });
+    // DOWNLOAD FILE
+    res.download(filePath, fileName);
 
   } catch (err) {
 
-    console.log("BACKUP ERROR:");
-    console.log(err);
+    console.log("BACKUP ERROR:", err);
 
     res.status(500).json({
       error: err.message
