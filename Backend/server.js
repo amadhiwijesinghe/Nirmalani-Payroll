@@ -529,6 +529,10 @@ app.get("/backup-db", async (req, res) => {
       port: 587,
       secure: false,
 
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -538,7 +542,9 @@ app.get("/backup-db", async (req, res) => {
     console.log("STEP 5 - Sending email");
 
     await transporter.sendMail({
-      from: "nirmalaniplantation@gmail.com",
+
+      from: process.env.SMTP_USER,
+
       to: "nirmalaniplantation@gmail.com",
 
       subject: "Monthly Payroll Backup",
@@ -546,12 +552,12 @@ app.get("/backup-db", async (req, res) => {
       text: "Attached is your payroll database backup.",
 
       attachments: [
-        {
-          filename: fileName,
-          path: filePath,
-        },
-      ],
-    });
+    {
+      filename: fileName,
+      path: filePath,
+    },
+  ],
+});
 
     console.log("STEP 6 - Email sent");
 
