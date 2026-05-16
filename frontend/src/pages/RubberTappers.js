@@ -29,8 +29,6 @@ export default function RubberTappers() {
   const [liter, setLiter] = useState("");
 
   const [workerId, setWorkerId] = useState("");
-  const [days, setDays] = useState("");
-  const [month, setMonth] = useState("");
   const [allowance, setAllowance] = useState("");
 
   const [date, setDate] = useState("");
@@ -46,14 +44,8 @@ export default function RubberTappers() {
     
   }, []);
 
-  useEffect(() => {
-  if (workerId && month) {
-    fetchDaysWorked(workerId, month);
-  }
-}, [workerId, month]);
-
   const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/plantation-workers`);
+    const res = await axios.get(`${API}/rubber-tappers`);
     setWorkers(res.data);
   };
 
@@ -66,34 +58,13 @@ const fetchData = async () => {
     console.error(err);
   }
 };
-  const fetchDaysWorked = async (worker, monthVal) => {
-  if (!worker || !monthVal) return;
-
-  try {
-    const res = await axios.get(
-      `${API}/plantation-attendance-days`,
-      {
-        params: {
-          worker_id: worker,
-          month: monthVal,
-        },
-      }
-    );
-
-    setDays(res.data.days);
-  } catch (err) {
-    console.error(err);
-  }
-};
 
   const addWorker = async () => {
     if (!name) return alert("Enter name and rate");
 
     await axios.post(`${API}/rubber-tappers`, {
       name,
-      liter: liter,
-      rate_per_day: rate,
-      allowance
+      rate_per_day: rate
     });
 
     setName("");
@@ -101,23 +72,6 @@ const fetchData = async () => {
     setRate("");
     setAllowance("");
     fetchWorkers();
-  };
-
-  const addAttendance = async () => {
-    if (!workerId || !days || !month)
-      return alert("Fill all fields");
-
-    await axios.post(`${API}/plantation-attendance`, {
-      worker_id: workerId,
-      days_worked: days,
-      month,
-      allowance
-    });
-
-    setDays("");
-    setMonth("");
-    fetchData();
-    setAllowance("");
   };
 
 const viewAttendance = async (workerId, month) => {
@@ -149,65 +103,60 @@ const viewAttendance = async (workerId, month) => {
 };
 
 const addDailyAttendance = async () => {
-  if (!workerId || !date) {
-    alert("Select worker and date");
+
+  if (!workerId || !liter || !rate || !date) {
+    alert("Fill all fields");
     return;
   }
 
   try {
-    // 1. Save daily attendance
-    await axios.post(`${API}/plantation-daily-attendance`, {
+
+    const total =
+      (Number(liter) * Number(rate)) +
+      Number(allowance || 0);
+
+    await axios.post(`${API}/rubber-tappers-attendance`, {
       worker_id: workerId,
+      liter,
+      rate,
+      allowance,
+      total_earning: total,
       date,
       status: "present"
     });
 
-    // 2. Extract month from date
-    const selectedMonth = date.substring(0, 7); // "2026-05"
+    alert("✅ Attendance Added");
 
-    // 3. Get total days for that month
-    const res = await axios.get(`${API}/plantation-attendance-days`, {
-      params: {
-        worker_id: workerId,
-        month: selectedMonth
-      }
-    });
+    setLiter("");
+    setRate("");
+    setAllowance("");
+    setDate("");
 
-    const daysWorked = res.data.days;
-
- // 4. SAVE / UPDATE monthly attendance automatically
-    await axios.post(`${API}/plantation-attendance`, {
-      worker_id: workerId,
-      days_worked: daysWorked,
-      month: selectedMonth
-    });
-
-   // 🔥 Refresh table ONLY ONCE (clean way)
-    await fetchData();
-
-    alert("✅ Attendance marked & updated!");
+    fetchData();
 
   } catch (err) {
-    if (err.response?.data === "Already marked for this date") {
-      alert("⚠️ Already marked for this date");
-    } else {
-      console.error(err);
-    }
+    console.error(err);
+
+    alert(
+      err.response?.data?.message ||
+      "Server Error"
+    );
   }
 };
 
 
   // 🔥 CALCULATE
-  const calculate = (liter, rate, allowance = 0) => {
-    const amount = (Number(liter || 0) * Number(rate || 0)) +
-    Number(allowance || 0);
-    const balance = amount;
+const calculate = (liter, rate, allowance = 0) => {
 
-    return {
-      amount,
-      balance: amount,
-    };
+  const amount =
+    (Number(liter || 0) * Number(rate || 0)) +
+    Number(allowance || 0);
+
+  return {
+    amount,
+    balance: amount,
   };
+};
 
   // 🔥 GRAND TOTAL
 
@@ -222,13 +171,12 @@ const addDailyAttendance = async () => {
 
 const totals = groupedData
   .filter((row) =>
-  row.days_worked > 0 &&
   row.month &&
   (!filterMonth || row.month === filterMonth)
 )
   .reduce(
     (acc, row) => {
-      const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+      const c = calculate(row.liter, row.rate, row.allowance || 0);
 
       acc.amount += c.amount;
       acc.balance += c.balance;
@@ -256,16 +204,16 @@ const totals = groupedData
 
       <table style="width:100%; font-size:12px;">
         <tr>
-          <td>Days Worked</td>
-          <td style="text-align:right;">${row.days_worked}</td>
+          <td>Liter</td>
+          <td style="text-align:right;">${row.liter}</td>
         </tr>
         <tr>
           <td>Rate per Day</td>
           <td style="text-align:right;">${row.rate_per_day}</td>
         </tr>
         <tr>
-          <td><b>Total Pay</b></td>
-          <td style="text-align:right;">${c.amount.toFixed(2)}</td>
+          <td>Allowance</td>
+          <td style="text-align:right;">${row.allowance || 0}</td>
         </tr>
       </table>
 
@@ -299,7 +247,7 @@ const totals = groupedData
 const printSlip = () => {
 
   const rows = groupedData
-    .filter(row => row.days_worked > 0 && (!filterMonth || row.month === filterMonth));
+    .filter(row => (!filterMonth || row.month === filterMonth));
 
   let pagesHTML = "";
 
@@ -441,83 +389,120 @@ const printSlip = () => {
       </Paper>
 
       {/* DAILY ATTENDANCE */}
-        <Paper
-          sx={{
-            p: 3,
-            mb: 4,
-            borderRadius: 5,
-            backdropFilter: "blur(20px)",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          <Typography sx={{ color: "#fff", mb: 2 }}>
-            📅 Daily Attendance
-          </Typography>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <Typography sx={{ color: "#fff", mb: 2 }}>
+          📅 Daily Attendance
+        </Typography>
 
-          <Grid container spacing={2}>
+        <Grid container spacing={2}>
 
-            <Grid item xs={12} md={5}>
-                <TextField
-                label="Enter the amount of liter"
-                fullWidth
-                value={liter}
-                onChange={(e) => setLiter(e.target.value)}
-                sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-                />
-            </Grid>
+          {/* Worker Select */}
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: "#aaa" }}>
+                Select Worker
+              </InputLabel>
 
-             <Grid item xs={12} md={5}>
-                <TextField
-                label="Rate Per Day"
-                fullWidth
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-                />
-            </Grid>
-
-            {/* Allowance */}
-            <Grid item xs={12} md={3}>
-              <TextField
-                label="Enter the Allowance"
-                type="number"
-                fullWidth
-                value={allowance}
-                onChange={(e) => setAllowance(e.target.value)}
-                sx={{ input: { color: "#fff" } }}
-              />
-            </Grid>
-
-              {/* Date */}
-            <Grid item xs={12} md={3}>
-              <TextField
-                type="date"
-                fullWidth
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                sx={{ input: { color: "#fff" } }}
-              />
-            </Grid>
-
-            {/* Button */}
-            <Grid item xs={12} md={3}>
-              <Button
-                fullWidth
-                onClick={addDailyAttendance}
+              <Select
+                value={workerId}
+                onChange={(e) => setWorkerId(e.target.value)}
                 sx={{
-                  height: "100%",
-                  borderRadius: 3,
-                  background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                  color: "#000",
+                  color: "#fff",
                 }}
               >
-                Mark Present
-              </Button>
-            </Grid>
-
+                {workers.map((worker) => (
+                  <MenuItem key={worker.id} value={worker.id}>
+                    {worker.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
-        </Paper>
+
+          {/* Liter */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              label="Liter"
+              type="number"
+              fullWidth
+              value={liter}
+              onChange={(e) => setLiter(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* Rate */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              label="Rate"
+              type="number"
+              fullWidth
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* Allowance */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              label="Allowance"
+              type="number"
+              fullWidth
+              value={allowance}
+              onChange={(e) => setAllowance(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* Date */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              type="date"
+              fullWidth
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+              }}
+            />
+          </Grid>
+
+          {/* Button */}
+          <Grid item xs={12} md={1}>
+            <Button
+              fullWidth
+              onClick={addDailyAttendance}
+              sx={{
+                height: "100%",
+                borderRadius: 3,
+                background: "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+              }}
+            >
+              Save
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
       {/* TABLE */}
       <Paper
@@ -560,10 +545,12 @@ const printSlip = () => {
             <TableRow>
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Date</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Liter Amount</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Total Earnings</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Actions</TableCell>
               
               <TableCell>View</TableCell> 
             </TableRow>
@@ -572,22 +559,21 @@ const printSlip = () => {
           <TableBody>
             {groupedData
               .filter((row) =>
-                row.days_worked > 0 &&
                 (!filterMonth || row.month === filterMonth)
               )
               .map((row) => {
-              const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+              const c = calculate(row.liter, row.rate, row.allowance);
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell sx={{ color: "#fff" }}>{row.liter}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.date}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.liter}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
-                    {c.amount.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#38bdf8" }}>
                     {c.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>

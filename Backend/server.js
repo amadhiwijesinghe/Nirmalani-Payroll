@@ -390,6 +390,100 @@ app.get('/rubber-tappers-data', (req, res) => {
 
 });
 
+// ================= RUBBER TAPPERS ATTENDANCE =================
+
+// ADD DAILY ATTENDANCE
+app.post("/rubber-tappers-attendance", (req, res) => {
+
+  const {
+    worker_id,
+    liter,
+    rate,
+    allowance,
+    total_earning,
+    date,
+    status
+  } = req.body;
+
+  const sql = `
+    INSERT INTO rubber_tappers_attendance
+    (
+      worker_id,
+      liter,
+      rate,
+      allowance,
+      total_earning,
+      date,
+      status
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      liter,
+      rate,
+      allowance || 0,
+      total_earning || 0,
+      date,
+      status || "present"
+    ],
+    (err, result) => {
+
+      if (err) {
+
+        console.log(err);
+
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(400).json({
+            message: "Already marked for this date"
+          });
+        }
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Attendance Saved"
+      });
+    }
+  );
+});
+
+// GET ALL DATA
+app.get("/rubber-tappers-data", (req, res) => {
+
+  const sql = `
+    SELECT
+      rta.id,
+      rta.worker_id,
+      rt.name,
+      rta.liter,
+      rta.rate,
+      rta.allowance,
+      rta.total_earning,
+      rta.date,
+      DATE_FORMAT(rta.date, '%Y-%m') AS month,
+      rta.status
+    FROM rubber_tappers_attendance rta
+    JOIN rubber_tappers rt
+      ON rt.id = rta.worker_id
+    ORDER BY rta.date DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.status(500).send(err);
+    }
+
+    res.json(result);
+  });
+});
 
 // ================= SERVER =================
 
