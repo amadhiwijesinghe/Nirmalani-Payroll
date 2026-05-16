@@ -488,3 +488,87 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
+
+const mysqldump = require("mysqldump");
+const fs = require("fs");
+const path = require("path");
+
+const { google } = require("googleapis");
+
+const KEYFILEPATH = path.join(
+  __dirname,
+  "config/google-service-account.json"
+);
+
+const SCOPES = [
+  "https://www.googleapis.com/auth/drive"
+];
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: KEYFILEPATH,
+  scopes: SCOPES,
+});
+
+const drive = google.drive({
+  version: "v3",
+  auth,
+});
+
+app.get("/backup-db", async (req, res) => {
+
+  try {
+
+    const backupDir = path.join(__dirname, "backups");
+
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir);
+    }
+
+    const fileName =
+      `backup-${new Date().toISOString().split("T")[0]}.sql`;
+
+    const filePath = path.join(backupDir, fileName);
+
+    // MYSQL EXPORT
+    await mysqldump({
+      connection: {
+        host: process.env.MYSQLHOST,
+        user: process.env.MYSQLUSER,
+        password: process.env.MYSQLPASSWORD,
+        database: process.env.MYSQLDATABASE,
+        port: process.env.MYSQLPORT
+      },
+
+      dumpToFile: filePath,
+    });
+
+    // GOOGLE DRIVE UPLOAD
+    const response = await drive.files.create({
+      requestBody: {
+        name: fileName,
+
+        parents: [
+          "14c1OqxWdgc3aw68TabIwkr37-DpxMaYM"
+        ]
+      },
+
+      media: {
+        mimeType: "application/sql",
+        body: fs.createReadStream(filePath),
+      },
+    });
+
+    res.json({
+      success: true,
+      fileId: response.data.id
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
