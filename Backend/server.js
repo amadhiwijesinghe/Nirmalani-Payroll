@@ -365,29 +365,25 @@ app.get('/rubber-tappers', (req, res) => {
 });
 
 app.post('/rubber-tappers', (req, res) => {
-  const { name, rate_per_day, liter, allowance} = req.body;
+
+  const { name, rate_per_day } = req.body;
 
   db.query(
-    "INSERT INTO rubber_tappers (name, rate_per_day, liter, allowance) VALUES (?, ?, ?, ?)",
-    [name, rate_per_day, liter, allowance],
+    "INSERT INTO rubber_tappers (name, rate_per_day) VALUES (?, ?)",
+    [name, rate_per_day],
     (err, result) => {
-      if (err) return res.status(500).send(err);
-      res.json({ message: "Worker added" });
+
+      if (err) {
+        console.log("SQL ERROR:", err);
+        return res.status(500).send(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Worker added"
+      });
     }
   );
-});
-
-app.get('/rubber-tappers-data', (req, res) => {
-
-  db.query(
-    "SELECT * FROM rubber_tappers ORDER BY id DESC",
-    (err, result) => {
-      if (err) return res.status(500).send(err);
-
-      res.json(result);
-    }
-  );
-
 });
 
 // ================= RUBBER TAPPERS ATTENDANCE =================
