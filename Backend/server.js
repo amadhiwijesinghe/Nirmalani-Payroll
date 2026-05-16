@@ -2,6 +2,11 @@ const express = require("express");
 const cors = require("cors");   // ✅ FIXED
 const mysql = require("mysql2");
 
+const nodemailer = require("nodemailer");
+const mysqldump = require("mysqldump");
+const fs = require("fs");
+const path = require("path");
+
 const app = express();
 
 app.use(cors({
@@ -481,37 +486,7 @@ app.get("/rubber-tappers-data", (req, res) => {
   });
 });
 
-// ================= SERVER =================
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
-
-const mysqldump = require("mysqldump");
-const fs = require("fs");
-const path = require("path");
-
-const { google } = require("googleapis");
-
-const SCOPES = [
-  "https://www.googleapis.com/auth/drive"
-];
-
-const serviceAccount = JSON.parse(
-  process.env.GOOGLE_SERVICE_ACCOUNT
-);
-
-const auth = new google.auth.GoogleAuth({
-  credentials: serviceAccount,
-  scopes: SCOPES,
-});
-
-const drive = google.drive({
-  version: "v3",
-  auth,
-});
+// ================= DATABASE BACKUP =================
 
 app.get("/backup-db", async (req, res) => {
 
@@ -541,25 +516,36 @@ app.get("/backup-db", async (req, res) => {
       dumpToFile: filePath,
     });
 
-    // GOOGLE DRIVE UPLOAD
-    const response = await drive.files.create({
-      requestBody: {
-        name: fileName,
+    // EMAIL TRANSPORT
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
 
-        parents: [
-          "14c1OqxWdgc3aw68TabIwkr37-DpxMaYM"
-        ]
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
+    });
 
-      media: {
-        mimeType: "application/sql",
-        body: fs.createReadStream(filePath),
-      },
+    // SEND EMAIL
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+
+      subject: "Monthly Payroll Backup",
+
+      text: "Attached is your payroll database backup.",
+
+      attachments: [
+        {
+          filename: fileName,
+          path: filePath,
+        },
+      ],
     });
 
     res.json({
       success: true,
-      fileId: response.data.id
+      message: "Backup emailed successfully"
     });
 
   } catch (err) {
@@ -571,3 +557,12 @@ app.get("/backup-db", async (req, res) => {
     });
   }
 });
+
+// ================= SERVER =================
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
+
