@@ -5,6 +5,7 @@ const mysql = require("mysql2");
 const mysqldump = require("mysqldump");
 const fs = require("fs");
 const path = require("path");
+const PDFDocument = require("pdfkit");
 
 const app = express();
 
@@ -507,12 +508,30 @@ app.get("/backup-db", async (req, res) => {
     console.log("STEP 2 - Running mysqldump");
 
     await mysqldump({
+
       connection: {
         host: process.env.MYSQLHOST,
         user: process.env.MYSQLUSER,
         password: process.env.MYSQLPASSWORD,
         database: process.env.MYSQLDATABASE,
         port: process.env.MYSQLPORT
+      },
+
+      dump: {
+
+        schema: false,
+
+        data: {
+          tables: [
+            "employees",
+            "attendance",
+            "allowances",
+            "rubber_tappers",
+            "rubber_tappers_attendance",
+            "plantation_workers",
+            "plantation_daily_attendance"
+          ]
+        }
       },
 
       dumpToFile: filePath,
@@ -530,6 +549,223 @@ app.get("/backup-db", async (req, res) => {
     res.status(500).json({
       error: err.message
     });
+  }
+});
+
+// ================= FULL SYSTEM PDF REPORT =================
+
+app.get("/full-system-report/:month", async (req, res) => {
+
+  const month = req.params.month;
+
+  try {
+
+    // EMPLOYEES
+    const employees = await new Promise((resolve, reject) => {
+
+      db.query(
+        "SELECT * FROM employees",
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+
+    // ATTENDANCE
+    const attendance = await new Promise((resolve, reject) => {
+
+      const sql = `
+        SELECT a.*, e.name
+        FROM attendance a
+        JOIN employees e
+          ON e.memberid = a.memberid
+        WHERE a.month = ?
+      `;
+
+      db.query(sql, [month], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    // ALLOWANCES
+    const allowances = await new Promise((resolve, reject) => {
+
+      const sql = `
+        SELECT al.*, e.name
+        FROM allowances al
+        JOIN employees e
+          ON e.memberid = al.memberid
+        WHERE al.month = ?
+      `;
+
+      db.query(sql, [month], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    // RUBBER TAPPERS
+    const rubber = await new Promise((resolve, reject) => {
+
+      const sql = `
+        SELECT
+          rt.name,
+          rta.*
+        FROM rubber_tappers_attendance rta
+        JOIN rubber_tappers rt
+          ON rt.id = rta.worker_id
+        WHERE DATE_FORMAT(rta.date, '%Y-%m') = ?
+      `;
+
+      db.query(sql, [month], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    // CREATE PDF
+    const doc = new PDFDocument({
+      margin: 40,
+      size: "A4"
+    });
+
+    const fileName =
+      `full-system-report-${month}.pdf`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+
+    doc.pipe(res);
+
+    // TITLE
+    doc
+      .fontSize(22)
+      .text(
+        "Nirmalani Plantation Full System Report",
+        { align: "center" }
+      );
+
+    doc.moveDown();
+
+    doc
+      .fontSize(16)
+      .text(`Month: ${month}`);
+
+    doc.moveDown(2);
+
+    // ================= EMPLOYEES =================
+
+    doc
+      .fontSize(18)
+      .text("Employees");
+
+    doc.moveDown();
+
+    employees.forEach(emp => {
+
+      doc
+        .fontSize(12)
+        .text(
+          `Name: ${emp.name} | Member ID: ${emp.memberid} | Salary: Rs.${emp.basic_salary}`
+        );
+    });
+
+    doc.moveDown(2);
+
+    // ================= ATTENDANCE =================
+
+    doc
+      .fontSize(18)
+      .text("Attendance");
+
+    doc.moveDown();
+
+    attendance.forEach(a => {
+
+      doc
+        .fontSize(12)
+        .text(
+          `${a.name} | ${a.date.toISOString().split("T")[0]} | Present: ${a.present}`
+        );
+    });
+
+    doc.moveDown(2);
+
+    // ================= ALLOWANCES =================
+
+    doc
+      .fontSize(18)
+      .text("Allowances");
+
+    doc.moveDown();
+
+    allowances.forEach(al => {
+
+      doc
+        .fontSize(12)
+        .text(
+          `${al.name} | Rs.${al.amount}`
+        );
+    });
+
+    doc.moveDown(2);
+
+    // ================= RUBBER TAPPERS =================
+
+    doc
+      .fontSize(18)
+      .text("Rubber Tappers");
+
+    doc.moveDown();
+
+    let rubberTotal = 0;
+
+    rubber.forEach(r => {
+
+      rubberTotal += Number(r.total_earning);
+
+      doc
+        .fontSize(12)
+        .text(
+          `${r.name} | ${r.date.toISOString().split("T")[0]} | Liter: ${r.liter} | Rate: ${r.rate} | Total: Rs.${r.total_earning}`
+        );
+    });
+
+    doc.moveDown();
+
+    doc
+      .fontSize(14)
+      .text(
+        `Rubber Tappers Total: Rs.${rubberTotal.toFixed(2)}`
+      );
+
+    doc.moveDown(3);
+
+    doc
+      .fontSize(12)
+      .text(
+        "Generated Automatically by Nirmalani Payroll System",
+        {
+          align: "center"
+        }
+      );
+
+    doc.end();
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json(err);
   }
 });
 
