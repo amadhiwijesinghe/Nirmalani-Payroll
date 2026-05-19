@@ -416,6 +416,32 @@ const printSlip = () => {
   win.document.close();
 };
 
+const deleteAttendance = async (id) => {
+
+  if (!window.confirm("Delete attendance?")) return;
+
+  try {
+
+    await axios.delete(
+      `${API}/plantation-daily-attendance/${id}`
+    );
+
+    alert("✅ Attendance Deleted");
+
+    setAttendanceDates(
+      attendanceDates.filter(d => d.id !== id)
+    );
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Error deleting attendance");
+  }
+};
+
   return (
     <Box
       sx={{
@@ -744,10 +770,36 @@ const printSlip = () => {
         No attendance found
       </Typography>
     ) : (
-      attendanceDates.map((d, i) => (
-        <Typography key={i} sx={{ color: "#38bdf8" }}>
-          {d.date}
-        </Typography>
+      attendanceDates.map((d) => (
+
+        <Box
+          key={d.id}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 1
+          }}
+        >
+
+          <Typography sx={{ color: "#38bdf8" }}>
+            {d.date}
+          </Typography>
+
+          <Button
+            size="small"
+            onClick={() =>
+              deleteAttendance(d.id)
+            }
+            sx={{
+              background: "#ef4444",
+              color: "#fff"
+            }}
+          >
+            Delete
+          </Button>
+
+        </Box>
       ))
     )}
 

@@ -341,7 +341,7 @@ app.get("/plantation-attendance-dates", (req, res) => {
   }
 
   const sql = `
-    SELECT date
+    SELECT id, date
     FROM plantation_daily_attendance
     WHERE worker_id = ?
     AND date LIKE CONCAT(?, '%')
@@ -358,6 +358,29 @@ app.get("/plantation-attendance-dates", (req, res) => {
   });
 });
 
+// ================= DELETE PLANTATION ATTENDANCE =================
+
+app.delete("/plantation-daily-attendance/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  db.query(
+    "DELETE FROM plantation_daily_attendance WHERE id = ?",
+    [id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Attendance deleted"
+      });
+    }
+  );
+});
 
 // ================= RUBBER TAPPERS ============
 //ADD
