@@ -97,8 +97,11 @@ const fetchData = async () => {
       epf_no: epf
     });
 
+    alert("✅ Worker Added Successfully!");
+
     setName("");
     setRate("");
+    setEpf("");
     fetchWorkers();
   };
 
@@ -112,6 +115,8 @@ const fetchData = async () => {
       month,
       allowance
     });
+
+    alert("✅ Worker Attendance Added Successfully!");
 
     setDays("");
     setMonth("");
