@@ -509,6 +509,30 @@ app.get("/rubber-tappers-data", (req, res) => {
   });
 });
 
+// ================= DELETE RUBBER TAPPER ATTENDANCE =================
+
+app.delete("/rubber-tappers-attendance/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  db.query(
+    "DELETE FROM rubber_tappers_attendance WHERE id = ?",
+    [id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Attendance deleted"
+      });
+    }
+  );
+});
+
 // ================= DATABASE BACKUP =================
 
 app.get("/backup-db", async (req, res) => {
