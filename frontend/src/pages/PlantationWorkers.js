@@ -157,23 +157,33 @@ const viewAttendance = async (workerId, month) => {
 };
 
 const addDailyAttendance = async () => {
-  if (!workerId || !date) {
-    alert("Select worker and date");
+  if (!workerId || !date || !dailyRate) {
+    alert("Enter worker, date and rate");
     return;
   }
 
   try {
-    // 1. Save daily attendance
+
+    // CHECK IF SUNDAY
+    const dayName = new Date(date).getDay();
+
+    // Sunday = 0
+    const finalRate =
+      dayName === 0
+        ? Number(dailyRate) * 1.5
+        : Number(dailyRate);
+    // Save daily attendance
     await axios.post(`${API}/plantation-daily-attendance`, {
       worker_id: workerId,
       date,
-      status: "present"
+      status: "present",
+      rate_per_day: finalRate
     });
 
-    // 2. Extract month from date
-    const selectedMonth = date.substring(0, 7); // "2026-05"
+    // Extract month from date
+    const selectedMonth = date.substring(0, 7);
 
-    // 3. Get total days for that month
+    // Get total days for that month
     const res = await axios.get(`${API}/plantation-attendance-days`, {
       params: {
         worker_id: workerId,
@@ -183,19 +193,31 @@ const addDailyAttendance = async () => {
 
     const daysWorked = res.data.days;
 
- // 4. SAVE / UPDATE monthly attendance automatically
+    console.log("dailyRate =", dailyRate);
+    console.log("finalRate =", finalRate);
+
+ // SAVE / UPDATE monthly attendance automatically
    await axios.post(`${API}/plantation-attendance`, {
       worker_id: workerId,
       days_worked: daysWorked,
       month: selectedMonth,
-      rate_per_day: dailyRate,
+      rate_per_day: finalRate,
       allowance
     });
 
    // 🔥 Refresh table ONLY ONCE (clean way)
     await fetchData();
 
-    alert("✅ Attendance marked & updated!");
+    if (dayName === 0) {
+
+      alert(
+        `✅ Sunday attendance marked!\nSunday Rate Applied: Rs.${finalRate}`
+      );
+
+    } else {
+
+      alert("✅ Attendance marked & updated!");
+    }
 
   } catch (err) {
     if (err.response?.data === "Already marked for this date") {
@@ -1090,7 +1112,28 @@ const updateWorker = async () => {
         >
 
           <Typography sx={{ color: "#38bdf8" }}>
-            {d.date}
+            {new Date(d.date).toLocaleDateString(
+              "en-CA",
+              {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+              }
+            )}
+
+            {" - "}
+
+            {new Date(d.date).toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long"
+              }
+            )}
+
+            {" - Rs."}
+
+            {d.rate_per_day ?? 0}
+
           </Typography>
 
           <Button

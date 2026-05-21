@@ -372,14 +372,34 @@ app.put("/plantation-attendance", (req, res) => {
 
 // 🌿 Daily Attendance
 app.post("/plantation-daily-attendance", (req, res) => {
-  const { worker_id, date, status } = req.body;
+
+  const {
+    worker_id,
+    date,
+    status,
+    rate_per_day
+  } = req.body;
 
   const sql = `
-    INSERT INTO plantation_daily_attendance (worker_id, date, status)
-    VALUES (?, ?, ?)
+    INSERT INTO plantation_daily_attendance
+    (
+      worker_id,
+      date,
+      status,
+      rate_per_day
+    )
+    VALUES (?, ?, ?, ?)
   `;
 
-  db.query(sql, [worker_id, date, status], (err) => {
+  db.query(
+    sql,
+    [
+      worker_id,
+      date,
+      status,
+      rate_per_day
+    ],
+    (err) => {
     if (err) {
       if (err.code === "ER_DUP_ENTRY") {
         return res.status(400).send("Already marked for this date");
@@ -464,13 +484,15 @@ app.get('/plantation-data', (req, res) => {
 app.get("/plantation-attendance-dates", (req, res) => {
   const { worker_id, month } = req.query;
 
-  // 🔴 IMPORTANT: check inputs
   if (!worker_id || !month) {
     return res.status(400).json({ error: "Missing worker_id or month" });
   }
 
   const sql = `
-    SELECT id, date
+    SELECT
+      id,
+      date,
+      rate_per_day
     FROM plantation_daily_attendance
     WHERE worker_id = ?
     AND date LIKE CONCAT(?, '%')
