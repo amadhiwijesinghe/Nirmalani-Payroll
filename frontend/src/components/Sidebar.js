@@ -17,6 +17,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AgricultureIcon from '@mui/icons-material/Agriculture';
 import HailIcon from '@mui/icons-material/Hail';
 import YardIcon from '@mui/icons-material/Yard';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 const drawerWidth = 240;
 
@@ -31,6 +32,7 @@ export default function Sidebar({ setPage, currentPage }) {
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
+    { label: "DPL Dispatch", value:"rubberdispatch", icon: <LocalShippingIcon />}
 
   ];
 

@@ -1251,6 +1251,65 @@ app.put("/rubber-dispatch/:id", (req, res) => {
   );
 });
 
+// ================= RUBBER COLLECTION =================
+
+// ADD COLLECTION
+app.post("/rubber-collection", (req, res) => {
+
+  const {
+    liters_collected,
+    date
+  } = req.body;
+
+  const sql = `
+    INSERT INTO rubber_collection
+    (
+      liters_collected,
+      date
+    )
+    VALUES (?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      liters_collected,
+      date
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Collection Saved"
+      });
+    }
+  );
+});
+
+app.get("/rubber-collection", (req, res) => {
+
+  const sql = `
+    SELECT *
+    FROM rubber_collection
+    ORDER BY date DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+  });
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
