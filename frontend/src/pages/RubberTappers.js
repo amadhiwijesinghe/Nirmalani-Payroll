@@ -618,6 +618,19 @@ const editAttendance = async (row) => {
             >
               Clear
             </Button>
+
+            <Button
+              onClick={printSlip}
+              sx={{
+                ml: 2,
+                background: "#22c55e",
+                color: "#000",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              PRINT PAYSLIPS
+            </Button>
         </Box>
         <Table>
           <TableHead>
@@ -655,30 +668,45 @@ const editAttendance = async (row) => {
                     {c.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      onClick={() => viewAttendance(row.worker_id, row.month)}
-                      sx={{ background: "#38bdf8", color: "#000" }}
-                    >
-                      View
-                    </Button>
 
-                    <Button
-                      onClick={() => editAttendance(row)}
-                      sx={{
-                        background: "#facc15",
-                        color: "#000",
-                        ml: 1
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={printSlip}
-                      sx={{ background: "#22c55e", color: "#000" }}
-                    >
-                      Print
-                    </Button>
-                  </TableCell>
+                  {/* VIEW */}
+                  <Button
+                    onClick={() =>
+                      viewAttendance(row.worker_id, row.month)
+                    }
+                    sx={{
+                      background: "#38bdf8",
+                      color: "#000"
+                    }}
+                  >
+                    View
+                  </Button>
+
+                  {/* EDIT */}
+                  <Button
+                    onClick={() => editAttendance(row)}
+                    sx={{
+                      background: "#facc15",
+                      color: "#000",
+                      ml: 1
+                    }}
+                  >
+                    Edit
+                  </Button>
+
+                  {/* DELETE */}
+                  <Button
+                    onClick={() => deleteAttendance(row.id)}
+                    sx={{
+                      background: "#ef4444",
+                      color: "#fff",
+                      ml: 1
+                    }}
+                  >
+                    Delete
+                  </Button>
+
+                </TableCell>
 
                 </TableRow>
               );
