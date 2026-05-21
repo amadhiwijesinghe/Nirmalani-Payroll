@@ -357,6 +357,55 @@ const deleteAttendance = async (id) => {
   }
 };
 
+const editAttendance = async (row) => {
+
+  const newLiter = prompt(
+    "Enter Liter",
+    row.liter
+  );
+
+  if (!newLiter) return;
+
+  const newRate = prompt(
+    "Enter Rate",
+    row.rate
+  );
+
+  if (!newRate) return;
+
+  const newAllowance = prompt(
+    "Enter Allowance",
+    row.allowance || 0
+  );
+
+  const total =
+    (Number(newLiter) * Number(newRate)) +
+    Number(newAllowance || 0);
+
+  try {
+
+    await axios.put(
+      `${API}/rubber-tappers-attendance/${row.id}`,
+      {
+        liter: newLiter,
+        rate: newRate,
+        allowance: newAllowance,
+        total_earning: total
+      }
+    );
+
+    alert("✅ Row Updated");
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Update failed");
+  }
+};
+
   return (
     <Box
       sx={{
@@ -612,6 +661,17 @@ const deleteAttendance = async (id) => {
                     >
                       View
                     </Button>
+
+                    <Button
+                      onClick={() => editAttendance(row)}
+                      sx={{
+                        background: "#facc15",
+                        color: "#000",
+                        ml: 1
+                      }}
+                    >
+                      Edit
+                    </Button>
                     <Button
                       onClick={printSlip}
                       sx={{ background: "#22c55e", color: "#000" }}
@@ -626,16 +686,42 @@ const deleteAttendance = async (id) => {
 
             {/* 🔥 GRAND TOTAL */}
             <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
-              <TableCell colSpan={4} sx={{ color: "#fff", fontWeight: "bold" }}>
+              <TableCell
+                colSpan={5}
+                sx={{
+                  color: "#fff",
+                  fontWeight: "bold"
+                }}
+              >
                 TOTAL
               </TableCell>
 
-              <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
+              {/* Liter Total */}
+              <TableCell
+                sx={{
+                  color: "#38bdf8",
+                  fontWeight: "bold"
+                }}
+              >
+                {groupedData.reduce(
+                  (sum, row) => sum + Number(row.liter || 0),
+                  0
+                )}
+              </TableCell>
+
+              {/* Earnings Total */}
+              <TableCell
+                sx={{
+                  color: "#22c55e",
+                  fontWeight: "bold"
+                }}
+              >
                 {totals.amount.toFixed(2)}
               </TableCell>
-              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
-                {totals.balance.toFixed(2)}
-              </TableCell>
+
+              {/* Empty Actions */}
+              <TableCell></TableCell>
+
             </TableRow>
           </TableBody>
         </Table>

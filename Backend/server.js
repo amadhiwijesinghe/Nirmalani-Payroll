@@ -662,6 +662,55 @@ app.delete("/rubber-tappers-attendance/:id", (req, res) => {
   );
 });
 
+// ================= UPDATE RUBBER TAPPER ATTENDANCE =================
+
+app.put("/rubber-tappers-attendance/:id", (req, res) => {
+
+  const {
+    liter,
+    rate,
+    allowance,
+    total_earning
+  } = req.body;
+
+  const id = req.params.id;
+
+  const sql = `
+    UPDATE rubber_tappers_attendance
+    SET
+      liter = ?,
+      rate = ?,
+      allowance = ?,
+      total_earning = ?
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      liter,
+      rate,
+      allowance,
+      total_earning,
+      id
+    ],
+    (err, result) => {
+
+      if (err) {
+
+        console.log(err);
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Attendance updated"
+      });
+    }
+  );
+});
+
 // ================= DATABASE BACKUP =================
 
 app.get("/backup-db", async (req, res) => {
