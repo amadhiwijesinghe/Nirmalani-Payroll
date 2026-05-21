@@ -1091,6 +1091,31 @@ app.get("/tea-collection", (req, res) => {
   });
 });
 
+// UPDATE TEA COLLECTION
+app.put("/tea-collection/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  const { kg } = req.body;
+
+  db.query(
+    "UPDATE tea_collection SET kg = ? WHERE id = ?",
+    [kg, id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Updated"
+      });
+    }
+  );
+});
+
 // DELETE TEA COLLECTION
 app.delete("/tea-collection/:id", (req, res) => {
 
