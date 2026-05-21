@@ -332,6 +332,44 @@ app.post('/plantation-attendance', (req, res) => {
   );
 });
 
+// UPDATE PLANTATION PAYROLL
+app.put("/plantation-attendance", (req, res) => {
+
+  const {
+    worker_id,
+    month,
+    rate_per_day
+  } = req.body;
+
+  const sql = `
+    UPDATE plantation_attendance
+    SET rate_per_day = ?
+    WHERE worker_id = ?
+    AND month = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      rate_per_day,
+      worker_id,
+      month
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Rate updated"
+      });
+    }
+  );
+});
+
 // 🌿 Daily Attendance
 app.post("/plantation-daily-attendance", (req, res) => {
   const { worker_id, date, status } = req.body;
