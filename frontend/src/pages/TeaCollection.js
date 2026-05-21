@@ -154,6 +154,133 @@ export default function TeaCollection() {
         alert("Update failed");
     }
     };
+
+        // PRINT REPORT
+    const printReport = () => {
+
+    const rows = data.filter(
+        row =>
+        !filterMonth ||
+        row.date.substring(0, 7) === filterMonth
+    );
+
+    let total = 0;
+
+    const tableRows = rows.map(row => {
+
+        total += Number(row.kg);
+
+        return `
+        <tr>
+            <td>${row.name}</td>
+            <td>${row.epf_no}</td>
+            <td>${row.date}</td>
+            <td>${row.kg}</td>
+        </tr>
+        `;
+    }).join("");
+
+    const html = `
+        <html>
+
+        <head>
+
+            <title>
+            Tea Collection Report
+            </title>
+
+            <style>
+
+            body {
+                font-family: Arial;
+                padding: 20px;
+            }
+
+            h2 {
+                text-align: center;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th, td {
+                border: 1px solid black;
+                padding: 10px;
+                text-align: center;
+            }
+
+            th {
+                background: #eee;
+            }
+
+            </style>
+
+        </head>
+
+        <body>
+
+            <h2>
+            Nirmalani Plantation
+            </h2>
+
+            <h3>
+            Tea Collection Report
+            </h3>
+
+            <p>
+            Month: ${filterMonth || "All"}
+            </p>
+
+            <table>
+
+            <thead>
+
+                <tr>
+                <th>Name</th>
+                <th>EPF</th>
+                <th>Date</th>
+                <th>KG</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                ${tableRows}
+
+                <tr>
+                <td colspan="3">
+                    <b>TOTAL KG</b>
+                </td>
+
+                <td>
+                    <b>${total.toFixed(2)}</b>
+                </td>
+                </tr>
+
+            </tbody>
+
+            </table>
+
+            <script>
+            window.print();
+            </script>
+
+        </body>
+
+        </html>
+    `;
+
+    const win = window.open("", "_blank");
+
+    win.document.write(html);
+
+    win.document.close();
+    };
+
   // TOTAL KG
   const totalKg = data
     .filter(
@@ -372,6 +499,18 @@ export default function TeaCollection() {
 
         </Box>
 
+        <Button
+            onClick={printReport}
+            sx={{
+                ml: 2,
+                background: "#22c55e",
+                color: "#000",
+                height: "56px"
+            }}
+            >
+            Print Report
+            </Button>
+
         <Table>
 
           <TableHead>
@@ -430,7 +569,9 @@ export default function TeaCollection() {
                   <TableCell
                     sx={{ color: "#fff" }}
                   >
-                    {row.date}
+                    {new Date(row.date)
+                        .toISOString()
+                        .split("T")[0]}
                   </TableCell>
 
                   <TableCell
