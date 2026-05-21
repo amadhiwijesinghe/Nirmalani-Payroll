@@ -1139,6 +1139,118 @@ app.delete("/tea-collection/:id", (req, res) => {
   );
 });
 
+// ================= RUBBER DISPATCH =================
+
+// ADD DISPATCH
+app.post("/rubber-dispatch", (req, res) => {
+
+  const {
+    liters_sent,
+    date
+  } = req.body;
+
+  const sql = `
+    INSERT INTO rubber_dispatch
+    (
+      liters_sent,
+      date
+    )
+    VALUES (?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      liters_sent,
+      date
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Dispatch Saved"
+      });
+    }
+  );
+});
+
+// GET DISPATCH DATA
+app.get("/rubber-dispatch", (req, res) => {
+
+  const sql = `
+    SELECT *
+    FROM rubber_dispatch
+    ORDER BY date DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+  });
+});
+
+// DELETE DISPATCH
+app.delete("/rubber-dispatch/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  db.query(
+    "DELETE FROM rubber_dispatch WHERE id = ?",
+    [id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Deleted"
+      });
+    }
+  );
+});
+
+// UPDATE DISPATCH
+app.put("/rubber-dispatch/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  const { liters_sent } = req.body;
+
+  db.query(
+    `
+    UPDATE rubber_dispatch
+    SET liters_sent = ?
+    WHERE id = ?
+    `,
+    [liters_sent, id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Updated"
+      });
+    }
+  );
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
