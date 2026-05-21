@@ -1016,6 +1016,104 @@ app.get("/full-system-report/:month", async (req, res) => {
   }
 });
 
+// ================= TEA COLLECTION =================
+
+// ADD TEA COLLECTION
+app.post("/tea-collection", (req, res) => {
+
+  const {
+    worker_id,
+    date,
+    kg
+  } = req.body;
+
+  const sql = `
+    INSERT INTO tea_collection
+    (
+      worker_id,
+      date,
+      kg
+    )
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      date,
+      kg
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Tea collection saved"
+      });
+    }
+  );
+});
+
+// GET TEA COLLECTION
+app.get("/tea-collection", (req, res) => {
+
+  const sql = `
+    SELECT
+      tc.id,
+      tc.worker_id,
+      tc.date,
+      tc.kg,
+
+      pw.name,
+      pw.epf_no
+
+    FROM tea_collection tc
+
+    JOIN plantation_workers pw
+      ON pw.id = tc.worker_id
+
+    ORDER BY tc.date DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+  });
+});
+
+// DELETE TEA COLLECTION
+app.delete("/tea-collection/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  db.query(
+    "DELETE FROM tea_collection WHERE id = ?",
+    [id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Deleted successfully"
+      });
+    }
+  );
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
