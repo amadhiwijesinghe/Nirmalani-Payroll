@@ -242,29 +242,92 @@ app.get('/plantation-workers', (req, res) => {
 });
 
 app.post('/plantation-workers', (req, res) => {
-  const { name, rate_per_day, epf_no } = req.body;
+
+  const { name, epf_no } = req.body;
 
   db.query(
-    "INSERT INTO plantation_workers (name, rate_per_day, epf_no) VALUES (?, ?, ?)",
-    [name, rate_per_day, epf_no],
+    "INSERT INTO plantation_workers (name, epf_no) VALUES (?, ?)",
+    [name, epf_no],
     (err, result) => {
-      if (err) return res.status(500).send(err);
-      res.json({ message: "Worker added" });
+
+      if (err) {
+        console.log(err);
+        return res.status(500).send(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Worker added"
+      });
     }
   );
 });
 
+// UPDATE PLANTATION WORKER
+app.put("/plantation-workers/:id", (req, res) => {
+
+  const { name, epf_no } = req.body;
+
+  db.query(
+    "UPDATE plantation_workers SET name=?, epf_no=? WHERE id=?",
+    [name, epf_no, req.params.id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Worker updated"
+      });
+    }
+  );
+});
 
 // 🌿 Attendance
 app.post('/plantation-attendance', (req, res) => {
-  const { worker_id, days_worked, month } = req.body;
+
+  const { worker_id, days_worked, month, allowance, rate_per_day } = req.body;
+
+  const sql = `
+    INSERT INTO plantation_attendance
+    (
+      worker_id,
+      days_worked,
+      month,
+      allowance,
+      rate_per_day
+    )
+    VALUES (?, ?, ?, ?, ?)
+
+    ON DUPLICATE KEY UPDATE
+      days_worked = VALUES(days_worked),
+      allowance = VALUES(allowance),
+      rate_per_day = VALUES(rate_per_day)
+  `;
 
   db.query(
-    "INSERT INTO plantation_attendance (worker_id, days_worked, month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE days_worked = VALUES(days_worked)",
-    [worker_id, days_worked, month],
+    sql,
+    [
+      worker_id,
+      days_worked,
+      month,
+      allowance || 0,
+      rate_per_day || 0
+    ],
     (err, result) => {
-      if (err) return res.status(500).send(err);
-      res.json({ message: "Attendance added" });
+
+      if (err) {
+        console.log(err);
+        return res.status(500).send(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Attendance added"
+      });
     }
   );
 });
@@ -310,23 +373,51 @@ app.get("/plantation-attendance-days", (req, res) => {
 
 // 🌿 Combined Data
 app.get('/plantation-data', (req, res) => {
+
   const sql = `
     SELECT 
       pw.id AS worker_id,
       pw.name,
-      pw.rate_per_day,
       pw.epf_no,
-      COUNT(pda.date) AS days_worked,
+
+      IFNULL(MAX(pa.rate_per_day), 0) AS rate_per_day,
+      IFNULL(MAX(pa.allowance), 0) AS allowance,
+
+      COUNT(pda.id) AS days_worked,
+
       DATE_FORMAT(pda.date, '%Y-%m') AS month
+
     FROM plantation_workers pw
-    JOIN plantation_daily_attendance pda   -- 🔥 CHANGE LEFT → JOIN
+
+    JOIN plantation_daily_attendance pda
       ON pw.id = pda.worker_id
+
+    LEFT JOIN plantation_attendance pa
+      ON pa.worker_id = pw.id
+      AND pa.month = DATE_FORMAT(pda.date, '%Y-%m')
+
     WHERE pda.status = 'present'
-    GROUP BY pw.id, DATE_FORMAT(pda.date, '%Y-%m')
+
+    GROUP BY
+      pw.id,
+      pw.name,
+      pw.epf_no,
+      DATE_FORMAT(pda.date, '%Y-%m')
+
+    ORDER BY month DESC
   `;
 
   db.query(sql, (err, result) => {
-    if (err) return res.status(500).send(err);
+
+    if (err) {
+
+      console.log("PLANTATION DATA ERROR:", err);
+
+      return res.status(500).json({
+        error: err.message
+      });
+    }
+
     res.json(result);
   });
 });

@@ -25,12 +25,12 @@ export default function PlantationPayroll() {
   const [data, setData] = useState([]);
 
   const [name, setName] = useState("");
-  const [rate, setRate] = useState("");
 
   const [workerId, setWorkerId] = useState("");
   const [days, setDays] = useState("");
   const [month, setMonth] = useState("");
   const [allowance, setAllowance] = useState("");
+  const [dailyRate, setDailyRate] = useState("");
 
   const [date, setDate] = useState("");
 
@@ -41,6 +41,11 @@ export default function PlantationPayroll() {
   
   const [selectedEpf, setSelectedEpf] = useState("");
   const [epf, setEpf] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [editingWorker, setEditingWorker] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editEpf, setEditEpf] = useState("");
 
   useEffect(() => {
     fetchWorkers();
@@ -62,7 +67,7 @@ export default function PlantationPayroll() {
 const fetchData = async () => {
   try {
     const res = await axios.get(`${API}/plantation-data`);
-    console.log("NEW DATA:", res.data); // 👈 ADD THIS
+    console.log("NEW DATA:", res.data);
     setData(res.data);
   } catch (err) {
     console.error(err);
@@ -89,18 +94,16 @@ const fetchData = async () => {
 };
 
   const addWorker = async () => {
-    if (!name || !rate) return alert("Enter name and rate");
+    if (!name || !epf) return alert("Enter name and EPF Number");
 
     await axios.post(`${API}/plantation-workers`, {
       name,
-      rate_per_day: rate,
       epf_no: epf
     });
 
     alert("✅ Worker Added Successfully!");
 
     setName("");
-    setRate("");
     setEpf("");
     fetchWorkers();
   };
@@ -113,7 +116,8 @@ const fetchData = async () => {
       worker_id: workerId,
       days_worked: days,
       month,
-      allowance
+      allowance,
+      rate_per_day: dailyRate
     });
 
     alert("✅ Worker Attendance Added Successfully!");
@@ -180,10 +184,12 @@ const addDailyAttendance = async () => {
     const daysWorked = res.data.days;
 
  // 4. SAVE / UPDATE monthly attendance automatically
-    await axios.post(`${API}/plantation-attendance`, {
+   await axios.post(`${API}/plantation-attendance`, {
       worker_id: workerId,
       days_worked: daysWorked,
-      month: selectedMonth
+      month: selectedMonth,
+      rate_per_day: dailyRate,
+      allowance
     });
 
    // 🔥 Refresh table ONLY ONCE (clean way)
@@ -442,6 +448,98 @@ const deleteAttendance = async (id) => {
   }
 };
 
+const deletePayroll = async (workerId, month) => {
+
+  if (!window.confirm("Delete this payroll record?")) {
+    return;
+  }
+
+  try {
+
+    await axios.delete(
+      `${API}/plantation-attendance`,
+      {
+        params: {
+          worker_id: workerId,
+          month: month
+        }
+      }
+    );
+
+    alert("✅ Payroll Deleted");
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Delete failed");
+  }
+};
+
+const editPayroll = async (row) => {
+
+  const newRate = prompt(
+    "Enter new rate",
+    row.rate_per_day
+  );
+
+  if (!newRate) return;
+
+  try {
+
+    await axios.put(
+      `${API}/plantation-attendance`,
+      {
+        worker_id: row.worker_id,
+        month: row.month,
+        rate_per_day: newRate
+      }
+    );
+
+    alert("✅ Payroll Updated");
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Update failed");
+  }
+};
+
+const updateWorker = async () => {
+
+  if (!editName || !editEpf) {
+    return alert("Enter worker name and EPF");
+  }
+
+  try {
+
+    await axios.put(
+      `${API}/plantation-workers/${editingWorker.id}`,
+      {
+        name: editName,
+        epf_no: editEpf
+      }
+    );
+
+    alert("✅ Worker Updated");
+
+    setEditingWorker(null);
+
+    fetchWorkers();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Update failed");
+  }
+};
+
   return (
     <Box
       sx={{
@@ -486,16 +584,6 @@ const deleteAttendance = async (id) => {
 
           <Grid item xs={12} md={5}>
             <TextField
-              label="Rate per Day"
-              fullWidth
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={5}>
-            <TextField
               label="EPF Number"
               fullWidth
               value={epf}
@@ -521,6 +609,159 @@ const deleteAttendance = async (id) => {
           </Grid>
         </Grid>
       </Paper>
+
+      {/* SEARCH & EDIT WORKERS */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(20px)",
+        }}
+      >
+
+        <Typography sx={{ color: "#fff", mb: 2 }}>
+          🔍 Search Plantation Workers
+        </Typography>
+
+        <TextField
+          fullWidth
+          label="Search Worker"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{
+            mb: 3,
+            input: { color: "#fff" },
+            label: { color: "#aaa" }
+          }}
+        />
+
+        {search.trim() !== "" &&
+        workers
+          .filter((w) => {
+
+            const searchText = search.toLowerCase();
+
+            return (
+              w.name.toLowerCase().includes(searchText) ||
+              String(w.epf_no).includes(searchText)
+            );
+          })
+          .map((w) => (
+
+            <Box
+              key={w.id}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+                p: 2,
+                borderRadius: 2,
+                background: "rgba(255,255,255,0.05)"
+              }}
+            >
+
+              <Box>
+                <Typography sx={{ color: "#fff" }}>
+                  {w.name}
+                </Typography>
+
+                <Typography sx={{ color: "#94a3b8" }}>
+                  EPF: {w.epf_no}
+                </Typography>
+              </Box>
+
+              <Button
+                onClick={() => {
+
+                  setEditingWorker(w);
+
+                  setEditName(w.name);
+
+                  setEditEpf(w.epf_no);
+                }}
+                sx={{
+                  background: "#facc15",
+                  color: "#000"
+                }}
+              >
+                Edit
+              </Button>
+
+            </Box>
+          ))}
+
+        </Paper>
+
+        {/* EDIT WORKER */}
+        {editingWorker && (
+
+          <Paper
+            sx={{
+              p: 3,
+              mt: 3,
+              mb: 4,
+              background: "rgba(255,255,255,0.05)",
+              borderRadius: 5,
+              backdropFilter: "blur(20px)"
+            }}
+          >
+
+            <Typography sx={{ color: "#fff", mb: 2 }}>
+              ✏️ Edit Worker
+            </Typography>
+
+            <Grid container spacing={2}>
+
+              <Grid item xs={12} md={5}>
+                <TextField
+                  fullWidth
+                  label="Worker Name"
+                  value={editName}
+                  onChange={(e) =>
+                    setEditName(e.target.value)
+                  }
+                  sx={{
+                    input: { color: "#fff" },
+                    label: { color: "#aaa" }
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={5}>
+                <TextField
+                  fullWidth
+                  label="EPF Number"
+                  value={editEpf}
+                  onChange={(e) =>
+                    setEditEpf(e.target.value)
+                  }
+                  sx={{
+                    input: { color: "#fff" },
+                    label: { color: "#aaa" }
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={2}>
+                <Button
+                  fullWidth
+                  onClick={updateWorker}
+                  sx={{
+                    height: "100%",
+                    background: "#22c55e",
+                    color: "#000"
+                  }}
+                >
+                  Save
+                </Button>
+              </Grid>
+
+            </Grid>
+          </Paper>
+        )}
 
       {/* DAILY ATTENDANCE */}
         <Paper
@@ -571,6 +812,21 @@ const deleteAttendance = async (id) => {
                 fullWidth
                 InputProps={{ readOnly: true }}
                 sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              />
+            </Grid>
+
+            {/* Daily Rate */}
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Rate per Day"
+                type="number"
+                fullWidth
+                value={dailyRate}
+                onChange={(e) => setDailyRate(e.target.value)}
+                sx={{
+                  input: { color: "#fff" },
+                  label: { color: "#aaa" }
+                }}
               />
             </Grid>
 
@@ -662,12 +918,12 @@ const deleteAttendance = async (id) => {
               <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Balance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
-              <TableCell>View</TableCell> 
+              <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Actions</TableCell> 
             </TableRow>
           </TableHead>
 
@@ -686,19 +942,12 @@ const deleteAttendance = async (id) => {
                   <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate_per_day}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
-
-                  <TableCell sx={{ color: "#22c55e" }}>
-                    {c.amount.toFixed(2)}
-                  </TableCell>
+                  <TableCell sx={{ color: "#22c55e" }}>{c.amount.toFixed(2)}</TableCell>
                   <TableCell sx={{ color: "#facc15" }}>
                     {c.epf_8.toFixed(2)}
                   </TableCell>
                   <TableCell sx={{ color: "#f87171" }}>
                     {c.total_deduction.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#38bdf8" }}>
-                    {c.balance.toFixed(2)}
                   </TableCell>
                   <TableCell sx={{ color: "#a78bfa" }}>
                     {c.epf_12.toFixed(2)}
@@ -709,19 +958,74 @@ const deleteAttendance = async (id) => {
                   <TableCell sx={{ color: "#34d399" }}>
                     {c.etf.toFixed(2)}
                   </TableCell>
+                  <TableCell sx={{ color: "#14b8a6" }}>
+                    {row.allowance || 0}
+                  </TableCell>
+                  <TableCell sx={{ color: "#38bdf8" }}>
+                    {c.balance.toFixed(2)}
+                  </TableCell>
                   <TableCell>
-                    <Button
-                      onClick={() => viewAttendance(row.worker_id, row.month)}
-                      sx={{ background: "#38bdf8", color: "#000" }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap"
+                      }}
                     >
-                      View
-                    </Button>
-                    <Button
-                      onClick={printSlip}
-                      sx={{ background: "#22c55e", color: "#000" }}
-                    >
-                      Print
-                    </Button>
+
+                      {/* VIEW */}
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          viewAttendance(row.worker_id, row.month)
+                        }
+                        sx={{
+                          background: "#38bdf8",
+                          color: "#000"
+                        }}
+                      >
+                        View
+                      </Button>
+
+                      {/* EDIT */}
+                      <Button
+                        size="small"
+                        onClick={() => editPayroll(row)}
+                        sx={{
+                          background: "#facc15",
+                          color: "#000"
+                        }}
+                      >
+                        Edit
+                      </Button>
+
+                      {/* DELETE */}
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          deletePayroll(row.worker_id, row.month)
+                        }
+                        sx={{
+                          background: "#ef4444",
+                          color: "#fff"
+                        }}
+                      >
+                        Delete
+                      </Button>
+
+                      {/* PRINT */}
+                      <Button
+                        size="small"
+                        onClick={printSlip}
+                        sx={{
+                          background: "#22c55e",
+                          color: "#000"
+                        }}
+                      >
+                        Print
+                      </Button>
+
+                    </Box>
                   </TableCell>
 
                 </TableRow>
@@ -743,9 +1047,6 @@ const deleteAttendance = async (id) => {
               <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
                 {totals.total_deduction.toFixed(2)}
               </TableCell>
-              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
-                {totals.balance.toFixed(2)}
-              </TableCell>
               <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
                 {totals.epf_12.toFixed(2)}
               </TableCell>
@@ -754,6 +1055,12 @@ const deleteAttendance = async (id) => {
               </TableCell>
               <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
                 {totals.etf.toFixed(2)}
+              </TableCell>
+              <TableCell sx={{ color: "#14b8a6", fontWeight: "bold" }}>
+                {totals.allowance || 0}
+              </TableCell>
+              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
+                {totals.balance.toFixed(2)}
               </TableCell>
             </TableRow>
           </TableBody>
