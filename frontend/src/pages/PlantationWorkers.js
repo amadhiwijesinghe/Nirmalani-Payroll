@@ -167,6 +167,7 @@ const addDailyAttendance = async () => {
     // CHECK IF SUNDAY
     const dayName = new Date(date).getDay();
 
+    console.log("dailyRate =", dailyRate);
     // Sunday = 0
     const finalRate =
       dayName === 0
@@ -843,7 +844,7 @@ const updateWorker = async () => {
                 label="Rate per Day"
                 type="number"
                 fullWidth
-                value={dailyRate}
+                value={dailyRate || ""}
                 onChange={(e) => setDailyRate(e.target.value)}
                 sx={{
                   input: { color: "#fff" },
