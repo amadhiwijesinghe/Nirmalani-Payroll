@@ -907,6 +907,19 @@ const updateWorker = async () => {
             >
               Clear
             </Button>
+
+            <Button
+              onClick={printSlip}
+              sx={{
+                ml: 2,
+                background: "#22c55e",
+                color: "#000",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              PRINT PAYSLIPS
+            </Button>
         </Box>
         <Table>
           <TableHead>
@@ -1012,19 +1025,6 @@ const updateWorker = async () => {
                       >
                         Delete
                       </Button>
-
-                      {/* PRINT */}
-                      <Button
-                        size="small"
-                        onClick={printSlip}
-                        sx={{
-                          background: "#22c55e",
-                          color: "#000"
-                        }}
-                      >
-                        Print
-                      </Button>
-
                     </Box>
                   </TableCell>
 
