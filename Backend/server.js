@@ -6,8 +6,6 @@ const mysqldump = require("mysqldump");
 const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
-const { google } = require("googleapis");
-
 const app = express();
 
 app.use(cors({
@@ -19,32 +17,6 @@ app.use(cors({
 
 app.use(express.json());
 
-const credentials = JSON.parse(
-  fs.readFileSync("credentials.json")
-);
-
-const token = JSON.parse(
-  fs.readFileSync("token.json")
-);
-
-const {
-  client_secret,
-  client_id,
-  redirect_uris
-} = credentials.installed;
-
-const oAuth2Client = new google.auth.OAuth2(
-  client_id,
-  client_secret,
-  redirect_uris[0]
-);
-
-oAuth2Client.setCredentials(token);
-
-const drive = google.drive({
-  version: "v3",
-  auth: oAuth2Client
-});
 
 // ================= DEBUG ENV =================
 console.log("ENV CHECK:", {
@@ -761,90 +733,6 @@ app.put("/rubber-tappers-attendance/:id", (req, res) => {
   );
 });
 
-// ================= DATABASE BACKUP =================
-
-app.get("/backup-db", async (req, res) => {
-
-  try {
-
-    console.log("STEP 1 - Backup started");
-
-    const backupDir = path.join(__dirname, "backups");
-
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
-
-    const fileName =
-      `backup-${new Date().toISOString().split("T")[0]}.sql`;
-
-    const filePath = path.join(backupDir, fileName);
-
-    console.log("STEP 2 - Running mysqldump");
-
-    await mysqldump({
-
-     connection: {
-  host:
-    process.env.MYSQLHOST ||
-    process.env.DB_HOST,
-
-  user:
-    process.env.MYSQLUSER ||
-    process.env.DB_USER,
-
-  password:
-    process.env.MYSQLPASSWORD ||
-    process.env.DB_PASSWORD,
-
-  database:
-    process.env.MYSQLDATABASE ||
-    process.env.DB_NAME,
-
-  port:
-    process.env.MYSQLPORT ||
-    process.env.DB_PORT
-},
-
-      dump: {
-
-        schema: false,
-
-        data: {
-          tables: [
-            "employees",
-            "attendance",
-            "allowances",
-            "rubber_tappers",
-            "rubber_tappers_attendance",
-            "plantation_workers",
-            "plantation_daily_attendance"
-          ]
-        }
-      },
-
-      dumpToFile: filePath,
-    });
-
-    console.log("STEP 3 - Backup completed");
-
-    await uploadToDrive(filePath, fileName);
-
-    console.log("Uploaded to Google Drive");
-
-    // DOWNLOAD FILE
-    res.download(filePath, fileName);
-
-  } catch (err) {
-
-    console.log("BACKUP ERROR:", err);
-
-    res.status(500).json({
-      error: err.message
-    });
-  }
-});
-
 // ================= FULL SYSTEM PDF REPORT =================
 
 app.get("/full-system-report/:month", async (req, res) => {
@@ -1355,24 +1243,6 @@ app.get("/rubber-collection", (req, res) => {
     res.json(result);
   });
 });
-
-async function uploadToDrive(filePath, fileName) {
-
-  const fileMetadata = {
-    name: fileName
-  };
-
-  const media = {
-    mimeType: "application/sql",
-    body: fs.createReadStream(filePath)
-  };
-
-  await drive.files.create({
-    resource: fileMetadata,
-    media,
-    fields: "id"
-  });
-}
 
 // ================= SERVER =================
 
