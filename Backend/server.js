@@ -769,12 +769,12 @@ app.get("/backup-db", async (req, res) => {
 
     await mysqldump({
 
-      connection: {
-        host: process.env.MYSQLHOST,
-        user: process.env.MYSQLUSER,
-        password: process.env.MYSQLPASSWORD,
-        database: process.env.MYSQLDATABASE,
-        port: process.env.MYSQLPORT
+     connection: {
+        host: db.config.connectionConfig.host,
+        user: db.config.connectionConfig.user,
+        password: db.config.connectionConfig.password,
+        database: db.config.connectionConfig.database,
+        port: db.config.connectionConfig.port
       },
 
       dump: {
