@@ -8,38 +8,6 @@ const path = require("path");
 const PDFDocument = require("pdfkit");
 const { google } = require("googleapis");
 
-let auth;
-
-if (process.env.GOOGLE_SERVICE_ACCOUNT) {
-
-  auth = new google.auth.GoogleAuth({
-
-    credentials: JSON.parse(
-      process.env.GOOGLE_SERVICE_ACCOUNT
-    ),
-
-    scopes: [
-      "https://www.googleapis.com/auth/drive"
-    ]
-  });
-
-} else {
-
-  auth = new google.auth.GoogleAuth({
-
-    keyFile: "service-account.json",
-
-    scopes: [
-      "https://www.googleapis.com/auth/drive"
-    ]
-  });
-}
-
-const drive = google.drive({
-  version: "v3",
-  auth
-});
-
 const app = express();
 
 app.use(cors({
@@ -50,6 +18,33 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const credentials = JSON.parse(
+  fs.readFileSync("credentials.json")
+);
+
+const token = JSON.parse(
+  fs.readFileSync("token.json")
+);
+
+const {
+  client_secret,
+  client_id,
+  redirect_uris
+} = credentials.installed;
+
+const oAuth2Client = new google.auth.OAuth2(
+  client_id,
+  client_secret,
+  redirect_uris[0]
+);
+
+oAuth2Client.setCredentials(token);
+
+const drive = google.drive({
+  version: "v3",
+  auth: oAuth2Client
+});
 
 // ================= DEBUG ENV =================
 console.log("ENV CHECK:", {
@@ -1364,8 +1359,7 @@ app.get("/rubber-collection", (req, res) => {
 async function uploadToDrive(filePath, fileName) {
 
   const fileMetadata = {
-    name: fileName,
-    parents: ["14c1OqxWdgc3aw68TabIwkr37-DpxMaYM"]
+    name: fileName
   };
 
   const media = {
@@ -1373,14 +1367,11 @@ async function uploadToDrive(filePath, fileName) {
     body: fs.createReadStream(filePath)
   };
 
-  const response = await drive.files.create({
+  await drive.files.create({
     resource: fileMetadata,
     media,
-    fields: "id",
-    supportsAllDrives: true
+    fields: "id"
   });
-
-  console.log("Google Drive File ID:", response.data.id);
 }
 
 // ================= SERVER =================
