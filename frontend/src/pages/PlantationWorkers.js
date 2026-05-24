@@ -35,6 +35,8 @@ export default function PlantationPayroll() {
   const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
@@ -563,6 +565,252 @@ const updateWorker = async () => {
   }
 };
 
+const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+    alert("Select week range");
+    return;
+  }
+
+  const weeklyRows = attendanceDates.filter((d) => {
+
+    const current = new Date(d.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (weeklyRows.length === 0) {
+    alert("No attendance found");
+    return;
+  }
+
+  let total = 0;
+
+  const workerName =
+    workers.find(w => w.id === workerId)?.name || "";
+
+  const rowsHTML = weeklyRows.map((d) => {
+
+    total += Number(d.rate_per_day || 0);
+
+    return `
+      <tr>
+        <td>${workerName}</td>
+
+        <td>
+          ${new Date(d.date).toLocaleDateString(
+            "en-CA"
+          )}
+        </td>
+
+        <td>
+          Rs.${Number(d.rate_per_day).toFixed(2)}
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Weekly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          h2{
+            text-align:center;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+            margin-top:20px;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:10px;
+            text-align:left;
+          }
+
+          th{
+            background:#f1f5f9;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Nirmalani Plantation Weekly Report
+        </h2>
+
+        <p>
+          <b>From:</b> ${weekStart}
+          <br/>
+          <b>To:</b> ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Worker Name</th>
+              <th>Date Worked</th>
+              <th>Rate</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3 style="margin-top:20px;">
+          Weekly Total:
+          Rs.${total.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
+const printMonthlyReport = () => {
+
+  if (!filterMonth) {
+    alert("Select month");
+    return;
+  }
+
+  const rows = groupedData.filter(
+    (row) => row.month === filterMonth
+  );
+
+  let grandTotal = 0;
+
+  const rowsHTML = rows.map((row) => {
+
+    const c = calculate(
+      row.days_worked,
+      row.rate_per_day,
+      row.allowance
+    );
+
+    grandTotal += c.balance;
+
+    return `
+      <tr>
+        <td>${row.name}</td>
+        <td>${row.days_worked}</td>
+        <td>${row.rate_per_day}</td>
+        <td>${c.balance.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Monthly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Monthly Payroll Report
+        </h2>
+
+        <h3>
+          Month: ${filterMonth}
+        </h3>
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Days</th>
+              <th>Rate</th>
+              <th>Net Salary</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3>
+          Grand Total:
+          Rs.${grandTotal.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
   return (
     <Box
       sx={{
@@ -908,13 +1156,78 @@ const updateWorker = async () => {
         <Box sx={{ mb: 2 }}>
           <TextField
             type="month"
-            label="Filter by Month"
             value={filterMonth}
             onChange={(e) => setFilterMonth(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Filter By Month"
             sx={{
-              input: { color: "#fff" },
-              label: { color: "#aaa" },
-              width: 200
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) => setWeekStart(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Week Start"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) => setWeekEnd(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Week End"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
             }}
           />
 
@@ -942,6 +1255,32 @@ const updateWorker = async () => {
               }}
             >
               PRINT PAYSLIPS
+            </Button>
+
+            <Button
+              onClick={printWeeklyReport}
+              sx={{
+                ml: 2,
+                background: "#0ea5e9",
+                color: "#fff",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              WEEKLY REPORT
+            </Button>
+
+            <Button
+              onClick={printMonthlyReport}
+              sx={{
+                ml: 2,
+                background: "#a855f7",
+                color: "#fff",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              MONTHLY REPORT
             </Button>
         </Box>
         <Table>
