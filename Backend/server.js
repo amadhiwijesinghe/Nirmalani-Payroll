@@ -8,12 +8,32 @@ const path = require("path");
 const PDFDocument = require("pdfkit");
 const { google } = require("googleapis");
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: "service-account.json",
-  scopes: [
-    "https://www.googleapis.com/auth/drive"
-  ]
-});
+let auth;
+
+if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+
+  auth = new google.auth.GoogleAuth({
+
+    credentials: JSON.parse(
+      process.env.GOOGLE_SERVICE_ACCOUNT
+    ),
+
+    scopes: [
+      "https://www.googleapis.com/auth/drive"
+    ]
+  });
+
+} else {
+
+  auth = new google.auth.GoogleAuth({
+
+    keyFile: "service-account.json",
+
+    scopes: [
+      "https://www.googleapis.com/auth/drive"
+    ]
+  });
+}
 
 const drive = google.drive({
   version: "v3",
@@ -770,12 +790,26 @@ app.get("/backup-db", async (req, res) => {
     await mysqldump({
 
      connection: {
-        host: db.config.connectionConfig.host,
-        user: db.config.connectionConfig.user,
-        password: db.config.connectionConfig.password,
-        database: db.config.connectionConfig.database,
-        port: db.config.connectionConfig.port
-      },
+  host:
+    process.env.MYSQLHOST ||
+    process.env.DB_HOST,
+
+  user:
+    process.env.MYSQLUSER ||
+    process.env.DB_USER,
+
+  password:
+    process.env.MYSQLPASSWORD ||
+    process.env.DB_PASSWORD,
+
+  database:
+    process.env.MYSQLDATABASE ||
+    process.env.DB_NAME,
+
+  port:
+    process.env.MYSQLPORT ||
+    process.env.DB_PORT
+},
 
       dump: {
 
