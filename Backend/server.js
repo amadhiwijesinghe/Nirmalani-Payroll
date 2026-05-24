@@ -1364,27 +1364,23 @@ app.get("/rubber-collection", (req, res) => {
 async function uploadToDrive(filePath, fileName) {
 
   const fileMetadata = {
-
     name: fileName,
-
     parents: ["14c1OqxWdgc3aw68TabIwkr37-DpxMaYM"]
   };
 
   const media = {
-
     mimeType: "application/sql",
-
     body: fs.createReadStream(filePath)
   };
 
-  await drive.files.create({
-
+  const response = await drive.files.create({
     resource: fileMetadata,
-
     media,
-
-    fields: "id"
+    fields: "id",
+    supportsAllDrives: true
   });
+
+  console.log("Google Drive File ID:", response.data.id);
 }
 
 // ================= SERVER =================
