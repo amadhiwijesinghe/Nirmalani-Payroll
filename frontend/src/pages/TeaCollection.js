@@ -36,6 +36,8 @@ export default function TeaCollection() {
   const [editKg, setEditKg] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
 
   useEffect(() => {
 
@@ -155,8 +157,8 @@ export default function TeaCollection() {
     }
     };
 
-        // PRINT REPORT
-    const printReport = () => {
+        // PRINT MONTLY AND WEEKLY REPORTS
+    const printMonthlyReport = () => {
 
     const rows = data.filter(
         row =>
@@ -280,6 +282,158 @@ export default function TeaCollection() {
 
     win.document.close();
     };
+
+    const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week range");
+
+    return;
+  }
+
+  const rows = data.filter((row) => {
+
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (rows.length === 0) {
+
+    alert("No records found");
+
+    return;
+  }
+
+  let total = 0;
+
+  const tableRows = rows.map((row) => {
+
+    total += Number(row.kg);
+
+    return `
+      <tr>
+        <td>${row.name}</td>
+        <td>${row.epf_no}</td>
+        <td>
+          ${new Date(row.date)
+            .toISOString()
+            .split("T")[0]}
+        </td>
+        <td>${row.kg}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>
+          Weekly Tea Report
+        </title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          h2{
+            text-align:center;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+            margin-top:20px;
+          }
+
+          th,td{
+            border:1px solid black;
+            padding:10px;
+            text-align:center;
+          }
+
+          th{
+            background:#eee;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Nirmalani Plantation
+        </h2>
+
+        <h3>
+          Weekly Tea Collection Report
+        </h3>
+
+        <p>
+          From: ${weekStart}
+          <br/>
+          To: ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Name</th>
+              <th>EPF No</th>
+              <th>Date</th>
+              <th>KG Plucked</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${tableRows}
+
+            <tr>
+
+              <td colspan="3">
+                <b>Total KG</b>
+              </td>
+
+              <td>
+                <b>${total.toFixed(2)}</b>
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
 
   // TOTAL KG
   const totalKg = data
@@ -482,17 +636,76 @@ export default function TeaCollection() {
 
           <TextField
             type="month"
-            label="Filter Month"
             value={filterMonth}
-            onChange={(e) =>
-              setFilterMonth(e.target.value)
-            }
+            onChange={(e) => setFilterMonth(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Filter By Month"
             sx={{
+              ml: 2,
+              width: 180,
+
               input: {
                 color: "#fff"
               },
-              label: {
-                color: "#aaa"
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) =>
+              setWeekStart(e.target.value)
+            }
+            helperText="Week Start"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) =>
+              setWeekEnd(e.target.value)
+            }
+            helperText="Week End"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
               }
             }}
           />
@@ -500,16 +713,28 @@ export default function TeaCollection() {
         </Box>
 
         <Button
-            onClick={printReport}
-            sx={{
-                ml: 2,
-                background: "#22c55e",
-                color: "#000",
-                height: "56px"
-            }}
-            >
-            Print Report
-            </Button>
+          onClick={printWeeklyReport}
+          sx={{
+            ml: 2,
+            background: "#0ea5e9",
+            color: "#fff",
+            height: "56px"
+          }}
+        >
+          Weekly Report
+        </Button>
+
+        <Button
+          onClick={printMonthlyReport}
+          sx={{
+            ml: 2,
+            background: "#22c55e",
+            color: "#000",
+            height: "56px"
+          }}
+        >
+          Monthly Report
+        </Button>
 
         <Table>
 
