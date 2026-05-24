@@ -106,21 +106,36 @@ export default function Employees() {
 
   return (
     <Box sx={{
-      p: 3,
+      p: {
+        xs: 1.5,
+        sm: 2,
+        md: 3
+      },
       minHeight: "100vh",
       background: "linear-gradient(135deg, #0f172a, #1e293b)"
     }}>
 
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-          letterSpacing: 1
-        }}
-      >
+     <Typography
+      variant="h4"
+      sx={{
+        mb: 3,
+        fontWeight: 800,
+        color: "#fff",
+        letterSpacing: 1,
+
+        fontSize: {
+          xs: "1.5rem",
+          sm: "1.8rem",
+          md: "2.3rem"
+        },
+
+        textAlign: {
+          xs: "center",
+          md: "left"
+        }
+      }}
+    >
         👥 Employees Dashboard
       </Typography>
 
@@ -136,7 +151,7 @@ export default function Employees() {
       }}>
         <Grid container spacing={2}>
 
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="Name"
               fullWidth
@@ -146,7 +161,7 @@ export default function Employees() {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} sm={6} md={2}>
             <TextField
               label="Member ID"
               fullWidth
@@ -162,7 +177,7 @@ export default function Employees() {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="NIC"
               fullWidth
@@ -172,7 +187,7 @@ export default function Employees() {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} sm={6} md={2}>
             <TextField
               label="Salary"
               fullWidth
@@ -182,12 +197,15 @@ export default function Employees() {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} sm={6} md={2}>
             <Button
               fullWidth
               onClick={saveEmployee}
               sx={{
-                height: "100%",
+                height: {
+                  xs: 45,
+                  md: "100%"
+                },
                 borderRadius: 3,
                 fontWeight: 700,
                 background: "linear-gradient(135deg,#22c55e,#4ade80)",
@@ -217,7 +235,11 @@ export default function Employees() {
           mb: 3,
           input: { color: "#fff" },
           borderRadius: 3,
-          background: "rgba(255,255,255,0.05)"
+          background: "rgba(255,255,255,0.05)",
+          maxWidth: {
+            xs: "100%",
+            md: 500
+          },
         }}
       />
 
@@ -229,14 +251,21 @@ export default function Employees() {
         backdropFilter: "blur(20px)",
         border: "1px solid rgba(255,255,255,0.1)"
       }}>
-        <Table>
+        <Box sx={{ overflowX: "auto" }}>
+
+        <Table sx={{ minWidth: 750 }}>
           <TableHead>
             <TableRow sx={{ background: "rgba(255,255,255,0.05)" }}>
-              <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>NIC</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Salary</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Action</TableCell>
+              <TableCell 
+                sx={{ color: "#aaa", fontSize: { xs: "12px",md: "14px"}}}>Name</TableCell>
+              <TableCell 
+                sx={{ color: "#aaa", fontSize: { xs: "12px",md: "14px"}}}>Member ID</TableCell>
+              <TableCell 
+                sx={{ color: "#aaa", fontSize: { xs: "12px",md: "14px"}}}>NIC</TableCell>
+              <TableCell 
+                sx={{ color: "#aaa", fontSize: { xs: "12px",md: "14px"}}}>Salary</TableCell>
+              <TableCell 
+                sx={{ color: "#aaa", fontSize: { xs: "12px",md: "14px"}}}>Action</TableCell>
             </TableRow>
           </TableHead>
 
@@ -251,15 +280,19 @@ export default function Employees() {
                   }
                 }}
               >
-                <TableCell sx={{ color: "#fff" }}>{emp.name}</TableCell>
-                <TableCell sx={{ color: "#fff" }}>{formatMemberId(emp.memberid)}</TableCell>
-                <TableCell sx={{ color: "#fff" }}>{emp.NIC}</TableCell>
-                <TableCell sx={{ color: "#22c55e" }}>
+                <TableCell
+                  sx={{ color: "#fff", fontSize: { xs: "12px",md: "14px"}}}>{emp.name}</TableCell>
+                <TableCell
+                  sx={{ color: "#fff", fontSize: { xs: "12px",md: "14px"}}}>{formatMemberId(emp.memberid)}</TableCell>
+                <TableCell
+                  sx={{ color: "#fff", fontSize: { xs: "12px",md: "14px"}}}>{emp.NIC}</TableCell>
+                <TableCell
+                  sx={{ color: "#22c55e", fontSize: { xs: "12px",md: "14px"}}}>
                   Rs. {Number(emp.basic_salary).toLocaleString()}
                 </TableCell>
 
                 <TableCell>
-                  <Box sx={{ display: "flex", gap: 3 }}>
+                  <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row"}}}>
                     
                     <Button
                       size="small"
@@ -272,8 +305,12 @@ export default function Employees() {
                         transition: "0.2s",
                         "&:hover": {
                           transform: "scale(1.05)",
-                          boxShadow: "0 10px 25px rgba(245,158,11,0.5)" // ✅ fixed
-                        }
+                          boxShadow: "0 10px 25px rgba(245,158,11,0.5)",
+                        },
+                        maxWidth: {
+                          xs: "100%",
+                          md: 500
+                        },
                       }}
                     >
                       Edit
@@ -291,7 +328,11 @@ export default function Employees() {
                         "&:hover": {
                           transform: "scale(1.05)",
                           boxShadow: "0 10px 25px rgba(239,68,68,0.5)" // ✅ fixed
-                        }
+                        },
+                        maxWidth: {
+                          xs: "100%",
+                          md: 500
+                        },
                       }}
                     >
                       Delete
@@ -304,6 +345,7 @@ export default function Employees() {
             ))}
           </TableBody>
         </Table>
+        </Box>
       </Paper>
     </Box>
   );
