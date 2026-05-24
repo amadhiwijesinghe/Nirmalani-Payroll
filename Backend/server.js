@@ -6,6 +6,19 @@ const mysqldump = require("mysqldump");
 const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
+const { google } = require("googleapis");
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: "service-account.json",
+  scopes: [
+    "https://www.googleapis.com/auth/drive"
+  ]
+});
+
+const drive = google.drive({
+  version: "v3",
+  auth
+});
 
 const app = express();
 
@@ -786,6 +799,10 @@ app.get("/backup-db", async (req, res) => {
 
     console.log("STEP 3 - Backup completed");
 
+    await uploadToDrive(filePath, fileName);
+
+    console.log("Uploaded to Google Drive");
+
     // DOWNLOAD FILE
     res.download(filePath, fileName);
 
@@ -1309,6 +1326,32 @@ app.get("/rubber-collection", (req, res) => {
     res.json(result);
   });
 });
+
+async function uploadToDrive(filePath, fileName) {
+
+  const fileMetadata = {
+
+    name: fileName,
+
+    parents: ["14c1OqxWdgc3aw68TabIwkr37-DpxMaYM"]
+  };
+
+  const media = {
+
+    mimeType: "application/sql",
+
+    body: fs.createReadStream(filePath)
+  };
+
+  await drive.files.create({
+
+    resource: fileMetadata,
+
+    media,
+
+    fields: "id"
+  });
+}
 
 // ================= SERVER =================
 
