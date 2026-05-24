@@ -26,6 +26,8 @@ export default function RubberDispatch() {
   const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
 
   const [rubberData, setRubberData] = useState([]);
 
@@ -187,8 +189,8 @@ const totalCollected = collectionData
   const balance =
     totalCollected - totalSent;
 
-  // PRINT REPORT
-  const printReport = () => {
+  // PRINT MONTHLY AND WEEKLY REPORTS
+  const printMonthlyReport = () => {
 
     const rows = data.filter(
       row =>
@@ -311,6 +313,159 @@ const totalCollected = collectionData
 
     win.document.close();
   };
+
+  const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week range");
+
+    return;
+  }
+
+  const rows = data.filter((row) => {
+
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (rows.length === 0) {
+
+    alert("No records found");
+
+    return;
+  }
+
+  let total = 0;
+
+  const tableRows = rows.map((row) => {
+
+    total += Number(row.liters_sent);
+
+    return `
+      <tr>
+
+        <td>
+          ${new Date(row.date)
+            .toISOString()
+            .split("T")[0]}
+        </td>
+
+        <td>
+          ${row.liters_sent}
+        </td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>
+          Weekly Dispatch Report
+        </title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          h2{
+            text-align:center;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+            margin-top:20px;
+          }
+
+          th,td{
+            border:1px solid black;
+            padding:10px;
+            text-align:center;
+          }
+
+          th{
+            background:#eee;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Nirmalani Plantation
+        </h2>
+
+        <h3>
+          Weekly Rubber Dispatch Report
+        </h3>
+
+        <p>
+          From: ${weekStart}
+          <br/>
+          To: ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Date</th>
+              <th>Liters Sent</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${tableRows}
+
+            <tr>
+
+              <td>
+                <b>Total Sent</b>
+              </td>
+
+              <td>
+                <b>${total.toFixed(2)}</b>
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
 
   // SAVE COLLECTION
 const saveCollection = async () => {
@@ -553,28 +708,105 @@ const saveCollection = async () => {
       {/* FILTER */}
       <Box sx={{ mb: 2 }}>
 
-        <TextField
-          type="month"
-          value={filterMonth}
-          onChange={(e) =>
-            setFilterMonth(e.target.value)
-          }
-          sx={{
-            input: { color: "#fff" }
-          }}
-        />
+       <TextField
+            type="month"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Filter By Month"
+            sx={{
+              ml: 2,
+              width: 180,
 
-        <Button
-          onClick={printReport}
-          sx={{
-            ml: 2,
-            background: "#22c55e",
-            color: "#000",
-            height: "56px"
-          }}
-        >
-          Print Report
-        </Button>
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) =>
+              setWeekStart(e.target.value)
+            }
+            helperText="Week Start"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) =>
+              setWeekEnd(e.target.value)
+            }
+            helperText="Week End"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+      <Button
+        onClick={printWeeklyReport}
+        sx={{
+          ml: 2,
+          background: "#0ea5e9",
+          color: "#fff",
+          height: "56px"
+        }}
+      >
+        Weekly Report
+      </Button>
+
+      <Button
+        onClick={printMonthlyReport}
+        sx={{
+          ml: 2,
+          background: "#22c55e",
+          color: "#000",
+          height: "56px"
+        }}
+      >
+        Monthly Report
+      </Button>
 
       </Box>
 
