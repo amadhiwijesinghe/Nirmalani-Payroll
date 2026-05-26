@@ -199,7 +199,7 @@ return (
       }}
 
       sx={{
-        width: drawerWidth,
+        width: isMobile ? 0 : drawerWidth,
         flexShrink: 0,
 
         [`& .MuiDrawer-paper`]: {
