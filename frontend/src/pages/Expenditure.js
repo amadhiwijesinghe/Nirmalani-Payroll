@@ -46,36 +46,52 @@ export default function Expenditure() {
 
 const categories = {
 
-  Salaries: {
+  "Salaries & Wages": {
     hasSub: true,
 
     subs: [
-      "Permanent Workers",
-      "Casual Workers",
-      "Rubber Tappers"
+      "Checkroll Salaries",
+      "Casual Worker Wages",
+      "Coconut Pluckers"
+
     ]
   },
 
-  Maintenance: {
+  EPF: {
     hasSub: true,
 
     subs: [
-      "Vehicle Repair",
-      "Machine Repair",
-      "Building Repair"
+      "Monthly Payment",
+      "Surcharges"
     ]
   },
 
-  Utilities: {
+  "Cinnaman Payment": {
     hasSub: false,
 
     subs: []
   },
 
-  Fuel: {
+  ETF: {
     hasSub: false,
 
     subs: []
+  },
+
+  "Allowance & Bounce": {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Weeding: {
+    hasSub: true,
+
+    subs: [
+        "Cinnamon Weeding",
+        "General Weeding",
+        "Weedicide"
+    ]
   },
 
   Electricity: {
@@ -84,17 +100,112 @@ const categories = {
     subs: []
   },
 
-  Water: {
+  Telephone: {
     hasSub: false,
 
     subs: []
   },
 
-  Other: {
+  "Manuring & Pruning": {
+    hasSub: true,
+
+    subs: [
+        "Fertilizing",
+        "Manuring",
+        "Pruning",
+        "Shade"
+    ]
+  },
+
+  "Payment for Rubber Latex": {
     hasSub: false,
 
     subs: []
-  }
+  },
+
+  "Nursery & New Clearing": {
+    hasSub: true,
+
+    subs: [
+        "Nursery",
+        "New Clearing"
+    ]
+  },
+
+  Maintenance: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "Travelling": {
+    hasSub: true,
+
+    subs: [
+        "Travelling",
+        "Transport",
+        "Diesel & Oil",
+        "Tools"
+    ]
+  },
+
+  "Staff Welfare": {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "Miscelleneous": {
+    hasSub: true,
+
+    subs: [
+        "Miscelleneous",
+        "Stationary",
+        "Donations"
+    ]
+  },
+
+  Gratuity: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "Visting Agent": {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Chemicals: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "Holiday Pay": {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "F.Loan": {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Audit: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  "Rubber Latex Tax": {
+    hasSub: false,
+
+    subs: []
+  },
 };
 
   useEffect(() => {

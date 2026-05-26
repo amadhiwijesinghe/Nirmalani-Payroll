@@ -43,13 +43,13 @@ export default function Income() {
 
   const categories = [
 
-    "Rubber Sales",
+    "Tea Leaf Sales",
 
-    "Tea Sales",
+    "Rubber Latex Sales",
 
-    "Transport Income",
+    "Cinnamon Sticks Income",
 
-    "Other Income"
+    "Cinnamon Income"
   ];
 
   useEffect(() => {
