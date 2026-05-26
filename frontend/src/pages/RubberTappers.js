@@ -34,6 +34,8 @@ export default function RubberTappers() {
   const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
@@ -361,6 +363,286 @@ const printSlip = () => {
 
   const win = window.open("", "_blank");
   win.document.write(html);
+  win.document.close();
+};
+
+const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week range");
+
+    return;
+  }
+
+  const weeklyRows = data.filter((row) => {
+
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (weeklyRows.length === 0) {
+
+    alert("No data found");
+
+    return;
+  }
+
+  let totalKG = 0;
+  let totalEarnings = 0;
+
+  const rowsHTML = weeklyRows.map((row) => {
+
+    const total =
+      (Number(row.kg || 0) *
+      Number(row.rate || 0)) +
+      Number(row.allowance || 0);
+
+    totalKG += Number(row.kg || 0);
+
+    totalEarnings += total;
+
+    return `
+      <tr>
+
+        <td>${row.name}</td>
+
+        <td>
+          ${new Date(row.date)
+            .toLocaleDateString("en-CA")}
+        </td>
+
+        <td>${row.kg}</td>
+
+        <td>${row.rate}</td>
+
+        <td>${row.allowance || 0}</td>
+
+        <td>${total.toFixed(2)}</td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Weekly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Rubber Tappers Weekly Report
+        </h2>
+
+        <p>
+          <b>From:</b> ${weekStart}
+          <br/>
+          <b>To:</b> ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>KG</th>
+              <th>Rate</th>
+              <th>Allowance</th>
+              <th>Total</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3>
+          Total KG:
+          ${totalKG.toFixed(2)}
+        </h3>
+
+        <h3>
+          Total Earnings:
+          ${totalEarnings.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
+const printMonthlyReport = () => {
+
+  if (!filterMonth) {
+
+    alert("Select month");
+
+    return;
+  }
+
+  const rows = groupedData.filter(
+    (row) =>
+      row.month === filterMonth
+  );
+
+  let totalKG = 0;
+  let totalEarnings = 0;
+
+  const rowsHTML = rows.map((row) => {
+
+    totalKG += Number(row.kg || 0);
+
+    totalEarnings +=
+      Number(row.calculated_total || 0);
+
+    return `
+      <tr>
+
+        <td>${row.name}</td>
+
+        <td>${row.month}</td>
+
+        <td>${row.kg}</td>
+
+        <td>${row.rate}</td>
+
+        <td>${row.allowance || 0}</td>
+
+        <td>
+          ${row.calculated_total.toFixed(2)}
+        </td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Monthly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Rubber Tappers Monthly Report
+        </h2>
+
+        <h3>
+          Month: ${filterMonth}
+        </h3>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Name</th>
+              <th>Month</th>
+              <th>KG</th>
+              <th>Rate</th>
+              <th>Allowance</th>
+              <th>Total Earnings</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3>
+          Total KG:
+          ${totalKG.toFixed(2)}
+        </h3>
+
+        <h3>
+          Total Earnings:
+          ${totalEarnings.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
   win.document.close();
 };
 
@@ -737,18 +1019,55 @@ const editAttendance = async (row) => {
             }}
           />
 
-            {/* Clear Button */}
-            <Button
-              onClick={() => setFilterMonth("")}
-              sx={{
-                ml: 2,
-                background: "#475569",
-                color: "#fff",
-                height: "56px"
-              }}
-            >
-              Clear
-            </Button>
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) =>
+              setWeekStart(e.target.value)
+            }
+            helperText="Week Start"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) =>
+              setWeekEnd(e.target.value)
+            }
+            helperText="Week End"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
 
             <Button
               onClick={printSlip}
@@ -761,6 +1080,32 @@ const editAttendance = async (row) => {
               }}
             >
               PRINT PAYSLIPS
+            </Button>
+
+            <Button
+              onClick={printWeeklyReport}
+              sx={{
+                ml: 2,
+                background: "#0ea5e9",
+                color: "#fff",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              WEEKLY REPORT
+            </Button>
+
+            <Button
+              onClick={printMonthlyReport}
+              sx={{
+                ml: 2,
+                background: "#a855f7",
+                color: "#fff",
+                height: "56px",
+                fontWeight: "bold"
+              }}
+            >
+              MONTHLY REPORT
             </Button>
         </Box>
         <Table>
@@ -790,13 +1135,13 @@ const editAttendance = async (row) => {
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.date}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{new Date(row.date) .toLocaleDateString( "en-CA")}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.kg}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
-                    {row.calculated_total.toFixed(2)}
+                    {c.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
 
@@ -862,7 +1207,10 @@ const editAttendance = async (row) => {
                   fontWeight: "bold"
                 }}
               >
-                {totals.kg.toFixed(2)}
+                {groupedData.reduce(
+                  (sum, row) => sum + Number(row.kg || 0),
+                  0
+                )}
               </TableCell>
 
               {/* Earnings Total */}
@@ -906,7 +1254,14 @@ const editAttendance = async (row) => {
         >
 
           <Typography sx={{ color: "#38bdf8" }}>
-            {d.date}
+             {new Date(d.date).toLocaleDateString(
+              "en-CA",
+              {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+              }
+            )}
           </Typography>
 
           <Button
