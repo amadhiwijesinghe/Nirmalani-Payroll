@@ -370,7 +370,7 @@ app.put("/plantation-attendance", (req, res) => {
   );
 });
 
-// DELETE PLANTATION PAYROLL
+// DELETE FULL PLANTATION PAYROLL
 app.delete("/plantation-attendance", (req, res) => {
 
   const {
@@ -378,28 +378,47 @@ app.delete("/plantation-attendance", (req, res) => {
     month
   } = req.query;
 
-  const sql = `
+  // DELETE MONTHLY PAYROLL
+  const deletePayroll = `
     DELETE FROM plantation_attendance
     WHERE worker_id = ?
     AND month = ?
   `;
 
+  // DELETE DAILY ATTENDANCE
+  const deleteDaily = `
+    DELETE FROM plantation_daily_attendance
+    WHERE worker_id = ?
+    AND DATE_FORMAT(date, '%Y-%m') = ?
+  `;
+
   db.query(
-    sql,
+    deletePayroll,
     [worker_id, month],
-    (err, result) => {
+    (err) => {
 
       if (err) {
-
         console.log(err);
-
         return res.status(500).json(err);
       }
 
-      res.json({
-        success: true,
-        message: "Payroll deleted"
-      });
+      db.query(
+        deleteDaily,
+        [worker_id, month],
+        (err2) => {
+
+          if (err2) {
+            console.log(err2);
+            return res.status(500).json(err2);
+          }
+
+          res.json({
+            success: true,
+            message:
+              "Payroll and attendance deleted"
+          });
+        }
+      );
     }
   );
 });
