@@ -842,6 +842,40 @@ const printMonthlyReport = () => {
           border: "1px solid rgba(255,255,255,0.1)",
         }}
       >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: {
+              xs: "center",
+              md: "flex-end"
+            },
+            mb: 2
+          }}
+        >
+          <Button
+            onClick={() => alert("Navigate to Casual Workers Page")}
+            sx={{
+              background:
+                "linear-gradient(135deg,#f59e0b,#f97316)",
+
+              color: "#fff",
+
+              fontWeight: "bold",
+
+              px: 3,
+              py: 1,
+
+              borderRadius: 3,
+
+              '&:hover': {
+                background:
+                  "linear-gradient(135deg,#d97706,#ea580c)"
+              }
+            }}
+          >
+            Casual Workers
+          </Button>
+        </Box>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
