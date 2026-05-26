@@ -88,19 +88,25 @@ const viewAttendance = async (workerId, month) => {
 
   try {
 
-    const filtered = data.filter(
-      (row) =>
-        row.worker_id === workerId &&
-        row.month === month
+    const res = await axios.get(
+      `${API}/casual-workers-attendance-dates`,
+      {
+        params: {
+          worker_id: workerId,
+          month: month
+        }
+      }
     );
 
-    setAttendanceDates(filtered);
+    setAttendanceDates(res.data);
+
     setOpen(true);
 
   } catch (err) {
 
     console.error(err);
-    alert("Server error");
+
+    alert("Server Error");
   }
 };
 
@@ -721,19 +727,6 @@ const editAttendance = async (row) => {
                 TOTAL
               </TableCell>
 
-              {/* Liter Total */}
-              <TableCell
-                sx={{
-                  color: "#38bdf8",
-                  fontWeight: "bold"
-                }}
-              >
-                {groupedData.reduce(
-                  (sum, row) => sum + Number(row.days_worked || 0),
-                  0
-                )}
-              </TableCell>
-
               {/* Earnings Total */}
               <TableCell
                 sx={{
@@ -775,7 +768,18 @@ const editAttendance = async (row) => {
         >
 
           <Typography sx={{ color: "#38bdf8" }}>
-            {d.date}
+            {new Date(d.date).toLocaleDateString(
+                "en-CA",
+                {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                }
+                )}
+
+                {" - Rs."}
+
+                {d.daily_rate}
           </Typography>
 
           <Button

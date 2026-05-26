@@ -1345,6 +1345,46 @@ app.get("/casual-workers-data", (req, res) => {
   });
 });
 
+
+// GET CASUAL WORKER ATTENDANCE DATES
+app.get(
+  "/casual-workers-attendance-dates",
+  (req, res) => {
+
+    const {
+      worker_id,
+      month
+    } = req.query;
+
+    const sql = `
+      SELECT
+        id,
+        date,
+        daily_rate
+      FROM casual_worker_attendance
+      WHERE worker_id = ?
+      AND month = ?
+      ORDER BY date ASC
+    `;
+
+    db.query(
+      sql,
+      [worker_id, month],
+      (err, result) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json(err);
+        }
+
+        res.json(result);
+      }
+    );
+  }
+);
+
 // GET CASUAL WORKERS
 app.get("/casual-workers", (req, res) => {
 
