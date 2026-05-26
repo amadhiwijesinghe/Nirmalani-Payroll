@@ -619,7 +619,7 @@ const printWeeklyReport = () => {
 
       <head>
 
-        <title>Weekly Report</title>
+        <title>Nirmalani Plantation Weekly Report</title>
 
         <style>
 
@@ -741,7 +741,7 @@ const printMonthlyReport = () => {
 
       <head>
 
-        <title>Monthly Report</title>
+        <title>Nirmalani Plantation Monthly Report</title>
 
         <style>
 

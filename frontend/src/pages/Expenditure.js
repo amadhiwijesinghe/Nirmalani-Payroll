@@ -381,7 +381,7 @@ const updateExpense = async (id) => {
 
           <td>${row.note || "-"}</td>
 
-          <td>${row.date}</td>
+          <td>${row.date.split("T")[0]}</td>
 
         </tr>
       `;
@@ -393,7 +393,7 @@ const updateExpense = async (id) => {
         <head>
 
           <title>
-            Monthly Expenditure Report
+            Nirmalani Plantation Monthly Expenditure Report
           </title>
 
           <style>
@@ -420,7 +420,7 @@ const updateExpense = async (id) => {
         <body>
 
           <h2>
-            Monthly Expenditure Report
+            Nirmalani Plantation Monthly Expenditure Report
           </h2>
 
           <h3>
@@ -526,7 +526,7 @@ const updateExpense = async (id) => {
         <head>
 
           <title>
-            Weekly Expenditure Report
+            Nirmalani Plantation Weekly Expenditure Report
           </title>
 
           <style>
@@ -553,7 +553,7 @@ const updateExpense = async (id) => {
         <body>
 
           <h2>
-            Weekly Expenditure Report
+            Nirmalani Plantation Weekly Expenditure Report
           </h2>
 
           <p>

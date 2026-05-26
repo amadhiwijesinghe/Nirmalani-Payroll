@@ -201,7 +201,7 @@ export default function Income() {
 
         <td>${row.note || "-"}</td>
 
-        <td>${row.date}</td>
+        <td>${row.date.split("T")[0]}</td>
 
       </tr>
     `;
@@ -213,7 +213,7 @@ export default function Income() {
       <head>
 
         <title>
-          Monthly Income Report
+          Nirmalani Plantation Monthly Income Report
         </title>
 
         <style>
@@ -240,7 +240,7 @@ export default function Income() {
       <body>
 
         <h2>
-          Monthly Income Report
+          Nirmalani Plantation Monthly Income Report
         </h2>
 
         <h3>
@@ -342,7 +342,7 @@ const printWeeklyReport = () => {
       <head>
 
         <title>
-          Weekly Income Report
+          Nirmalani Plantation Weekly Income Report
         </title>
 
         <style>
@@ -369,7 +369,7 @@ const printWeeklyReport = () => {
       <body>
 
         <h2>
-          Weekly Income Report
+          Nirmalani Plantation Weekly Income Report
         </h2>
 
         <p>

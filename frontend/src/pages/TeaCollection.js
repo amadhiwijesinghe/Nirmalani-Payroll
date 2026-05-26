@@ -176,7 +176,7 @@ export default function TeaCollection() {
         <tr>
             <td>${row.name}</td>
             <td>${row.epf_no}</td>
-            <td>${row.date}</td>
+            <td>${row.date.split("T")[0]}</td>
             <td>${row.kg}</td>
         </tr>
         `;

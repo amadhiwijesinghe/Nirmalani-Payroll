@@ -219,7 +219,7 @@ const totalCollected = collectionData
         <head>
 
           <title>
-            Rubber Dispatch Report
+            Nirmalani Plantation Rubber Dispatch Report
           </title>
 
           <style>
@@ -370,7 +370,7 @@ const totalCollected = collectionData
       <head>
 
         <title>
-          Weekly Dispatch Report
+          Nirmalani Plantation Weekly Dispatch Report
         </title>
 
         <style>

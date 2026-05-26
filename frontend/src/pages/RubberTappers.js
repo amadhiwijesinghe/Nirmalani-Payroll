@@ -434,7 +434,7 @@ const printWeeklyReport = () => {
 
       <head>
 
-        <title>Weekly Report</title>
+        <title>Nirmalani Plantation Weekly Report</title>
 
         <style>
 
@@ -460,7 +460,7 @@ const printWeeklyReport = () => {
       <body>
 
         <h2>
-          Rubber Tappers Weekly Report
+          Nirmalani Plantation Rubber Tappers Weekly Report
         </h2>
 
         <p>
@@ -566,7 +566,7 @@ const printMonthlyReport = () => {
 
       <head>
 
-        <title>Monthly Report</title>
+        <title>Nirmalani Plantation Monthly Report</title>
 
         <style>
 
@@ -592,7 +592,7 @@ const printMonthlyReport = () => {
       <body>
 
         <h2>
-          Rubber Tappers Monthly Report
+          Nirmalani Plantation Rubber Tappers Monthly Report
         </h2>
 
         <h3>
