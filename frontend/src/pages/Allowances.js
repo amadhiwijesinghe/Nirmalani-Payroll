@@ -78,12 +78,34 @@ function Allowance() {
 
   return (
     <Box sx={{
-      p: 3,
+      p: {
+        xs: 1.5,
+        sm: 2,
+        md: 3
+      },
       minHeight: "100vh",
       background: "linear-gradient(135deg, #0f172a, #1e293b)"
     }}>
 
-      <Typography variant="h4" sx={{ color: "#fff", mb: 3 }}>
+      <Typography
+        variant="h4"
+        sx={{
+          color: "#fff",
+          mb: 3,
+          fontWeight: 800,
+
+          fontSize: {
+            xs: "1.5rem",
+            sm: "1.8rem",
+            md: "2.3rem"
+          },
+
+          textAlign: {
+            xs: "center",
+            md: "left"
+          }
+        }}
+      >
         💸 Allowance Management
       </Typography>
 
@@ -109,7 +131,7 @@ function Allowance() {
               }}
               sx={{ '& .MuiOutlinedInput-root': {
                 height: 56,
-                width: 250,
+                width: '100%',
                 paddingRight: '14px',
                 color: '#fff' // text color inside input
               },
@@ -148,7 +170,7 @@ function Allowance() {
               onChange={(e) => setMonth(e.target.value)}
               sx={{ '& .MuiOutlinedInput-root': {
                 height: 56,
-                width: 120,
+                width: '100%',
                 paddingRight: '14px',
                 color: '#fff' // text color inside input
               },
@@ -238,35 +260,38 @@ function Allowance() {
         </TextField>
 
         {/* Table */}
-        <Table sx={{ mt: 2 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Month</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Member ID</TableCell>
-              <TableCell>Allowance</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {data.length > 0 ? (
-              data.map((row, i) => (
-                <TableRow key={i}>
-                  <TableCell>{row.month}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{formatMemberId(row.memberid)}</TableCell>
-                  <TableCell>Rs. {row.amount}</TableCell>
-                </TableRow>
-              ))
-            ) : (
+        <Box sx={{ overflowX: "auto" }}>
+          <Table sx={{ mt: 2, minWidth: 650 }}>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={4}>
-                  No data available
-                </TableCell>
+                <TableCell>Month</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Member ID</TableCell>
+                <TableCell>Allowance</TableCell>
               </TableRow>
-            )}
-          </TableBody>
+            </TableHead>
+
+            <TableBody>
+              {data.length > 0 ? (
+                data.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{row.month}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{formatMemberId(row.memberid)}</TableCell>
+                    <TableCell>Rs. {row.amount}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4}>
+                    No data available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
         </Table>
+        </Box>
+      
 
       </Paper>
 
