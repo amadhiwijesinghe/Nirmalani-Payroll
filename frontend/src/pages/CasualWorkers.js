@@ -214,7 +214,6 @@ const totals = groupedData
       </h3>
 
       <p><b>Name:</b> ${row.name}</p>
-      <p><b>EPF No:</b> ${row.epf_no || "-"}</p>
       <p><b>Month:</b> ${row.month}</p>
 
       <hr/>
@@ -222,7 +221,7 @@ const totals = groupedData
       <table style="width:100%; font-size:12px;">
         <tr>
           <td>Days Worked</td>
-          <td style="text-align:right;">${row.days_worked}}</td>
+          <td style="text-align:right;">${row.days_worked}</td>
         </tr>
         <tr>
           <td>Rate per Day</td>
@@ -272,7 +271,11 @@ const printSlip = () => {
     const chunk = rows.slice(i, i + 2);
 
     const slips = chunk.map(row => {
-      const c = calculate(row.liter, row.rate, row.allowance || 0);
+      const c = calculate(
+        row.days_worked,
+        row.daily_rate,
+        row.allowance
+        );
       return generateSlipHTML(row, c);
     }).join("");
 
@@ -375,7 +378,7 @@ const editAttendance = async (row) => {
 
   const newDailyRate = prompt(
     "Enter Daily Rate",
-    row.dailyRate
+    row.daily_rate
   );
 
   if (!newDailyRate) return;

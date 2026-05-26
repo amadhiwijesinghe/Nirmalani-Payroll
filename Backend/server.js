@@ -1419,25 +1419,32 @@ app.post(
       [
         worker_id,
         daily_rate,
-        allowance,
-        total_earning,
+        allowance || 0,
+        total_earning || 0,
         date,
         month,
-        status
+        status || "present"
       ],
       (err, result) => {
 
         if (err) {
 
-          console.log("INSERT ERROR:", err);
+          console.log(
+            "INSERT ERROR:",
+            err
+          );
 
           return res.status(500).json(err);
         }
 
-        res.json(result);
+        res.json({
+          success: true,
+          message: "Attendance Saved"
+        });
       }
     );
-});
+  }
+);
 
 // DELETE ATTENDANCE - CASUAL WORKERS
 app.delete(
