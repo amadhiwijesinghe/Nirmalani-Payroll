@@ -1718,6 +1718,72 @@ app.post("/expenditure", (req,res)=>{
   );
 });
 
+// DELETE EXPENDITURE
+app.delete("/expenditure/:id", (req,res)=>{
+
+  db.query(
+    "DELETE FROM expenditure WHERE id=?",
+    [req.params.id],
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+    }
+  );
+});
+
+// UPDATE EXPENDITURE
+app.put("/expenditure/:id", (req,res)=>{
+
+  const {
+    category,
+    sub_category,
+    amount,
+    note,
+    date
+  } = req.body;
+
+  const sql = `
+    UPDATE expenditure
+    SET
+      category=?,
+      sub_category=?,
+      amount=?,
+      note=?,
+      date=?
+    WHERE id=?
+  `;
+
+  db.query(
+    sql,
+    [
+      category,
+      sub_category,
+      amount,
+      note,
+      date,
+      req.params.id
+    ],
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+    }
+  );
+});
+
 
 // ================= SERVER =================
 

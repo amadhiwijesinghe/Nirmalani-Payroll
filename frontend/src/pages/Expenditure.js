@@ -24,29 +24,23 @@ export default function Expenditure() {
 
   const [data, setData] = useState([]);
 
-  const [category, setCategory] =
-    useState("");
+  const [category, setCategory] = useState("");
 
-  const [subCategory, setSubCategory] =
-    useState("");
+  const [subCategory, setSubCategory] = useState("");
 
-  const [amount, setAmount] =
-    useState("");
+  const [amount, setAmount] = useState("");
 
-  const [note, setNote] =
-    useState("");
+  const [note, setNote] = useState("");
 
-  const [date, setDate] =
-    useState("");
+  const [date, setDate] = useState("");
 
-  const [filterMonth, setFilterMonth] =
-    useState("");
+  const [filterMonth, setFilterMonth] = useState("");
 
-  const [weekStart, setWeekStart] =
-    useState("");
+  const [weekStart, setWeekStart] = useState("");
 
-  const [weekEnd, setWeekEnd] =
-    useState("");
+  const [weekEnd, setWeekEnd] = useState("");
+
+  const [editingId, setEditingId] = useState(null);
 
 const categories = {
 
@@ -169,6 +163,63 @@ const categories = {
       alert("Server Error");
     }
   };
+
+  const deleteExpense = async (id) => {
+
+    if (!window.confirm(
+        "Delete this expense?"
+    )) return;
+
+    try {
+
+        await axios.delete(
+        `${API}/expenditure/${id}`
+        );
+
+        fetchData();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Delete Failed");
+    }
+};
+
+const updateExpense = async (id) => {
+
+  try {
+
+    await axios.put(
+      `${API}/expenditure/${id}`,
+      {
+        category,
+        sub_category: subCategory,
+        amount,
+        note,
+        date
+      }
+    );
+
+    alert("Updated");
+
+    setEditingId(null);
+
+    setCategory("");
+    setSubCategory("");
+    setAmount("");
+    setNote("");
+    setDate("");
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Update Failed");
+  }
+};
 
   const totalExpense =
     data.reduce(
@@ -585,7 +636,13 @@ const categories = {
           <Grid item xs={12} md={2}>
             <Button
               fullWidth
-              onClick={addExpense}
+              onClick={() => {
+                if (editingId) {
+                    updateExpense(editingId);
+                } else {
+                    addExpense();
+                }
+                }}
               sx={{
                 height:"100%",
                 background:
@@ -594,13 +651,245 @@ const categories = {
                 fontWeight:"bold"
               }}
             >
-              Add
+              {editingId ? "Update" : "Add"}
             </Button>
           </Grid>
 
         </Grid>
 
       </Paper>
+
+      <Paper
+        sx={{
+            p:3,
+            borderRadius:5,
+            background:
+            "rgba(255,255,255,0.05)"
+        }}
+        >
+
+        <Box
+            sx={{
+            display:"flex",
+            gap:2,
+            flexWrap:"wrap",
+            mb:3
+            }}
+        >
+
+            <TextField
+            type="month"
+            value={filterMonth}
+            onChange={(e)=>
+                setFilterMonth(
+                e.target.value
+                )
+            }
+            sx={{
+                input:{color:"#fff"}
+            }}
+            />
+
+            <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e)=>
+                setWeekStart(
+                e.target.value
+                )
+            }
+            sx={{
+                input:{color:"#fff"}
+            }}
+            />
+
+            <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e)=>
+                setWeekEnd(
+                e.target.value
+                )
+            }
+            sx={{
+                input:{color:"#fff"}
+            }}
+            />
+
+            <Button
+            onClick={printWeeklyReport}
+            sx={{
+                background:"#0ea5e9",
+                color:"#fff"
+            }}
+            >
+            Weekly Report
+            </Button>
+
+            <Button
+            onClick={printMonthlyReport}
+            sx={{
+                background:"#8b5cf6",
+                color:"#fff"
+            }}
+            >
+            Monthly Report
+            </Button>
+
+        </Box>
+
+        <Table>
+
+            <TableHead>
+
+            <TableRow>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Category
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Sub Category
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Amount
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Note
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Date
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                Actions
+                </TableCell>
+
+            </TableRow>
+
+            </TableHead>
+
+            <TableBody>
+
+            {data.map((row)=>(
+
+                <TableRow key={row.id}>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {row.category}
+                </TableCell>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {row.sub_category || "-"}
+                </TableCell>
+
+                <TableCell sx={{color:"#ef4444"}}>
+                    Rs.{Number(row.amount)
+                    .toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {row.note || "-"}
+                </TableCell>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {new Date(row.date)
+                    .toLocaleDateString("en-CA")}
+                </TableCell>
+
+                <TableCell>
+
+                    <Button
+                    size="small"
+                    sx={{
+                        mr:1,
+                        background:"#eab308",
+                        color:"#000"
+                    }}
+                    onClick={() => {
+
+                        setEditingId(row.id);
+
+                        setCategory(
+                        row.category
+                        );
+
+                        setSubCategory(
+                        row.sub_category || ""
+                        );
+
+                        setAmount(
+                        row.amount
+                        );
+
+                        setNote(
+                        row.note || ""
+                        );
+
+                        setDate(
+                        row.date
+                            .split("T")[0]
+                        );
+                    }}
+                    >
+                    Edit
+                    </Button>
+
+                    <Button
+                    size="small"
+                    sx={{
+                        background:"#ef4444",
+                        color:"#fff"
+                    }}
+                    onClick={() =>
+                        deleteExpense(row.id)
+                    }
+                    >
+                    Delete
+                    </Button>
+
+                </TableCell>
+
+                </TableRow>
+            ))}
+
+            <TableRow>
+
+                <TableCell
+                sx={{
+                    color:"#fff",
+                    fontWeight:"bold"
+                }}
+                >
+                TOTAL
+                </TableCell>
+
+                <TableCell />
+
+                <TableCell
+                sx={{
+                    color:"#22c55e",
+                    fontWeight:"bold"
+                }}
+                >
+                Rs.
+                {totalExpense.toFixed(2)}
+                </TableCell>
+
+                <TableCell />
+                <TableCell />
+                <TableCell />
+
+            </TableRow>
+
+            </TableBody>
+
+        </Table>
+
+        </Paper>
 
     </Box>
   );
