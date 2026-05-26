@@ -451,7 +451,7 @@ const printWeeklyReport = () => {
       <body>
 
         <h2>
-          Casual Workers Weekly Report
+          Nirmalani Plantation Casual Workers Weekly Report
         </h2>
 
         <p>
@@ -572,7 +572,7 @@ const printMonthlyReport = () => {
       <body>
 
         <h2>
-          Casual Workers Monthly Report
+          Nirmalani Plantation Casual Workers Monthly Report
         </h2>
 
         <h3>

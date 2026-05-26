@@ -38,6 +38,9 @@ export default function RubberTappers() {
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
 
+  const [brc, setBrc] = useState("");
+  const [kg, setKg] = useState("");
+
   useEffect(() => {
     fetchWorkers();
     fetchData();
@@ -115,18 +118,23 @@ const addDailyAttendance = async () => {
   try {
 
     const total =
-      (Number(liter) * Number(rate)) +
+      (Number(kg) * Number(rate)) +
       Number(allowance || 0);
 
-    await axios.post(`${API}/rubber-tappers-attendance`, {
-      worker_id: workerId,
-      liter,
-      rate,
-      allowance,
-      total_earning: total,
-      date,
-      status: "present"
-    });
+      await axios.post(
+        `${API}/rubber-tappers-attendance`,
+        {
+          worker_id: workerId,
+          liter,
+          brc,
+          kg,
+          rate,
+          allowance,
+          total_earning: total,
+          date,
+          status: "present"
+        }
+      );
 
     alert("✅ Attendance Added");
 
@@ -149,10 +157,15 @@ const addDailyAttendance = async () => {
 
 
   // 🔥 CALCULATE
-const calculate = (liter, rate, allowance = 0) => {
+const calculate = (
+  kg,
+  rate,
+  allowance = 0
+) => {
 
   const amount =
-    (Number(liter || 0) * Number(rate || 0)) +
+    (Number(kg || 0) *
+    Number(rate || 0)) +
     Number(allowance || 0);
 
   return {
@@ -161,34 +174,54 @@ const calculate = (liter, rate, allowance = 0) => {
   };
 };
 
+const calculateKG = (
+  literValue,
+  brcValue
+) => {
+
+  const result =
+    (Number(literValue || 0) *
+    Number(brcValue || 0));
+
+  setKg(result.toFixed(2));
+};
+
   // 🔥 GRAND TOTAL
 
-  const groupedData = Object.values(
-  data.reduce((acc, row) => {
-    const key = `${row.worker_id}-${row.month}`;
-    acc[key] = row;
-    return acc;
-  }, {})
-);
+const groupedData = data.map((row) => {
+
+  const total =
+    (Number(row.kg || 0) *
+    Number(row.rate || 0)) +
+    Number(row.allowance || 0);
+
+  return {
+    ...row,
+    calculated_total: total
+  };
+});
 
 
 const totals = groupedData
-  .filter((row) =>
-  row.month &&
-  (!filterMonth || row.month === filterMonth)
-)
+  .filter(
+    (row) =>
+      !filterMonth ||
+      row.month === filterMonth
+  )
   .reduce(
     (acc, row) => {
-      const c = calculate(row.liter, row.rate, row.allowance || 0);
 
-      acc.amount += c.amount;
-      acc.balance += c.balance;
+      acc.kg += Number(row.kg || 0);
+
+      acc.amount +=
+        Number(row.calculated_total || 0);
 
       return acc;
+
     },
     {
-      amount: 0,
-      balance: 0,
+      kg: 0,
+      amount: 0
     }
   );
 
@@ -258,7 +291,7 @@ const printSlip = () => {
     const chunk = rows.slice(i, i + 2);
 
     const slips = chunk.map(row => {
-      const c = calculate(row.liter, row.rate, row.allowance || 0);
+      const c = calculate(row.kg,row.rate, row.allowance || 0);
       return generateSlipHTML(row, c);
     }).join("");
 
@@ -359,12 +392,12 @@ const deleteAttendance = async (id) => {
 
 const editAttendance = async (row) => {
 
-  const newLiter = prompt(
-    "Enter Liter",
-    row.liter
+  const newKg = prompt(
+    "Enter Kg",
+    row.kg
   );
 
-  if (!newLiter) return;
+  if (!newKg) return;
 
   const newRate = prompt(
     "Enter Rate",
@@ -379,7 +412,8 @@ const editAttendance = async (row) => {
   );
 
   const total =
-    (Number(newLiter) * Number(newRate)) +
+    (Number(row.kg || 0) *
+    Number(newRate)) +
     Number(newAllowance || 0);
 
   try {
@@ -387,7 +421,7 @@ const editAttendance = async (row) => {
     await axios.put(
       `${API}/rubber-tappers-attendance/${row.id}`,
       {
-        liter: newLiter,
+        liter: newKg,
         rate: newRate,
         allowance: newAllowance,
         total_earning: total
@@ -466,6 +500,97 @@ const editAttendance = async (row) => {
         </Grid>
       </Paper>
 
+      {/* BRC CONVERSION */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <Typography
+          sx={{
+            color: "#fff",
+            mb: 2,
+            fontWeight: "bold"
+          }}
+        >
+          🧪 Rubber Milk Conversion
+        </Typography>
+
+        <Grid container spacing={2}>
+
+          {/* Liter */}
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Collected Liter"
+              type="number"
+              fullWidth
+              value={liter}
+              onChange={(e) => {
+
+                setLiter(e.target.value);
+
+                calculateKG(
+                  e.target.value,
+                  brc
+                );
+              }}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* BRC */}
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="BRC"
+              type="number"
+              fullWidth
+              value={brc}
+              onChange={(e) => {
+
+                setBrc(e.target.value);
+
+                calculateKG(
+                  liter,
+                  e.target.value
+                );
+              }}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* KG RESULT */}
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="KG Result"
+              fullWidth
+              value={kg}
+              InputProps={{
+                readOnly: true
+              }}
+              sx={{
+                input: {
+                  color: "#22c55e",
+                  fontWeight: "bold"
+                },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+        </Grid>
+      </Paper>
+
       {/* DAILY ATTENDANCE */}
       <Paper
         sx={{
@@ -507,20 +632,25 @@ const editAttendance = async (row) => {
             </FormControl>
           </Grid>
 
-          {/* Liter */}
-          <Grid item xs={12} md={2}>
-            <TextField
-              label="Liter"
-              type="number"
-              fullWidth
-              value={liter}
-              onChange={(e) => setLiter(e.target.value)}
-              sx={{
-                input: { color: "#fff" },
-                label: { color: "#aaa" },
-              }}
-            />
-          </Grid>
+         {/* KG */}
+        <Grid item xs={12} md={2}>
+          <TextField
+            label="KG"
+            type="number"
+            fullWidth
+            value={kg}
+            InputProps={{
+              readOnly: true
+            }}
+            sx={{
+              input: {
+                color: "#22c55e",
+                fontWeight: "bold"
+              },
+              label: { color: "#aaa" },
+            }}
+          />
+        </Grid>
 
           {/* Rate */}
           <Grid item xs={12} md={2}>
@@ -641,7 +771,7 @@ const editAttendance = async (row) => {
               <TableCell sx={{ color: "#aaa" }}>Date</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Liter Amount</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Kg Amount</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Total Earnings</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Actions</TableCell>
               
@@ -654,7 +784,7 @@ const editAttendance = async (row) => {
                 (!filterMonth || row.month === filterMonth)
               )
               .map((row) => {
-              const c = calculate(row.liter, row.rate, row.allowance);
+              const c = calculate(row.kg,row.rate, row.allowance);
 
               return (
                 <TableRow key={row.id}>
@@ -663,10 +793,10 @@ const editAttendance = async (row) => {
                   <TableCell sx={{ color: "#fff" }}>{row.date}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.liter}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.kg}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
-                    {c.amount.toFixed(2)}
+                    {row.calculated_total.toFixed(2)}
                   </TableCell>
                   <TableCell>
 
@@ -732,10 +862,7 @@ const editAttendance = async (row) => {
                   fontWeight: "bold"
                 }}
               >
-                {groupedData.reduce(
-                  (sum, row) => sum + Number(row.liter || 0),
-                  0
-                )}
+                {totals.kg.toFixed(2)}
               </TableCell>
 
               {/* Earnings Total */}

@@ -623,28 +623,32 @@ app.post('/rubber-tappers', (req, res) => {
 // ADD DAILY ATTENDANCE
 app.post("/rubber-tappers-attendance", (req, res) => {
 
-  const {
-    worker_id,
-    liter,
-    rate,
-    allowance,
-    total_earning,
-    date,
-    status
-  } = req.body;
+const {
+  worker_id,
+  liter,
+  brc,
+  kg,
+  rate,
+  allowance,
+  total_earning,
+  date,
+  status
+} = req.body;
 
   const sql = `
     INSERT INTO rubber_tappers_attendance
     (
       worker_id,
       liter,
+      brc,
+      kg,
       rate,
       allowance,
       total_earning,
       date,
       status
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -652,6 +656,8 @@ app.post("/rubber-tappers-attendance", (req, res) => {
     [
       worker_id,
       liter,
+      brc,
+      kg,
       rate,
       allowance || 0,
       total_earning || 0,
@@ -690,6 +696,8 @@ app.get("/rubber-tappers-data", (req, res) => {
       rta.worker_id,
       rt.name,
       rta.liter,
+      rta.brc,
+      rta.kg,
       rta.rate,
       rta.allowance,
       rta.total_earning,
