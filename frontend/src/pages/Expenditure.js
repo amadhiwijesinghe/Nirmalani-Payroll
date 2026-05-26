@@ -48,35 +48,58 @@ export default function Expenditure() {
   const [weekEnd, setWeekEnd] =
     useState("");
 
-  const categories = {
+const categories = {
 
-    Salaries: [
+  Salaries: {
+    hasSub: true,
+
+    subs: [
       "Permanent Workers",
       "Casual Workers",
       "Rubber Tappers"
-    ],
+    ]
+  },
 
-    Maintenance: [
+  Maintenance: {
+    hasSub: true,
+
+    subs: [
       "Vehicle Repair",
       "Machine Repair",
       "Building Repair"
-    ],
-
-    Utilities: [
-      "Electricity",
-      "Water",
-      "Internet"
-    ],
-
-    Transport: [
-      "Fuel",
-      "Vehicle Hire"
-    ],
-
-    Other: [
-      "Miscellaneous"
     ]
-  };
+  },
+
+  Utilities: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Fuel: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Electricity: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Water: {
+    hasSub: false,
+
+    subs: []
+  },
+
+  Other: {
+    hasSub: false,
+
+    subs: []
+  }
+};
 
   useEffect(() => {
 
@@ -119,7 +142,10 @@ export default function Expenditure() {
         `${API}/expenditure`,
         {
           category,
-          sub_category: subCategory,
+          sub_category:
+            categories[category]?.hasSub
+                ? subCategory
+                : null,
           amount,
           note,
           date
@@ -458,6 +484,7 @@ export default function Expenditure() {
                 setSubCategory("");
               }}
               sx={{
+                width: 250,
                 input:{color:"#fff"},
                 label:{color:"#aaa"}
               }}
@@ -474,33 +501,41 @@ export default function Expenditure() {
             </TextField>
           </Grid>
 
-          <Grid item xs={12} md={2}>
-            <TextField
-              select
-              fullWidth
-              label="Sub Category"
-              value={subCategory}
-              onChange={(e)=>
-                setSubCategory(
-                  e.target.value
-                )
-              }
-              sx={{
-                input:{color:"#fff"},
-                label:{color:"#aaa"}
-              }}
-            >
-              {(categories[category] || [])
-                .map((sub)=>(
-                <MenuItem
-                  key={sub}
-                  value={sub}
+            {categories[category]?.hasSub && (
+
+            <Grid item xs={12} md={2}>
+
+                <TextField
+                select
+                fullWidth
+                label="Sub Category"
+                value={subCategory}
+                onChange={(e)=>
+                    setSubCategory(
+                    e.target.value
+                    )
+                }
+                sx={{
+                    input:{color:"#fff"},
+                    label:{color:"#aaa"}
+                }}
                 >
-                  {sub}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
+
+                {(categories[category]?.subs || [])
+                    .map((sub)=>(
+                    <MenuItem
+                    key={sub}
+                    value={sub}
+                    >
+                    {sub}
+                    </MenuItem>
+                ))}
+
+                </TextField>
+
+            </Grid>
+
+            )}
 
           <Grid item xs={12} md={2}>
             <TextField

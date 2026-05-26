@@ -164,6 +164,7 @@ export default function Income() {
                 )
               }
               sx={{
+                width: 250,
                 input:{color:"#fff"},
                 label:{color:"#aaa"}
               }}
