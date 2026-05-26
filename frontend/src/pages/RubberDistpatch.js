@@ -255,9 +255,21 @@ const totalCollected = collectionData
             Rubber Dispatch Report
           </h3>
 
-          <p>
-            Month: ${filterMonth || "All"}
-          </p>
+        <h3>
+          Month:
+          ${
+            filterMonth
+          }
+          ${
+            new Date(filterMonth + "-01")
+              .toLocaleString(
+                "default",
+                {
+                  month:"long"
+                }
+              )
+          }
+        </h3>
 
           <table>
 

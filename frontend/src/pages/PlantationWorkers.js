@@ -771,7 +771,19 @@ const printMonthlyReport = () => {
         </h2>
 
         <h3>
-          Month: ${filterMonth}
+          Month:
+          ${
+            filterMonth
+          }
+          ${
+            new Date(filterMonth + "-01")
+              .toLocaleString(
+                "default",
+                {
+                  month:"long"
+                }
+              )
+          }
         </h3>
 
         <table>

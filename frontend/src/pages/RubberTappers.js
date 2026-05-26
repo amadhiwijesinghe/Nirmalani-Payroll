@@ -596,7 +596,19 @@ const printMonthlyReport = () => {
         </h2>
 
         <h3>
-          Month: ${filterMonth}
+          Month:
+          ${
+            filterMonth
+          }
+          ${
+            new Date(filterMonth + "-01")
+              .toLocaleString(
+                "default",
+                {
+                  month:"long"
+                }
+              )
+          }
         </h3>
 
         <table>
@@ -800,7 +812,7 @@ const editAttendance = async (row) => {
             fontWeight: "bold"
           }}
         >
-          🧪 Rubber Milk Conversion
+          🧪 Rubber Latex Conversion
         </Typography>
 
         <Grid container spacing={2}>
@@ -828,10 +840,10 @@ const editAttendance = async (row) => {
             />
           </Grid>
 
-          {/* BRC */}
+          {/* DRC */}
           <Grid item xs={12} md={3}>
             <TextField
-              label="BRC"
+              label="DRC"
               type="number"
               fullWidth
               value={brc}
