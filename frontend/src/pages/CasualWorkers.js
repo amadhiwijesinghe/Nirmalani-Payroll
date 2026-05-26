@@ -106,19 +106,19 @@ const viewAttendance = async (workerId, month) => {
 
 const addDailyAttendance = async () => {
 
-  if (!workerId || !dailyRate || !date) {
+  if (!workerId || !date || !dailyRate) {
 
-    alert("Fill all fields");
+    alert("Enter worker, date and rate");
 
     return;
   }
 
   try {
 
-    const total =
-      Number(dailyRate) +
-      Number(allowance || 0);
+    const selectedMonth =
+      date.substring(0, 7);
 
+    // SAVE DAILY ATTENDANCE
     await axios.post(
       `${API}/casual-workers-attendance`,
       {
@@ -128,19 +128,23 @@ const addDailyAttendance = async () => {
 
         allowance,
 
-        total_earning: total,
+        total_earning:
+          Number(dailyRate) +
+          Number(allowance || 0),
 
         date,
+
+        month: selectedMonth,
 
         status: "present"
       }
     );
 
-    alert("✅ Attendance Added");
+    alert("✅ Attendance marked!");
 
-    setDailyRate("");
-    setAllowance("");
     setDate("");
+    setAllowance("");
+    setDailyRate("");
 
     fetchData();
 
@@ -148,10 +152,7 @@ const addDailyAttendance = async () => {
 
     console.error(err);
 
-    alert(
-      err.response?.data?.message ||
-      "Server Error"
-    );
+    alert("Server Error");
   }
 };
 
@@ -192,7 +193,7 @@ const totals = groupedData
 )
   .reduce(
     (acc, row) => {
-      const c = calculate(row.liter, row.rate, row.allowance || 0);
+      const c = calculate( row.days_worked, row.daily_rate, row.allowance );
 
       acc.amount += c.amount;
       acc.balance += c.balance;
@@ -220,12 +221,12 @@ const totals = groupedData
 
       <table style="width:100%; font-size:12px;">
         <tr>
-          <td>Liter</td>
-          <td style="text-align:right;">${row.liter}</td>
+          <td>Days Worked</td>
+          <td style="text-align:right;">${row.days_worked}}</td>
         </tr>
         <tr>
           <td>Rate per Day</td>
-          <td style="text-align:right;">${row.rate}</td>
+          <td style="text-align:right;">${row.daily_rate}</td>
         </tr>
         <tr>
           <td>Allowance</td>
@@ -632,7 +633,6 @@ const editAttendance = async (row) => {
             <TableRow>
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Date</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Daily Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Days Worked</TableCell>
@@ -654,7 +654,6 @@ const editAttendance = async (row) => {
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.date}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.daily_rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
