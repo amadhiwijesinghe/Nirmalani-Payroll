@@ -25,6 +25,7 @@ export default function Income() {
   const [data, setData] = useState([]);
 
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
 
   const [amount, setAmount] = useState("");
 
@@ -77,7 +78,7 @@ export default function Income() {
   const addIncome = async () => {
 
     if (
-      !category ||
+      (!category && !customCategory) ||
       !amount ||
       !date
     ) {
@@ -91,7 +92,7 @@ export default function Income() {
       await axios.post(
         `${API}/income`,
         {
-          category,
+          category: customCategory || category,
           amount,
           note,
           date
@@ -101,6 +102,7 @@ export default function Income() {
       alert("Income Added");
 
       setCategory("");
+      setCustomCategory("");
       setAmount("");
       setNote("");
       setDate("");
@@ -492,6 +494,25 @@ const printWeeklyReport = () => {
               ))}
             </TextField>
           </Grid>
+
+          <Grid item xs={12} md={3}>
+
+        <TextField
+            fullWidth
+            label="Custom Category"
+            value={customCategory}
+            onChange={(e)=>
+            setCustomCategory(
+                e.target.value
+            )
+            }
+            sx={{
+            input:{color:"#fff"},
+            label:{color:"#aaa"}
+            }}
+        />
+
+        </Grid>
 
           <Grid item xs={12} md={2}>
             <TextField
