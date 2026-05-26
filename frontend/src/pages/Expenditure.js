@@ -25,8 +25,10 @@ export default function Expenditure() {
   const [data, setData] = useState([]);
 
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
 
   const [subCategory, setSubCategory] = useState("");
+  const [customSubCategory, setCustomSubCategory] = useState("");
 
   const [amount, setAmount] = useState("");
 
@@ -121,7 +123,7 @@ const categories = {
   const addExpense = async () => {
 
     if (
-      !category ||
+      (!category && !customCategory) ||
       !amount ||
       !date
     ) {
@@ -135,10 +137,13 @@ const categories = {
       await axios.post(
         `${API}/expenditure`,
         {
-          category,
+          category: customCategory || category,
           sub_category:
             categories[category]?.hasSub
-                ? (subCategory || "")
+                ? (
+                    customSubCategory ||
+                    subCategory
+                )
                 : "",
           amount,
           note,
@@ -149,7 +154,9 @@ const categories = {
       alert("Expense Added");
 
       setCategory("");
+      setCustomCategory("");
       setSubCategory("");
+      setCustomSubCategory("");
       setAmount("");
       setNote("");
       setDate("");
@@ -193,8 +200,10 @@ const updateExpense = async (id) => {
     await axios.put(
       `${API}/expenditure/${id}`,
       {
-        category,
-        sub_category: subCategory,
+        category: customCategory || category,
+        sub_category:
+            customSubCategory ||
+            subCategory,
         amount,
         note,
         date
@@ -206,7 +215,9 @@ const updateExpense = async (id) => {
     setEditingId(null);
 
     setCategory("");
+    setCustomCategory("");
     setSubCategory("");
+    setCustomCategory("");
     setAmount("");
     setNote("");
     setDate("");
@@ -554,39 +565,89 @@ const updateExpense = async (id) => {
 
             {categories[category]?.hasSub && (
 
-            <Grid item xs={12} md={2}>
+            <>
+
+                {/* SUBCATEGORY DROPDOWN */}
+
+                <Grid item xs={12} md={2}>
 
                 <TextField
-                select
-                fullWidth
-                label="Sub Category"
-                value={subCategory}
-                onChange={(e)=>
+                    select
+                    fullWidth
+                    label="Sub Category"
+                    value={subCategory}
+                    onChange={(e)=>
                     setSubCategory(
-                    e.target.value
+                        e.target.value
                     )
-                }
-                sx={{
+                    }
+                    sx={{
+                    width:250,
                     input:{color:"#fff"},
                     label:{color:"#aaa"}
-                }}
+                    }}
                 >
 
-                {(categories[category]?.subs || [])
+                    {(categories[category]?.subs || [])
                     .map((sub)=>(
+
                     <MenuItem
-                    key={sub}
-                    value={sub}
+                        key={sub}
+                        value={sub}
                     >
-                    {sub}
+                        {sub}
                     </MenuItem>
-                ))}
+
+                    ))}
 
                 </TextField>
 
-            </Grid>
+                </Grid>
+
+                {/* CUSTOM SUBCATEGORY */}
+
+                <Grid item xs={12} md={2}>
+
+                <TextField
+                    fullWidth
+                    label="Custom Subcategory"
+                    value={customSubCategory}
+                    onChange={(e)=>
+                    setCustomSubCategory(
+                        e.target.value
+                    )
+                    }
+                    sx={{
+                    width:250,
+                    input:{color:"#fff"},
+                    label:{color:"#aaa"}
+                    }}
+                />
+
+                </Grid>
+
+            </>
 
             )}
+
+            <Grid item xs={12} md={2}>
+
+                <TextField
+                    fullWidth
+                    label="Custom Category"
+                    value={customCategory}
+                    onChange={(e)=>
+                    setCustomCategory(
+                        e.target.value
+                    )
+                    }
+                    sx={{
+                    input:{color:"#fff"},
+                    label:{color:"#aaa"}
+                    }}
+                />
+
+                </Grid>
 
           <Grid item xs={12} md={2}>
             <TextField
