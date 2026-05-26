@@ -370,6 +370,40 @@ app.put("/plantation-attendance", (req, res) => {
   );
 });
 
+// DELETE PLANTATION PAYROLL
+app.delete("/plantation-attendance", (req, res) => {
+
+  const {
+    worker_id,
+    month
+  } = req.query;
+
+  const sql = `
+    DELETE FROM plantation_attendance
+    WHERE worker_id = ?
+    AND month = ?
+  `;
+
+  db.query(
+    sql,
+    [worker_id, month],
+    (err, result) => {
+
+      if (err) {
+
+        console.log(err);
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Payroll deleted"
+      });
+    }
+  );
+});
+
 // 🌿 Daily Attendance
 app.post("/plantation-daily-attendance", (req, res) => {
 
