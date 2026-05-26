@@ -1471,12 +1471,16 @@ app.delete(
           return res.status(500).json(err);
         }
 
-        res.json(result);
+        res.json({
+          success: true,
+          message: "Deleted"
+        });
       }
     );
-});
+  }
+);
 
-// UPDATE CASUAL WORKERS 
+// UPDATE CASUAL WORKERS
 app.put(
   "/casual-workers-attendance/:id",
   (req, res) => {
@@ -1515,10 +1519,14 @@ app.put(
           return res.status(500).json(err);
         }
 
-        res.json(result);
+        res.json({
+          success: true,
+          message: "Updated"
+        });
       }
     );
-});
+  }
+);
 
 
 // ================= SERVER =================
