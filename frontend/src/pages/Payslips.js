@@ -201,7 +201,8 @@ export default function Payslips() {
                       onClick={() => generatePayslip(emp)}
                       sx={{
                         background: "#16a34a",
-                        color: "#fff"
+                        color: "#fff",
+                        fontWeight: "bold"
                       }}
                     >
                       PDF

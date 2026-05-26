@@ -274,7 +274,7 @@ const handleSubmit = () => {
 
       <Button
         onClick={() => setFilterMonth("")}
-        sx={{ ml: 2, background: "#475569", color: "#fff" }}
+        sx={{ ml: 2, background: "#475569", color: "#fff", fontWeight: "bold" }}
       >
         Clear
       </Button>

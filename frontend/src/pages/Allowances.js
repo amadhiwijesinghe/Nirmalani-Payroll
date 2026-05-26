@@ -198,6 +198,7 @@ function Allowance() {
               fullWidth
               onClick={handleSave}
               variant="contained"
+              sx={{ fontWeight: "bold"}}
             >
               Save
             </Button>
