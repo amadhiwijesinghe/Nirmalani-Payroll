@@ -20,7 +20,7 @@ import {
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function PlantationPayroll() {
+export default function PlantationWorkers({ setPage }) {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
@@ -842,41 +842,12 @@ const printMonthlyReport = () => {
           border: "1px solid rgba(255,255,255,0.1)",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: {
-              xs: "center",
-              md: "flex-end"
-            },
-            mb: 2
-          }}
+        <Grid
+          container
+          spacing={2}
+          alignItems="center"
+          justifyContent="space-between"
         >
-          <Button
-            onClick={() => alert("Navigate to Casual Workers Page")}
-            sx={{
-              background:
-                "linear-gradient(135deg,#f59e0b,#f97316)",
-
-              color: "#fff",
-
-              fontWeight: "bold",
-
-              px: 3,
-              py: 1,
-
-              borderRadius: 3,
-
-              '&:hover': {
-                background:
-                  "linear-gradient(135deg,#d97706,#ea580c)"
-              }
-            }}
-          >
-            Casual Workers
-          </Button>
-        </Box>
-        <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
               label="Worker Name"
@@ -911,6 +882,44 @@ const printMonthlyReport = () => {
             >
               Add
             </Button>
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            sm={6}
+            md="auto"
+            sx={{
+              ml: {
+                md: "auto"
+              }
+            }}
+          >
+                      <Button
+              fullWidth
+              onClick={() =>
+                setPage("casualworkers")
+              }
+              sx={{
+                height: "100%",
+
+                borderRadius: 3,
+
+                fontWeight: 700,
+
+                background:
+                  "linear-gradient(135deg,#f59e0b,#f97316)",
+
+                color: "#fff",
+
+                '&:hover': {
+                  background:
+                    "linear-gradient(135deg,#d97706,#ea580c)"
+                }
+              }}
+            >
+              Casual Workers
+            </Button>
+
           </Grid>
         </Grid>
       </Paper>

@@ -1297,6 +1297,230 @@ app.get("/rubber-collection", (req, res) => {
   });
 });
 
+// ================= CASUAL WORKERS =========
+app.get("/casual-workers-data", (req, res) => {
+
+  const sql = `
+    SELECT
+
+      MAX(cwa.id) AS id,
+
+      cw.id AS worker_id,
+
+      cw.name,
+
+      DATE_FORMAT(cwa.date, '%Y-%m')
+      AS month,
+
+      COUNT(cwa.id)
+      AS days_worked,
+
+      cwa.daily_rate,
+
+      SUM(cwa.allowance)
+      AS allowance,
+
+      SUM(cwa.total_earning)
+      AS total_earning,
+
+      MAX(cwa.date)
+      AS date
+
+    FROM casual_worker_attendance cwa
+
+    JOIN casual_workers cw
+    ON cw.id = cwa.worker_id
+
+    GROUP BY
+      cw.id,
+      month
+
+    ORDER BY
+      date DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) {
+
+      console.log(err);
+
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+  });
+});
+
+// GET CASUAL WORKERS
+app.get("/casual-workers", (req, res) => {
+
+  db.query(
+    "SELECT * FROM casual_workers ORDER BY id DESC",
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
+// ADD CASUAL WORKERS
+app.post("/casual-workers", (req, res) => {
+
+  const { name } = req.body;
+
+  db.query(
+    `
+    INSERT INTO casual_workers (name)
+    VALUES (?)
+    `,
+    [name],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
+// ADD DAILY ATTENDANCE - CASUAL WORKERS
+app.post(
+  "/casual-workers-attendance",
+  (req, res) => {
+
+    const {
+      worker_id,
+      daily_rate,
+      allowance,
+      total_earning,
+      date,
+      status
+    } = req.body;
+
+    const month =
+      date.substring(0, 7);
+
+    const sql = `
+      INSERT INTO casual_worker_attendance
+      (
+        worker_id,
+        daily_rate,
+        allowance,
+        total_earning,
+        date,
+        month,
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      sql,
+      [
+        worker_id,
+        daily_rate,
+        allowance,
+        total_earning,
+        date,
+        month,
+        status
+      ],
+      (err, result) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json(err);
+        }
+
+        res.json(result);
+      }
+    );
+  }
+);
+
+// DELETE ATTENDANCE - CASUAL WORKERS
+app.delete(
+  "/casual-workers-attendance/:id",
+  (req, res) => {
+
+    const { id } = req.params;
+
+    db.query(
+      `
+      DELETE FROM casual_worker_attendance
+      WHERE id = ?
+      `,
+      [id],
+      (err, result) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json(err);
+        }
+
+        res.json(result);
+      }
+    );
+});
+
+// UPDATE CASUAL WORKERS 
+app.put(
+  "/casual-workers-attendance/:id",
+  (req, res) => {
+
+    const { id } = req.params;
+
+    const {
+      daily_rate,
+      allowance,
+      total_earning
+    } = req.body;
+
+    const sql = `
+      UPDATE casual_worker_attendance
+      SET
+        daily_rate = ?,
+        allowance = ?,
+        total_earning = ?
+      WHERE id = ?
+    `;
+
+    db.query(
+      sql,
+      [
+        daily_rate,
+        allowance,
+        total_earning,
+        id
+      ],
+      (err, result) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json(err);
+        }
+
+        res.json(result);
+      }
+    );
+});
+
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
