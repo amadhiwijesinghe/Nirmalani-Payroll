@@ -34,6 +34,12 @@ export default function Income() {
 
   const [editingId, setEditingId] = useState(null);
 
+  const [filterMonth, setFilterMonth] = useState("");
+
+  const [weekStart, setWeekStart] = useState("");
+
+  const [weekEnd, setWeekEnd] = useState("");
+
   const categories = [
 
     "Rubber Sales",
@@ -163,6 +169,260 @@ export default function Income() {
             alert("Update Failed");
         }
         };
+
+    const printMonthlyReport = () => {
+
+  if (!filterMonth) {
+
+    alert("Select month");
+
+    return;
+  }
+
+  const rows = data.filter(
+    (row)=>
+      row.date.startsWith(filterMonth)
+  );
+
+  let total = 0;
+
+  const rowsHTML = rows.map((row)=>{
+
+    total += Number(row.amount);
+
+    return `
+      <tr>
+
+        <td>${row.category}</td>
+
+        <td>${row.amount}</td>
+
+        <td>${row.note || "-"}</td>
+
+        <td>${row.date}</td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>
+          Monthly Income Report
+        </title>
+
+        <style>
+
+          body{
+            font-family:Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Monthly Income Report
+        </h2>
+
+        <h3>
+          Month: ${filterMonth}
+        </h3>
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>Category</th>
+
+              <th>Amount</th>
+
+              <th>Note</th>
+
+              <th>Date</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${rowsHTML}
+
+          </tbody>
+
+        </table>
+
+        <h3>
+          Total Income:
+          Rs.${total.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win =
+    window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};  
+
+const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week");
+
+    return;
+  }
+
+  const rows = data.filter((row)=>{
+
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  let total = 0;
+
+  const rowsHTML = rows.map((row)=>{
+
+    total += Number(row.amount);
+
+    return `
+      <tr>
+
+        <td>${row.category}</td>
+
+        <td>${row.amount}</td>
+
+        <td>${row.note || "-"}</td>
+
+        <td>${row.date}</td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>
+          Weekly Income Report
+        </title>
+
+        <style>
+
+          body{
+            font-family:Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Weekly Income Report
+        </h2>
+
+        <p>
+          ${weekStart}
+          to
+          ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>Category</th>
+
+              <th>Amount</th>
+
+              <th>Note</th>
+
+              <th>Date</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${rowsHTML}
+
+          </tbody>
+
+        </table>
+
+        <h3>
+          Total Income:
+          Rs.${total.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win =
+    window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
 
   const totalIncome =
     data.reduce(
@@ -318,6 +578,77 @@ export default function Income() {
             "rgba(255,255,255,0.05)"
         }}
       >
+        <Box
+            sx={{
+                display:"flex",
+                gap:2,
+                flexWrap:"wrap",
+                mb:3
+            }}
+            >
+
+            <TextField
+                type="month"
+                value={filterMonth}
+                onChange={(e)=>
+                setFilterMonth(
+                    e.target.value
+                )
+                }
+                sx={{
+                input:{color:"#fff"}
+                }}
+            />
+
+            <TextField
+                type="date"
+                value={weekStart}
+                onChange={(e)=>
+                setWeekStart(
+                    e.target.value
+                )
+                }
+                sx={{
+                input:{color:"#fff"}
+                }}
+            />
+
+            <TextField
+                type="date"
+                value={weekEnd}
+                onChange={(e)=>
+                setWeekEnd(
+                    e.target.value
+                )
+                }
+                sx={{
+                input:{color:"#fff"}
+                }}
+            />
+
+            <Button
+                onClick={printWeeklyReport}
+                sx={{
+                background:"#0ea5e9",
+                color:"#fff",
+                fontWeight: "bold"
+                }}
+            >
+                Weekly Report
+            </Button>
+
+            <Button
+                onClick={printMonthlyReport}
+                sx={{
+                background:"#8b5cf6",
+                color:"#fff",
+                fontWeight: "bold"
+                }}
+            >
+                Monthly Report
+            </Button>
+
+            </Box>
 
         <Table>
 

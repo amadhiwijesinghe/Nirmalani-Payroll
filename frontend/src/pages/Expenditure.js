@@ -720,7 +720,8 @@ const updateExpense = async (id) => {
             onClick={printWeeklyReport}
             sx={{
                 background:"#0ea5e9",
-                color:"#fff"
+                color:"#fff",
+                fontWeight: "bold"
             }}
             >
             Weekly Report
@@ -730,7 +731,8 @@ const updateExpense = async (id) => {
             onClick={printMonthlyReport}
             sx={{
                 background:"#8b5cf6",
-                color:"#fff"
+                color:"#fff",
+                fontWeight: "bold"
             }}
             >
             Monthly Report
