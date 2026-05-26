@@ -1640,6 +1640,68 @@ app.post("/income", (req,res)=>{
   );
 });
 
+// ================ EXPENDITURE ============
+// GET EXPENDITURE
+app.get("/expenditure", (req,res)=>{
+
+  db.query(
+    "SELECT * FROM expenditure ORDER BY date DESC",
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
+// ADD EXPENDITURE
+app.post("/expenditure", (req,res)=>{
+
+  const {
+    category,
+    sub_category,
+    amount,
+    note,
+    date
+  } = req.body;
+
+  const sql = `
+    INSERT INTO expenditure
+    (
+      category,
+      sub_category,
+      amount,
+      note,
+      date
+    )
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      category,
+      sub_category,
+      amount,
+      note,
+      date
+    ],
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
 
 // ================= SERVER =================
 
