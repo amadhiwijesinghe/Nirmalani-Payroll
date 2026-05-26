@@ -1309,22 +1309,15 @@ app.get("/casual-workers-data", (req, res) => {
 
       cw.name,
 
-      DATE_FORMAT(cwa.date, '%Y-%m')
-      AS month,
+      cwa.month,
 
-      COUNT(cwa.id)
-      AS days_worked,
+      COUNT(cwa.id) AS days_worked,
 
-      cwa.daily_rate,
+      MAX(cwa.daily_rate) AS daily_rate,
 
-      SUM(cwa.allowance)
-      AS allowance,
+      SUM(cwa.allowance) AS allowance,
 
-      SUM(cwa.total_earning)
-      AS total_earning,
-
-      MAX(cwa.date)
-      AS date
+      SUM(cwa.total_earning) AS total_earning
 
     FROM casual_worker_attendance cwa
 
@@ -1333,17 +1326,17 @@ app.get("/casual-workers-data", (req, res) => {
 
     GROUP BY
       cw.id,
-      month
+      cwa.month
 
     ORDER BY
-      date DESC
+      cwa.month DESC
   `;
 
   db.query(sql, (err, result) => {
 
     if (err) {
 
-      console.log(err);
+      console.log("SQL ERROR:", err);
 
       return res.status(500).json(err);
     }
@@ -1403,11 +1396,9 @@ app.post(
       allowance,
       total_earning,
       date,
+      month,
       status
     } = req.body;
-
-    const month =
-      date.substring(0, 7);
 
     const sql = `
       INSERT INTO casual_worker_attendance
@@ -1438,7 +1429,7 @@ app.post(
 
         if (err) {
 
-          console.log(err);
+          console.log("INSERT ERROR:", err);
 
           return res.status(500).json(err);
         }
@@ -1446,8 +1437,7 @@ app.post(
         res.json(result);
       }
     );
-  }
-);
+});
 
 // DELETE ATTENDANCE - CASUAL WORKERS
 app.delete(
