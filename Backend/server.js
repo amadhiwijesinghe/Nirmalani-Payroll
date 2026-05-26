@@ -1640,6 +1640,69 @@ app.post("/income", (req,res)=>{
   );
 });
 
+// DELETE INCOME
+app.delete("/income/:id", (req,res)=>{
+
+  db.query(
+    "DELETE FROM income WHERE id=?",
+    [req.params.id],
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+    }
+  );
+});
+
+// UPDATE INCOME
+app.put("/income/:id", (req,res)=>{
+
+  const {
+    category,
+    amount,
+    note,
+    date
+  } = req.body;
+
+  const sql = `
+    UPDATE income
+    SET
+      category=?,
+      amount=?,
+      note=?,
+      date=?
+    WHERE id=?
+  `;
+
+  db.query(
+    sql,
+    [
+      category,
+      amount,
+      note,
+      date,
+      req.params.id
+    ],
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+    }
+  );
+});
+
 // ================ EXPENDITURE ============
 // GET EXPENDITURE
 app.get("/expenditure", (req,res)=>{

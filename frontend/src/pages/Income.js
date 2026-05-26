@@ -24,17 +24,15 @@ export default function Income() {
 
   const [data, setData] = useState([]);
 
-  const [category, setCategory] =
-    useState("");
+  const [category, setCategory] = useState("");
 
-  const [amount, setAmount] =
-    useState("");
+  const [amount, setAmount] = useState("");
 
-  const [note, setNote] =
-    useState("");
+  const [note, setNote] = useState("");
 
-  const [date, setDate] =
-    useState("");
+  const [date, setDate] = useState("");
+
+  const [editingId, setEditingId] = useState(null);
 
   const categories = [
 
@@ -110,6 +108,61 @@ export default function Income() {
       alert("Server Error");
     }
   };
+
+  const deleteIncome = async (id) => {
+
+    if (!window.confirm(
+        "Delete this income?"
+    )) return;
+
+    try {
+
+        await axios.delete(
+        `${API}/income/${id}`
+        );
+
+        fetchData();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Delete Failed");
+    }
+    };
+
+    const updateIncome = async (id) => {
+
+        try {
+
+            await axios.put(
+            `${API}/income/${id}`,
+            {
+                category,
+                amount,
+                note,
+                date
+            }
+            );
+
+            alert("Updated");
+
+            setEditingId(null);
+
+            setCategory("");
+            setAmount("");
+            setNote("");
+            setDate("");
+
+            fetchData();
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Update Failed");
+        }
+        };
 
   const totalIncome =
     data.reduce(
@@ -234,7 +287,13 @@ export default function Income() {
           <Grid item xs={12} md={2}>
             <Button
               fullWidth
-              onClick={addIncome}
+              onClick={() => {
+                if (editingId) {
+                    updateIncome(editingId);
+                } else {
+                    addIncome();
+                }
+                }}
               sx={{
                 height:"100%",
                 background:
@@ -243,7 +302,7 @@ export default function Income() {
                 fontWeight:"bold"
               }}
             >
-              Add
+              {editingId ? "Update" : "Add"}
             </Button>
           </Grid>
 
@@ -282,6 +341,10 @@ export default function Income() {
                 Date
               </TableCell>
 
+              <TableCell sx={{color:"#aaa"}}>
+                Actions
+              </TableCell>
+
             </TableRow>
 
           </TableHead>
@@ -308,6 +371,43 @@ export default function Income() {
                   {new Date(row.date)
                     .toLocaleDateString("en-CA")}
                 </TableCell>
+
+                <TableCell>
+
+                    <Button
+                        size="small"
+                        sx={{
+                        mr:1,
+                        background:"#eab308",
+                        color:"#000"
+                        }}
+                        onClick={() => {
+                        setEditingId(row.id);
+                        setCategory(row.category);
+                        setAmount(row.amount);
+                        setNote(row.note || "");
+                        setDate(
+                            row.date.split("T")[0]
+                        );
+                        }}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        size="small"
+                        sx={{
+                        background:"#ef4444",
+                        color:"#fff"
+                        }}
+                        onClick={() =>
+                        deleteIncome(row.id)
+                        }
+                    >
+                        Delete
+                    </Button>
+
+                    </TableCell>
 
               </TableRow>
             ))}
