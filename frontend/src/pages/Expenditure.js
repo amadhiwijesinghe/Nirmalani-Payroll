@@ -144,8 +144,8 @@ const categories = {
           category,
           sub_category:
             categories[category]?.hasSub
-                ? subCategory
-                : null,
+                ? (subCategory || "")
+                : "",
           amount,
           note,
           date

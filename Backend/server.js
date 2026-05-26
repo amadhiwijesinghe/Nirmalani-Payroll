@@ -1684,20 +1684,36 @@ app.post("/expenditure", (req,res)=>{
   db.query(
     sql,
     [
-      category,
-      sub_category,
-      amount,
-      note,
-      date
+      category || null,
+
+      sub_category || null,
+
+      Number(amount || 0),
+
+      note || null,
+
+      date || null
     ],
     (err,result)=>{
 
       if(err){
 
-        return res.status(500).json(err);
+        console.log(
+          "EXPENDITURE ERROR:",
+          err
+        );
+
+        return res
+          .status(500)
+          .json({
+            error: err.message
+          });
       }
 
-      res.json(result);
+      res.json({
+        success:true,
+        message:"Expense Added"
+      });
     }
   );
 });
