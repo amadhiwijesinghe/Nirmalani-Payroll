@@ -17,6 +17,8 @@ import RubberTappers from './pages/RubberTappers';
 import TeaCollection from './pages/TeaCollection';
 import RubberDispatch from './pages/RubberDistpatch';
 import CasualWorkers from './pages/CasualWorkers';
+import Income from "./pages/Income";
+import Expenditure from "./pages/Expenditure";
 
 
 function App() {
@@ -197,6 +199,30 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                  <CasualWorkers />
+                </motion.div>
+              )}
+
+              {page === "income" && (
+                <motion.div
+                  key="income"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity:1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                <Income />
+                </motion.div>
+              )}
+
+              {page === "expenditure" && (
+                <motion.div
+                  key="expenditure"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity:1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                <Expenditure />
                 </motion.div>
               )}
 
