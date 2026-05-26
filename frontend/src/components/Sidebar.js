@@ -194,6 +194,10 @@ return (
 
       onClose={handleDrawerToggle}
 
+      ModalProps={{
+        keepMounted: true
+      }}
+
       sx={{
         width: drawerWidth,
         flexShrink: 0,

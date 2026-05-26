@@ -49,7 +49,16 @@ function App() {
         <Sidebar setPage={setPage} currentPage={page} />
 
         {/* MAIN AREA */}
-        <Box sx={{ flexGrow: 1 }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+
+            ml: {
+              xs: 0,
+              md: '240px'
+            }
+          }}
+        >
 
           {/* TOPBAR */}
           <Topbar
