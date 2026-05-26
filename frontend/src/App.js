@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Toolbar, Box } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Toolbar, Box, useMediaQuery } from '@mui/material';
 import { motion, AnimatePresence } from "framer-motion";
 
 import Sidebar from './components/Sidebar';
@@ -21,6 +22,7 @@ function App() {
   const [page, setPage] = useState("employees");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const isMobile = useMediaQuery("(max-width:900px)");
 
   const theme = createTheme({
     palette: {
@@ -61,13 +63,15 @@ function App() {
         >
 
           {/* TOPBAR */}
-          <Topbar
-            toggleDarkMode={() => setDarkMode(!darkMode)}
-            darkMode={darkMode}
-          />
+          {!isMobile && (
+            <Topbar
+              toggleDarkMode={() => setDarkMode(!darkMode)}
+              darkMode={darkMode}
+            />
+          )}
 
           {/* SPACE FOR FIXED TOPBAR */}
-          <Toolbar />
+          {!isMobile && <Toolbar />}
 
           {/* CONTENT */}
           <Box
