@@ -48,6 +48,7 @@ export default function PlantationWorkers({ setPage }) {
   const [editingWorker, setEditingWorker] = useState(null);
   const [editName, setEditName] = useState("");
   const [editEpf, setEditEpf] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
 
   useEffect(() => {
     fetchWorkers();
@@ -1326,6 +1327,27 @@ const printMonthlyReport = () => {
             >
               MONTHLY REPORT
             </Button>
+
+            <TextField
+              label="Search Worker in Table"
+              value={tableSearch}
+              onChange={(e) =>
+                setTableSearch(e.target.value)
+              }
+              sx={{
+                ml: 2,
+                mb: 2,
+                width: 300,
+
+                input: {
+                  color: "#fff"
+                },
+
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
         </Box>
         <Table>
           <TableHead>
@@ -1348,11 +1370,22 @@ const printMonthlyReport = () => {
 
           <TableBody>
             {groupedData
-              .filter((row) =>
-                row.days_worked > 0 &&
-                (!filterMonth || row.month === filterMonth)
-              )
-
+              .filter((row) => {
+                const searchText =
+                  tableSearch.toLowerCase();
+                return (
+                  row.days_worked > 0 &&
+                  (!filterMonth ||
+                    row.month === filterMonth) &&
+                  (
+                    row.name
+                      .toLowerCase()
+                      .includes(searchText) ||
+                    String(row.epf_no)
+                      .includes(searchText)
+                  )
+                );
+              })
               .sort(
                 (a, b) =>
                   Number(a.epf_no) - Number(b.epf_no)
