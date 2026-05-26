@@ -147,7 +147,7 @@ const viewAttendance = async (workerId, month) => {
       },
     });
 
-    console.log("DATA:", res.data); // 👈 ADD THIS
+    console.log("DATA:", res.data);
 
     setAttendanceDates(res.data);
     setOpen(true);
@@ -1351,6 +1351,11 @@ const printMonthlyReport = () => {
               .filter((row) =>
                 row.days_worked > 0 &&
                 (!filterMonth || row.month === filterMonth)
+              )
+
+              .sort(
+                (a, b) =>
+                  Number(a.epf_no) - Number(b.epf_no)
               )
               .map((row) => {
               const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
