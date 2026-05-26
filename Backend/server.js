@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");   // ✅ FIXED
 const mysql = require("mysql2");
@@ -17,6 +18,12 @@ app.use(cors({
 
 app.use(express.json());
 
+require("./services/backupService");
+
+const backupRoutes = require("./routes/backupRoutes");
+
+app.use("/api/backup", backupRoutes);
+
 
 // ================= DEBUG ENV =================
 console.log("ENV CHECK:", {
@@ -29,11 +36,11 @@ console.log("ENV CHECK:", {
 // ================= DATABASE =================
 
 const db = mysql.createPool({
-  host: process.env.MYSQLHOST || "localhost",
-  user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "root123",
-  database: process.env.MYSQLDATABASE || "railway",
-  port: process.env.MYSQLPORT || 3306,
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "root123",
+  database: process.env.DB_NAME || "railway",
+  port: process.env.DB_PORT || 3306,
 
   ssl: {
     rejectUnauthorized: false
