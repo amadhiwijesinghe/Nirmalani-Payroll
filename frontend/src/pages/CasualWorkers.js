@@ -33,6 +33,8 @@ export default function CasualWorkers() {
   const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
@@ -354,6 +356,270 @@ const printSlip = () => {
   win.document.close();
 };
 
+const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week range");
+
+    return;
+  }
+
+  const weeklyRows = attendanceDates.filter((d) => {
+
+    const current = new Date(d.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (weeklyRows.length === 0) {
+
+    alert("No attendance found");
+
+    return;
+  }
+
+  let total = 0;
+
+  const workerName =
+    workers.find(w => w.id === workerId)?.name || "";
+
+  const rowsHTML = weeklyRows.map((d) => {
+
+    total += Number(d.daily_rate || 0);
+
+    return `
+      <tr>
+
+        <td>${workerName}</td>
+
+        <td>
+          ${new Date(d.date).toLocaleDateString(
+            "en-CA"
+          )}
+        </td>
+
+        <td>
+          Rs.${Number(d.daily_rate).toFixed(2)}
+        </td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Weekly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          h2{
+            text-align:center;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+            margin-top:20px;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:10px;
+            text-align:left;
+          }
+
+          th{
+            background:#f1f5f9;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Casual Workers Weekly Report
+        </h2>
+
+        <p>
+          <b>From:</b> ${weekStart}
+          <br/>
+          <b>To:</b> ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Worker Name</th>
+              <th>Date Worked</th>
+              <th>Rate</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3 style="margin-top:20px;">
+          Weekly Total:
+          Rs.${total.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
+const printMonthlyReport = () => {
+
+  if (!filterMonth) {
+
+    alert("Select month");
+
+    return;
+  }
+
+  const rows = groupedData.filter(
+    (row) => row.month === filterMonth
+  );
+
+  let grandTotal = 0;
+
+  const rowsHTML = rows.map((row) => {
+
+    const c = calculate(
+      row.days_worked,
+      row.daily_rate,
+      row.allowance
+    );
+
+    grandTotal += c.balance;
+
+    return `
+      <tr>
+
+        <td>${row.name}</td>
+
+        <td>${row.days_worked}</td>
+
+        <td>${row.daily_rate}</td>
+
+        <td>${row.allowance || 0}</td>
+
+        <td>${c.balance.toFixed(2)}</td>
+
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>Monthly Report</title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Casual Workers Monthly Report
+        </h2>
+
+        <h3>
+          Month: ${filterMonth}
+        </h3>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Name</th>
+              <th>Days Worked</th>
+              <th>Daily Rate</th>
+              <th>Allowance</th>
+              <th>Total Salary</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+
+        </table>
+
+        <h3>
+          Grand Total:
+          Rs.${grandTotal.toFixed(2)}
+        </h3>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
 const deleteAttendance = async (id) => {
 
   if (!window.confirm("Delete attendance?")) return;
@@ -611,18 +877,57 @@ const editAttendance = async (row) => {
             }}
           />
 
-            {/* Clear Button */}
-            <Button
-              onClick={() => setFilterMonth("")}
-              sx={{
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) => setWeekStart(e.target.value)}
+            InputLabelProps={{
+                shrink: true
+            }}
+            helperText="Week Start"
+            sx={{
                 ml: 2,
-                background: "#475569",
-                color: "#fff",
-                height: "56px"
-              }}
-            >
-              Clear
-            </Button>
+                width: 180,
+
+                input: {
+                color: "#fff"
+                },
+
+                '& .MuiFormHelperText-root': {
+                color: '#aaa'
+                },
+
+                '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+                }
+            }}
+            />
+
+            <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) => setWeekEnd(e.target.value)}
+            InputLabelProps={{
+                shrink: true
+            }}
+            helperText="Week End"
+            sx={{
+                ml: 2,
+                width: 180,
+
+                input: {
+                color: "#fff"
+                },
+
+                '& .MuiFormHelperText-root': {
+                color: '#aaa'
+                },
+
+                '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+                }
+            }}
+            />
 
             <Button
               onClick={printSlip}
@@ -636,6 +941,32 @@ const editAttendance = async (row) => {
             >
               PRINT PAYSLIPS
             </Button>
+
+            <Button
+                onClick={printWeeklyReport}
+                sx={{
+                    ml: 2,
+                    background: "#0ea5e9",
+                    color: "#fff",
+                    height: "56px",
+                    fontWeight: "bold"
+                }}
+                >
+                WEEKLY REPORT
+                </Button>
+
+                <Button
+                onClick={printMonthlyReport}
+                sx={{
+                    ml: 2,
+                    background: "#a855f7",
+                    color: "#fff",
+                    height: "56px",
+                    fontWeight: "bold"
+                }}
+                >
+                MONTHLY REPORT
+                </Button>
         </Box>
         <Table>
           <TableHead>
