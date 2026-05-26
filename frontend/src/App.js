@@ -54,7 +54,11 @@ function App() {
        <Box
           sx={{
             flexGrow: 1,
-            width: '100%'
+            width: '100%',
+            ml: {
+              xs: 0,
+              md: '240px'
+            }
           }}
         >
 
