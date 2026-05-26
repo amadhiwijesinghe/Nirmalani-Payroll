@@ -587,7 +587,8 @@ const saveCollection = async () => {
                 height: "100%",
                 background:
                     "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000"
+                color: "#000",
+                fontWeight: "bold"
                 }}
             >
                 Save Collection
@@ -657,7 +658,8 @@ const saveCollection = async () => {
                 height: "100%",
                 background:
                   "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000"
+                color: "#000",
+                fontWeight: "bold"
               }}
             >
               Save Dispatch
@@ -790,7 +792,8 @@ const saveCollection = async () => {
           ml: 2,
           background: "#0ea5e9",
           color: "#fff",
-          height: "56px"
+          height: "56px",
+          fontWeight: "bold"
         }}
       >
         Weekly Report
@@ -802,7 +805,8 @@ const saveCollection = async () => {
           ml: 2,
           background: "#22c55e",
           color: "#000",
-          height: "56px"
+          height: "56px",
+          fontWeight: "bold"
         }}
       >
         Monthly Report

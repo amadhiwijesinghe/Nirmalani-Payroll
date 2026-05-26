@@ -1134,6 +1134,7 @@ const printMonthlyReport = () => {
                   borderRadius: 3,
                   background: "linear-gradient(135deg,#22c55e,#4ade80)",
                   color: "#000",
+                  fontWeight: "bold",
                 }}
               >
                 Mark Present

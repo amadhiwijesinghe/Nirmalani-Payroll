@@ -511,7 +511,8 @@ export default function TeaCollection() {
                   );
                 }}
                 sx={{
-                  color: "#fff"
+                  color: "#fff",
+                  width: 250
                 }}
               >
 
@@ -610,7 +611,8 @@ export default function TeaCollection() {
                 background:
                   "linear-gradient(135deg,#22c55e,#4ade80)",
                 color: "#000",
-                borderRadius: 3
+                borderRadius: 3,
+                fontWeight: "bold"
               }}
             >
               Save
@@ -718,7 +720,8 @@ export default function TeaCollection() {
             ml: 2,
             background: "#0ea5e9",
             color: "#fff",
-            height: "56px"
+            height: "56px",
+            fontWeight: "bold"
           }}
         >
           Weekly Report
@@ -730,7 +733,8 @@ export default function TeaCollection() {
             ml: 2,
             background: "#22c55e",
             color: "#000",
-            height: "56px"
+            height: "56px",
+            fontWeight: "bold"
           }}
         >
           Monthly Report
