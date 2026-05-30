@@ -1847,6 +1847,119 @@ app.put("/expenditure/:id", (req,res)=>{
   );
 });
 
+// ================ FINANCIAL DASHBOARD ==============
+
+//Total Income
+
+app.get("/dashboard/total-income", (req, res) => {
+
+  db.query(
+    "SELCT SUM(amount) AS total FROM income",
+    (err, result) => {
+
+      if (err) return res.status(500).json(err);
+
+      res.json(result[0]);
+    }
+  );
+});
+
+// Total Expenditure
+
+app.get("/dashboard/total-expenditure", (req, res) => {
+
+  db.query(
+    "SELCT SUM(amount) AS total FROM expenditure",
+    (err, result) => {
+
+      if (err) return res.status(500).json(err);
+
+      res.json(result[0]);
+    }
+  );
+});
+
+// Monthly Profit & Loss
+app.get("/dashboard/monthly-profit-loss", (req, res) => {
+
+  const sql = `
+
+    SELECT
+
+      months.month,
+
+      COALESCE(i.income,0) AS income,
+
+      COALESCE(e.expense,0) AS expense,
+
+      COALESCE(i.income,0)
+      -
+      COALESCE(e.expense,0)
+      AS profit
+
+    FROM
+
+    (
+
+      SELECT DATE_FORMAT(date,'%Y-%m')
+      AS month
+      FROM income
+
+      UNION
+
+      SELECT DATE_FORMAT(date,'%Y-%m')
+      AS month
+      FROM expenditure
+
+    ) months
+
+    LEFT JOIN
+
+    (
+      SELECT
+      DATE_FORMAT(date,'%Y-%m')
+      AS month,
+
+      SUM(amount)
+      AS income
+
+      FROM income
+
+      GROUP BY month
+
+    ) i
+
+    ON months.month = i.month
+
+    LEFT JOIN
+
+    (
+      SELECT
+      DATE_FORMAT(date,'%Y-%m')
+      AS month,
+
+      SUM(amount)
+      AS expense
+
+      FROM expenditure
+
+      GROUP BY month
+
+    ) e
+
+    ON months.month = e.month
+
+    ORDER BY months.month DESC
+  `;
+
+  db.query(sql, (err, result) => {
+
+    if (err) return res.status(500).json(err);
+
+    res.json(result);
+  });
+
+});
 
 // ================= SERVER =================
 

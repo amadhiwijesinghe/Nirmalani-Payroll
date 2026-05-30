@@ -19,6 +19,7 @@ import RubberDispatch from './pages/RubberDistpatch';
 import CasualWorkers from './pages/CasualWorkers';
 import Income from "./pages/Income";
 import Expenditure from "./pages/Expenditure";
+import FinancialDashboard from "./pages/FinancialDashboard";
 
 
 function App() {
@@ -223,6 +224,18 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                 <Expenditure />
+                </motion.div>
+              )}
+
+               {page === "financialdashboard" && (
+                <motion.div
+                  key="financialdashboard"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity:1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                <FinancialDashboard />
                 </motion.div>
               )}
 

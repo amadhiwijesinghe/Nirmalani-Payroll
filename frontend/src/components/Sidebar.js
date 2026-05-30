@@ -49,7 +49,8 @@ export default function Sidebar({ setPage, currentPage }) {
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
     { label: "DPL Dispatch", value:"rubberdispatch", icon: <LocalShippingIcon />},
     { label: "Income", value: "income", icon: <TrendingUpIcon />},
-    { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />}
+    { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />},
+    { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />}
 
   ];
 
