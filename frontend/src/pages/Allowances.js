@@ -131,7 +131,7 @@ function Allowance() {
               }}
               sx={{ '& .MuiOutlinedInput-root': {
                 height: 56,
-                width: '100%',
+                width: 250,
                 paddingRight: '14px',
                 color: '#fff' // text color inside input
               },
@@ -165,12 +165,11 @@ function Allowance() {
             <TextField
               select
               label="Month"
-              fullWidth
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               sx={{ '& .MuiOutlinedInput-root': {
                 height: 56,
-                width: '100%',
+                width: 150,
                 paddingRight: '14px',
                 color: '#fff' // text color inside input
               },

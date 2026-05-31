@@ -300,6 +300,48 @@ const calculate = (salary, allowance = 0) => {
     win.document.close();
   };
 
+  const filteredData = month
+    ? data.filter(emp => emp.month === month)
+    : data;
+
+const totals = filteredData.reduce(
+  (acc, emp) => {
+
+    const c = calculate(
+      emp.basic_salary,
+      emp.total_allowance
+    );
+
+    acc.amount += c.amount;
+    acc.epf_8 += c.epf_8;
+    acc.deduction += c.deduction;
+    acc.epf_12 += c.epf_12;
+    acc.epf_20 += c.epf_20;
+    acc.etf += c.etf;
+    acc.allowance += Number(
+      emp.total_allowance || 0
+    );
+    acc.netSalary += c.netSalary;
+
+    return acc;
+  },
+  {
+    amount: 0,
+    epf_8: 0,
+    deduction: 0,
+    epf_12: 0,
+    epf_20: 0,
+    etf: 0,
+    allowance: 0,
+    netSalary: 0
+  }
+);
+
+const totalMoneyRequired =
+  totals.netSalary +
+  totals.epf_20 +
+  totals.etf;
+
   return (
     <Box sx={{
       p: 3,
@@ -350,6 +392,99 @@ const calculate = (salary, allowance = 0) => {
         >
           MONTHLY REPORT
         </Button>
+
+        <Box
+          sx={{
+            mt: 3,
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(220px,1fr))",
+            gap: 3,
+            mb: 3
+          }}
+        >
+
+          <Paper
+            sx={{
+              p: 3,
+              background: "#1e3a8a",
+              color: "#fff",
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h6">
+              💵 Net Salary
+            </Typography>
+
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+            >
+              Rs. {totals.netSalary.toFixed(2)}
+            </Typography>
+          </Paper>
+
+          <Paper
+            sx={{
+              p: 3,
+              background: "#166534",
+              color: "#fff",
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h6">
+              🏦 EPF 20%
+            </Typography>
+
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+            >
+              Rs. {totals.epf_20.toFixed(2)}
+            </Typography>
+          </Paper>
+
+          <Paper
+            sx={{
+              p: 3,
+              background: "#92400e",
+              color: "#fff",
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h6">
+              📄 ETF
+            </Typography>
+
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+            >
+              Rs. {totals.etf.toFixed(2)}
+            </Typography>
+          </Paper>
+
+          <Paper
+            sx={{
+              p: 3,
+              background: "#14532d",
+              color: "#fff",
+              borderRadius: 4
+            }}
+          >
+            <Typography variant="h6">
+              💰 Total Required
+            </Typography>
+
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+            >
+              Rs. {totalMoneyRequired.toFixed(2)}
+            </Typography>
+          </Paper>
+
+        </Box>
       </Paper>
 
       {/* TABLE */}
@@ -403,35 +538,35 @@ const calculate = (salary, allowance = 0) => {
                       {emp.month}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#22c55e" }}>
                       {c.amount.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#facc15" }}>
                       {c.epf_8.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#f87171" }}>
                       {c.deduction.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#a78bfa" }}>
                       {c.epf_12.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#fb7185" }}>
                       {c.epf_20.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#34d399" }}>
                       {c.etf.toFixed(2)}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#fff" }}>
+                    <TableCell sx={{ color: "#14b8a6" }}>
                       {emp.total_allowance}
                     </TableCell>
 
-                    <TableCell sx={{ color: "#22c55e", fontWeight: 700 }}>
+                    <TableCell sx={{ color: "#38bdf8", fontWeight: 700 }}>
                       {c.netSalary.toFixed(2)}
                     </TableCell>
 
@@ -470,6 +605,56 @@ const calculate = (salary, allowance = 0) => {
               </TableRow>
 
             )}
+            <TableRow
+              sx={{
+                background: "rgba(255,255,255,0.08)"
+              }}
+            >
+
+              <TableCell
+                colSpan={3}
+                sx={{
+                  color: "#fff",
+                  fontWeight: "bold"
+                }}
+              >
+                TOTAL
+              </TableCell>
+
+              <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
+                {totals.amount.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#facc15", fontWeight: "bold" }}>
+                {totals.epf_8.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
+                {totals.deduction.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
+                {totals.epf_12.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#fb7185", fontWeight: "bold" }}>
+                {totals.epf_20.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
+                {totals.etf.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#14b8a6", fontWeight: "bold" }}>
+                {totals.allowance.toFixed(2)}
+              </TableCell>
+
+              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
+                {totals.netSalary.toFixed(2)}
+              </TableCell>
+
+              <TableCell />
+            </TableRow>
 
           </TableBody>
         </Table>
