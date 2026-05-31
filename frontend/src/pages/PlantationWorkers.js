@@ -591,7 +591,9 @@ const printWeeklyReport = () => {
   let total = 0;
 
   const workerName =
-    workers.find(w => w.id === workerId)?.name || "";
+    attendanceDates.length > 0
+      ? attendanceDates[0].name
+      : "";
 
   const rowsHTML = weeklyRows.map((d) => {
 
