@@ -239,6 +239,25 @@ app.get("/payroll/:month?", (req, res) => {
   }
 });
 
+// SUMMARY
+app.get("/dashboard/employees-summary", (req, res) => {
+
+  const sql = `
+    SELECT
+      SUM(net_salary) AS totalRequired,
+      SUM(epf_20) AS totalEPF,
+      SUM(etf) AS totalETF
+    FROM payroll
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result[0]);
+  });
+
+});
+
+
 // ================= PLANTATION WORKERS =================
 // 🌿 Plantation Workers
 app.get('/plantation-workers', (req, res) => {
@@ -639,6 +658,25 @@ app.get("/plantation-weekly-report", (req, res) => {
   );
 });
 
+// SUMMARY
+app.get("/dashboard/plantation-summary", (req, res) => {
+
+  const sql = `
+    SELECT
+      SUM(balance) AS totalRequired,
+      SUM(epf_20) AS totalEPF,
+      SUM(etf) AS totalETF
+    FROM plantation_payroll_summary
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result[0]);
+  });
+
+});
+
+
 // ================= RUBBER TAPPERS ============
 //ADD
 
@@ -845,6 +883,22 @@ app.put("/rubber-tappers-attendance/:id", (req, res) => {
       });
     }
   );
+});
+
+// SUMMARY
+app.get("/dashboard/rubber-summary", (req, res) => {
+
+  const sql = `
+    SELECT
+      SUM(total_earning) AS totalRequired
+    FROM rubber_tappers_attendance
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result[0]);
+  });
+
 });
 
 // ================= FULL SYSTEM PDF REPORT =================
@@ -1626,6 +1680,21 @@ app.put(
   }
 );
 
+// SUMMARY
+app.get("/dashboard/casual-summary", (req, res) => {
+
+  const sql = `
+    SELECT
+      SUM(total_earning) AS totalRequired
+    FROM casual_workers_attendance
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result[0]);
+  });
+
+});
 
 // ================= INCOME ================
 // GET INCOME

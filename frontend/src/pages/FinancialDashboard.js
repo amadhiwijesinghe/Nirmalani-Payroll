@@ -30,6 +30,10 @@ export default function FinancialDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
+  const [employeeSummary, setEmployeeSummary] = useState({});
+  const [plantationSummary, setPlantationSummary] = useState({});
+  const [casualSummary, setCasualSummary] = useState({});
+  const [rubberSummary, setRubberSummary] = useState({});
   useEffect(() => {
     fetchDashboard();
   }, []);
@@ -41,7 +45,11 @@ export default function FinancialDashboard() {
       const [
         incomeRes,
         expenseRes,
-        profitRes
+        profitRes,
+        employeeRes,
+        plantationRes,
+        casualRes,
+        rubberRes
       ] = await Promise.all([
 
         axios.get(
@@ -54,7 +62,12 @@ export default function FinancialDashboard() {
 
         axios.get(
           `${API}/dashboard/monthly-profit-loss`
-        )
+        ),
+
+        axios.get(`${API}/dashboard/employees-summary`),
+        axios.get(`${API}/dashboard/plantation-summary`),
+        axios.get(`${API}/dashboard/casual-summary`),
+        axios.get(`${API}/dashboard/rubber-summary`)
 
       ]);
 
@@ -70,6 +83,11 @@ export default function FinancialDashboard() {
         profitRes.data || []
       );
 
+      setEmployeeSummary(employeeRes.data);
+      setPlantationSummary(plantationRes.data);
+      setCasualSummary(casualRes.data);
+      setRubberSummary(rubberRes.data);
+
     } catch (error) {
 
       console.error(error);
@@ -84,8 +102,24 @@ export default function FinancialDashboard() {
     Number(income || 0) -
     Number(expense || 0);
 
-  if (loading) {
+  const totalPayrollRequired =
 
+    Number(employeeSummary.totalRequired || 0)
+    +
+    Number(plantationSummary.totalRequired || 0)
+    +
+    Number(casualSummary.totalRequired || 0)
+    +
+    Number(rubberSummary.totalRequired || 0);
+  const totalEPF =
+    Number(employeeSummary.totalEPF || 0)
+    +
+    Number(plantationSummary.totalEPF || 0);
+  const totalETF =
+    Number(employeeSummary.totalETF || 0)
+    +
+    Number(plantationSummary.totalETF || 0);
+  if (loading) {
     return (
       <Box
         sx={{
@@ -404,6 +438,170 @@ const yearlyProfit =
 
       </Grid>
 
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 1, mb: 3 }}
+      >
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              👨‍💼 Employee Payroll
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {Number(
+                employeeSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              🌱 Plantation Payroll
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {Number(
+                plantationSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              👷 Casual Payroll
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {Number(
+                casualSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              🥛 Rubber Payroll
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {Number(
+                rubberSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              🏦 Total EPF
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {totalEPF.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(10px)",
+              color: "#fff"
+            }}
+          >
+            <Typography>
+              📄 Total ETF
+            </Typography>
+
+            <Typography variant="h5">
+              Rs.
+              {totalETF.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper
+            sx={{
+              p: 3,
+              background:
+                "linear-gradient(135deg,#16a34a,#15803d)",
+              color: "#fff"
+            }}
+          >
+            <Typography variant="h6">
+              💰 Grand Payroll Requirement
+            </Typography>
+
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+            >
+              Rs.
+              {totalPayrollRequired.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+      </Grid>
       <TextField
         select
         label="Year"
@@ -438,7 +636,15 @@ const yearlyProfit =
             >
 
             <Grid item xs={12} md={4}>
-                <Paper sx={{ p:2 }}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    background: "rgba(34,197,94,0.15)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff"
+                  }}
+                >
 
                 <Typography>
                     Year Income
@@ -456,7 +662,15 @@ const yearlyProfit =
             </Grid>
 
             <Grid item xs={12} md={4}>
-                <Paper sx={{ p:2 }}>
+                 <Paper
+                  sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    background: "rgba(249,115,22,0.15)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff"
+                  }}
+                >
 
                 <Typography>
                     Year Expense
@@ -474,7 +688,15 @@ const yearlyProfit =
             </Grid>
 
             <Grid item xs={12} md={4}>
-                <Paper sx={{ p:2 }}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    background: "rgba(168,85,247,0.15)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff"
+                  }}
+                >
 
                 <Typography>
                     Year Profit
