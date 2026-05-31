@@ -35,7 +35,39 @@ export default function Payslips() {
     return String(id).padStart(6, '0');
   };
 
-  // 🌿 PROFESSIONAL CINNAMON PAYSLIP DESIGN
+  // CALCULATION
+const calculate = (salary, allowance = 0) => {
+  const basicSalary =
+    Number(salary || 0);
+  const allowanceAmount =
+    Number(allowance || 0);
+  const epf_8 =
+    basicSalary * 0.08;
+  const epf_12 =
+    basicSalary * 0.12;
+  const epf_20 =
+    epf_8 + epf_12;
+  const etf =
+    basicSalary * 0.03;
+  const deduction =
+    epf_8;
+  const netSalary =
+    basicSalary -
+    deduction +
+    allowanceAmount;
+  return {
+    amount: basicSalary,
+    epf_8,
+    epf_12,
+    epf_20,
+    etf,
+    deduction,
+    allowance: allowanceAmount,
+    netSalary
+  };
+};
+
+  // GENERATE EMPLOYEE PAYSLIP
   const generatePayslip = (emp) => {
     try {
       const doc = new jsPDF();
@@ -63,7 +95,6 @@ export default function Payslips() {
       doc.text(`Name: ${emp.name}`, 15, 45);
       doc.text(`Member ID: ${formatMemberId(emp.memberid)}`, 15, 55);
       doc.text(`Month: ${emp.month || "-"}`, 15, 65);
-      doc.text(`Working Days: ${emp.days_worked || 0}`, 15, 75);
 
       // SALARY SECTION
       let y = 90;
@@ -172,7 +203,12 @@ export default function Payslips() {
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EFF 8%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Action</TableCell>
@@ -180,44 +216,100 @@ export default function Payslips() {
           </TableHead>
 
           <TableBody>
+
             {data.length > 0 ? (
-              data.map((emp, index) => (
-                <TableRow key={index}>
-                  <TableCell sx={{ color: "#fff" }}>{emp.name}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>
-                    {formatMemberId(emp.memberid)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{emp.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{emp.days_worked}</TableCell>
-                  <TableCell sx={{ color: "#f59e0b" }}>
-                    Rs. {emp.total_allowance}
-                  </TableCell>
-                  <TableCell sx={{ color: "#22c55e", fontWeight: 700 }}>
-                    Rs. {emp.net_salary}
-                  </TableCell>
 
-                  <TableCell>
-                    <Button
-                      onClick={() => generatePayslip(emp)}
-                      sx={{
-                        background: "#16a34a",
-                        color: "#fff",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      PDF
-                    </Button>
-                  </TableCell>
+              data.map((emp, index) => {
 
-                </TableRow>
-              ))
+                const c = calculate(
+                  emp.basic_salary,
+                  emp.total_allowance
+                );
+
+                return (
+
+                  <TableRow key={index}>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {emp.name}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {formatMemberId(emp.memberid)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {emp.month}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.amount.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.epf_8.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.deduction.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.epf_12.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.epf_20.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {c.etf.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#fff" }}>
+                      {emp.total_allowance}
+                    </TableCell>
+
+                    <TableCell sx={{ color: "#22c55e", fontWeight: 700 }}>
+                      {c.netSalary.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell>
+
+                      <Button
+                        onClick={() => generatePayslip(emp)}
+                        sx={{
+                          background: "#16a34a",
+                          color: "#fff",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        PDF
+                      </Button>
+
+                    </TableCell>
+
+                  </TableRow>
+
+                );
+
+              })
+
             ) : (
+
               <TableRow>
-                <TableCell colSpan={7} sx={{ color: "#aaa" }}>
+
+                <TableCell
+                  colSpan={12}
+                  sx={{ color: "#aaa" }}
+                >
                   No data available
                 </TableCell>
+
               </TableRow>
+
             )}
+
           </TableBody>
         </Table>
       </Paper>

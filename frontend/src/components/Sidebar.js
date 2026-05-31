@@ -40,9 +40,7 @@ export default function Sidebar({ setPage, currentPage }) {
 
   const menu = [
     { label: "Employees", value: "employees", icon: <PeopleIcon /> },
-    { label: "Attendance", value: "attendance", icon: <EventIcon /> },
     { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
-    { label: "Payroll", value: "payroll", icon: <PaymentsIcon /> },
     { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
