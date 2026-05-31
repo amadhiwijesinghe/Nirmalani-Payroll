@@ -214,6 +214,8 @@ const totals = groupedData
     }
   );
 
+  const totalRequired = totals.amount;
+
   const generateSlipHTML = (row, c) => {
   return `
     <div class="slip">
@@ -865,6 +867,40 @@ const editAttendance = async (row) => {
           </Grid>
         </Grid>
       </Paper>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit,minmax(250px,1fr))",
+          gap: 1,
+          mb: 1
+        }}
+      >
+
+        <Paper
+          sx={{
+            p: 2,
+            width: 300,
+            minHeight: 90,
+            background: "#14532d",
+            color: "#fff",
+            borderRadius: 4
+          }}
+        >
+          <Typography variant="subtitle1">
+            🏦 Total Required
+          </Typography>
+
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+          >
+            Rs. {totalRequired.toFixed(2)}
+          </Typography>
+        </Paper>
+
+      </Box>
 
       {/* TABLE */}
       <Paper
