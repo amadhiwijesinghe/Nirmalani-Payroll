@@ -283,6 +283,9 @@ const totals = groupedData
       acc.etf += c.etf;
       acc.total_deduction += c.total_deduction;
       acc.balance += c.balance;
+      acc.allowance += Number(
+        row.allowance || 0
+      );
 
       return acc;
     },
@@ -294,8 +297,14 @@ const totals = groupedData
       etf: 0,
       total_deduction: 0,
       balance: 0,
+      allowance: 0,
     }
   );
+
+  const totalRequired =
+    totals.balance +
+    totals.epf_20 +
+    totals.etf;
 
   const generateSlipHTML = (row, c) => {
   return `
@@ -1240,6 +1249,97 @@ const rowsHTML = rows.map((row) => {
           </Grid>
         </Paper>
 
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit,minmax(250px,1fr))",
+              gap: 3,
+              mb: 3
+            }}
+          >
+
+            <Paper
+              sx={{
+                p: 3,
+                background: "#1e3a8a",
+                color: "#fff",
+                borderRadius: 4
+              }}
+            >
+              <Typography variant="h6">
+                💵 Net Salary
+              </Typography>
+
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+              >
+                Rs. {totals.balance.toFixed(2)}
+              </Typography>
+            </Paper>
+
+            <Paper
+              sx={{
+                p: 3,
+                background: "#166534",
+                color: "#fff",
+                borderRadius: 4
+              }}
+            >
+              <Typography variant="h6">
+                🏦 EPF 20%
+              </Typography>
+
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+              >
+                Rs. {totals.epf_20.toFixed(2)}
+              </Typography>
+            </Paper>
+
+            <Paper
+              sx={{
+                p: 3,
+                background: "#92400e",
+                color: "#fff",
+                borderRadius: 4
+              }}
+            >
+              <Typography variant="h6">
+                📄 ETF
+              </Typography>
+
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+              >
+                Rs. {totals.etf.toFixed(2)}
+              </Typography>
+            </Paper>
+
+            <Paper
+              sx={{
+                p: 3,
+                background: "#14532d",
+                color: "#fff",
+                borderRadius: 4
+              }}
+            >
+              <Typography variant="h6">
+                💰 Total Required
+              </Typography>
+
+              <Typography
+                variant="h3"
+                fontWeight="bold"
+              >
+                Rs. {totalRequired.toFixed(2)}
+              </Typography>
+            </Paper>
+
+          </Box>
       {/* TABLE */}
       <Paper
         sx={{
