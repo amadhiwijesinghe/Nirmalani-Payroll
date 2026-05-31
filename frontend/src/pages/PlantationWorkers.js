@@ -722,25 +722,46 @@ const printMonthlyReport = () => {
 
   let grandTotal = 0;
 
-  const rowsHTML = rows.map((row) => {
+const rowsHTML = rows.map((row) => {
 
-    const c = calculate(
-      row.days_worked,
-      row.rate_per_day,
-      row.allowance
-    );
+  const c = calculate(
+    row.days_worked,
+    row.rate_per_day,
+    row.allowance
+  );
 
-    grandTotal += c.balance;
+  grandTotal += c.balance;
 
-    return `
-      <tr>
-        <td>${row.name}</td>
-        <td>${row.days_worked}</td>
-        <td>${row.rate_per_day}</td>
-        <td>${c.balance.toFixed(2)}</td>
-      </tr>
-    `;
-  }).join("");
+  return `
+    <tr>
+
+      <td>${row.name}</td>
+
+      <td>${row.month}</td>
+
+      <td>${row.days_worked}</td>
+
+      <td>${row.rate_per_day}</td>
+
+      <td>${c.amount.toFixed(2)}</td>
+
+      <td>${c.epf_8.toFixed(2)}</td>
+
+      <td>${c.total_deduction.toFixed(2)}</td>
+
+      <td>${c.epf_12.toFixed(2)}</td>
+
+      <td>${c.epf_20.toFixed(2)}</td>
+
+      <td>${c.etf.toFixed(2)}</td>
+
+      <td>${row.allowance || 0}</td>
+
+      <td>${c.balance.toFixed(2)}</td>
+
+    </tr>
+  `;
+}).join("");
 
   const html = `
     <html>
@@ -778,18 +799,11 @@ const printMonthlyReport = () => {
 
         <h3>
           Month:
-          ${
-            filterMonth
-          }
-          ${
-            new Date(filterMonth + "-01")
-              .toLocaleString(
-                "default",
-                {
-                  month:"long"
-                }
-              )
-          }
+         ${new Date(filterMonth + "-01")
+          .toLocaleString("default", {
+            month: "long",
+            year: "numeric"
+          })}
         </h3>
 
         <table>
@@ -797,14 +811,34 @@ const printMonthlyReport = () => {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Month</th>
               <th>Days</th>
               <th>Rate</th>
+              <th>Amount</th>
+              <th>EPF 8%</th>
+              <th>Deduction</th>
+              <th>EPF 12%</th>
+              <th>EPF 20%</th>
+              <th>ETF</th>
+              <th>Allowance</th>
               <th>Net Salary</th>
             </tr>
           </thead>
 
           <tbody>
             ${rowsHTML}
+            <tr style="font-weight:bold;background:#f1f5f9;">
+              <td colspan="4">TOTAL</td>
+
+              <td>${totals.amount.toFixed(2)}</td>
+              <td>${totals.epf_8.toFixed(2)}</td>
+              <td>${totals.total_deduction.toFixed(2)}</td>
+              <td>${totals.epf_12.toFixed(2)}</td>
+              <td>${totals.epf_20.toFixed(2)}</td>
+              <td>${totals.etf.toFixed(2)}</td>
+              <td>-</td>
+              <td>${totals.balance.toFixed(2)}</td>
+            </tr>
           </tbody>
 
         </table>
