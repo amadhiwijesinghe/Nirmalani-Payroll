@@ -133,7 +133,7 @@ const fetchData = async () => {
 
 const viewAttendance = async (workerId, month) => {
 
-  console.log("CLICKED →", workerId, month); // 👈 ADD THIS
+  console.log("CLICKED →", workerId, month); 
 
   if (!workerId) {
     alert("Worker ID is missing!");
@@ -566,143 +566,147 @@ const updateWorker = async () => {
   }
 };
 
-const printWeeklyReport = () => {
+const printWeeklyReport = async () => {
 
   if (!weekStart || !weekEnd) {
     alert("Select week range");
     return;
   }
 
-  const weeklyRows = attendanceDates.filter((d) => {
+  try {
 
-    const current = new Date(d.date);
-
-    return (
-      current >= new Date(weekStart) &&
-      current <= new Date(weekEnd)
+    const res = await axios.get(
+      `${API}/plantation-weekly-report`,
+      {
+        params: {
+          weekStart,
+          weekEnd
+        }
+      }
     );
-  });
 
-  if (weeklyRows.length === 0) {
-    alert("No attendance found");
-    return;
-  }
+    const weeklyRows = res.data;
 
-  let total = 0;
+    if (weeklyRows.length === 0) {
+      alert("No attendance found");
+      return;
+    }
 
-  const workerName =
-    attendanceDates.length > 0
-      ? attendanceDates[0].name
-      : "";
+    let total = 0;
 
-  const rowsHTML = weeklyRows.map((d) => {
+    const rowsHTML = weeklyRows.map((d) => {
 
-    total += Number(d.rate_per_day || 0);
+      total += Number(
+        d.rate_per_day || 0
+      );
 
-    return `
-      <tr>
-        <td>${workerName}</td>
+      return `
+        <tr>
 
-        <td>
-          ${new Date(d.date).toLocaleDateString(
-            "en-CA"
-          )}
-        </td>
+          <td>${d.name}</td>
 
-        <td>
-          Rs.${Number(d.rate_per_day).toFixed(2)}
-        </td>
-      </tr>
-    `;
-  }).join("");
+          <td>${d.epf_no}</td>
 
-  const html = `
-    <html>
+          <td>
+            ${d.date.split("T")[0]}
+          </td>
+
+          <td>
+            Rs.${Number(
+              d.rate_per_day
+            ).toFixed(2)}
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+    const html = `
+      <html>
 
       <head>
 
-        <title>Nirmalani Plantation Weekly Report</title>
+      <title>
+        Weekly Report
+      </title>
 
-        <style>
+      <style>
 
-          body{
-            font-family: Arial;
-            padding:20px;
-          }
+      body{
+        font-family:Arial;
+        padding:20px;
+      }
 
-          h2{
-            text-align:center;
-          }
+      table{
+        width:100%;
+        border-collapse:collapse;
+      }
 
-          table{
-            width:100%;
-            border-collapse: collapse;
-            margin-top:20px;
-          }
+      th,td{
+        border:1px solid black;
+        padding:8px;
+      }
 
-          th,td{
-            border:1px solid #000;
-            padding:10px;
-            text-align:left;
-          }
-
-          th{
-            background:#f1f5f9;
-          }
-
-        </style>
+      </style>
 
       </head>
 
       <body>
 
-        <h2>
-          Nirmalani Plantation Weekly Report
-        </h2>
+      <h2>
+        Nirmalani Plantation Weekly Report
+      </h2>
 
-        <p>
-          <b>From:</b> ${weekStart}
-          <br/>
-          <b>To:</b> ${weekEnd}
-        </p>
+      <p>
+        Week:
+        ${weekStart}
+        to
+        ${weekEnd}
+      </p>
 
-        <table>
+      <table>
 
-          <thead>
+      <tr>
 
-            <tr>
-              <th>Worker Name</th>
-              <th>Date Worked</th>
-              <th>Rate</th>
-            </tr>
+        <th>Name</th>
+        <th>EPF</th>
+        <th>Date</th>
+        <th>Rate</th>
 
-          </thead>
+      </tr>
 
-          <tbody>
-            ${rowsHTML}
-          </tbody>
+      ${rowsHTML}
 
-        </table>
+      </table>
 
-        <h3 style="margin-top:20px;">
-          Weekly Total:
-          Rs.${total.toFixed(2)}
-        </h3>
+      <h3>
+        Weekly Total:
+        Rs.${total.toFixed(2)}
+      </h3>
 
-        <script>
-          window.print();
-        </script>
+      <script>
+        window.print();
+      </script>
 
       </body>
 
-    </html>
-  `;
+      </html>
+    `;
 
-  const win = window.open("", "_blank");
+    const win =
+      window.open("", "_blank");
 
-  win.document.write(html);
+    win.document.write(html);
 
-  win.document.close();
+    win.document.close();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Error generating report");
+  }
 };
 
 const printMonthlyReport = () => {

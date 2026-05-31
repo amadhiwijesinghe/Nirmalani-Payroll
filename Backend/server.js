@@ -550,13 +550,21 @@ app.get("/plantation-attendance-dates", (req, res) => {
 
   const sql = `
     SELECT
-      id,
-      date,
-      rate_per_day
-    FROM plantation_daily_attendance
-    WHERE worker_id = ?
-    AND date LIKE CONCAT(?, '%')
-    ORDER BY date ASC
+      pda.id,
+      pda.worker_id,
+      pw.name,
+      pda.date,
+      pda.rate_per_day
+
+    FROM plantation_daily_attendance pda
+
+    JOIN plantation_workers pw
+      ON pw.id = pda.worker_id
+
+    WHERE pda.worker_id = ?
+    AND pda.date LIKE CONCAT(?, '%')
+
+    ORDER BY pda.date ASC
   `;
 
   db.query(sql, [worker_id, month], (err, result) => {
@@ -589,6 +597,44 @@ app.delete("/plantation-daily-attendance/:id", (req, res) => {
         success: true,
         message: "Attendance deleted"
       });
+    }
+  );
+});
+
+// WEEKLY REPORT
+app.get("/plantation-weekly-report", (req, res) => {
+
+  const { weekStart, weekEnd } = req.query;
+
+  const sql = `
+    SELECT
+      pw.name,
+      pw.epf_no,
+      pda.date,
+      pda.rate_per_day
+
+    FROM plantation_daily_attendance pda
+
+    JOIN plantation_workers pw
+      ON pw.id = pda.worker_id
+
+    WHERE DATE(pda.date)
+      BETWEEN ? AND ?
+
+    ORDER BY pda.date ASC
+  `;
+
+  db.query(
+    sql,
+    [weekStart, weekEnd],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
     }
   );
 });
