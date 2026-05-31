@@ -152,6 +152,154 @@ const calculate = (salary, allowance = 0) => {
     }
   };
 
+  const printMonthlyReport = () => {
+
+    if (!month) {
+      alert("Select month");
+      return;
+    }
+
+    const rows = data;
+
+    const totals = {
+      amount: 0,
+      epf_8: 0,
+      deduction: 0,
+      epf_12: 0,
+      epf_20: 0,
+      etf: 0,
+      allowance: 0,
+      netSalary: 0
+    };
+
+    const rowsHTML = rows.map((emp) => {
+
+      const c = calculate(
+        emp.basic_salary,
+        emp.total_allowance
+      );
+
+      totals.amount += c.amount;
+      totals.epf_8 += c.epf_8;
+      totals.deduction += c.deduction;
+      totals.epf_12 += c.epf_12;
+      totals.epf_20 += c.epf_20;
+      totals.etf += c.etf;
+      totals.allowance += Number(emp.total_allowance || 0);
+      totals.netSalary += c.netSalary;
+
+      return `
+        <tr>
+          <td>${emp.name}</td>
+          <td>${formatMemberId(emp.memberid)}</td>
+          <td>${emp.month}</td>
+          <td>${c.amount.toFixed(2)}</td>
+          <td>${c.epf_8.toFixed(2)}</td>
+          <td>${c.deduction.toFixed(2)}</td>
+          <td>${c.epf_12.toFixed(2)}</td>
+          <td>${c.epf_20.toFixed(2)}</td>
+          <td>${c.etf.toFixed(2)}</td>
+          <td>${emp.total_allowance || 0}</td>
+          <td>${c.netSalary.toFixed(2)}</td>
+
+        </tr>
+      `;
+    }).join("");
+
+    const html = `
+      <html>
+
+      <head>
+
+        <title>Monthly Payroll Report</title>
+
+        <style>
+
+          body{
+            font-family:Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+          }
+
+          th,td{
+            border:1px solid #000;
+            padding:8px;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>Nirmalani Plantation</h2>
+
+        <h3>
+          Employee Monthly Payroll Report
+        </h3>
+
+        <h3>
+          Month : ${month}
+        </h3>
+
+        <table>
+
+          <tr>
+
+            <th>Name</th>
+            <th>Member ID</th>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>EPF 8%</th>
+            <th>Deduction</th>
+            <th>EPF 12%</th>
+            <th>EPF 20%</th>
+            <th>ETF</th>
+            <th>Allowance</th>
+            <th>Net Salary</th>
+
+          </tr>
+
+          ${rowsHTML}
+
+          <tr style="font-weight:bold; background:#f1f5f9">
+
+            <td colspan="3">
+              TOTAL
+            </td>
+            <td>${totals.amount.toFixed(2)}</td>
+            <td>${totals.epf_8.toFixed(2)}</td>
+            <td>${totals.deduction.toFixed(2)}</td>
+            <td>${totals.epf_12.toFixed(2)}</td>
+            <td>${totals.epf_20.toFixed(2)}</td>
+            <td>${totals.etf.toFixed(2)}</td>
+            <td>${totals.allowance.toFixed(2)}</td>
+            <td>${totals.netSalary.toFixed(2)}</td>
+
+          </tr>
+
+        </table>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+
+    win.document.write(html);
+
+    win.document.close();
+  };
+
   return (
     <Box sx={{
       p: 3,
@@ -189,6 +337,19 @@ const calculate = (salary, allowance = 0) => {
             <MenuItem key={m} value={m}>{m}</MenuItem>
           ))}
         </TextField>
+
+        <Button
+          onClick={printMonthlyReport}
+          sx={{
+            ml: 2,
+            background: "#a855f7",
+            color: "#fff",
+            height: "56px",
+            fontWeight: "bold"
+          }}
+        >
+          MONTHLY REPORT
+        </Button>
       </Paper>
 
       {/* TABLE */}
@@ -204,7 +365,7 @@ const calculate = (salary, allowance = 0) => {
               <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EFF 8%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
