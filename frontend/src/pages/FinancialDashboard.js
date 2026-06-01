@@ -34,9 +34,10 @@ export default function FinancialDashboard() {
   const [plantationSummary, setPlantationSummary] = useState({});
   const [casualSummary, setCasualSummary] = useState({});
   const [rubberSummary, setRubberSummary] = useState({});
+  const [selectedMonth, setSelectedMonth] = useState("");
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [selectedMonth]);
 
   const fetchDashboard = async () => {
 
@@ -64,10 +65,10 @@ export default function FinancialDashboard() {
           `${API}/dashboard/monthly-profit-loss`
         ),
 
-        axios.get(`${API}/dashboard/employees-summary`),
-        axios.get(`${API}/dashboard/plantation-summary`),
-        axios.get(`${API}/dashboard/casual-summary`),
-        axios.get(`${API}/dashboard/rubber-summary`)
+        axios.get(`${API}/dashboard/employees-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/dashboard/plantation-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/dashboard/casual-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/dashboard/rubber-summary/${selectedMonth}`)
 
       ]);
 
@@ -320,6 +321,26 @@ const yearlyProfit =
       >
         📊 Financial Dashboard
       </Typography>
+
+            <TextField
+              select
+              label="Month"
+              value={selectedMonth}
+              onChange={(e) =>
+                setSelectedMonth(e.target.value)
+              }
+              sx={{ mb:2, width: 150}}
+            >
+              {[
+                "January","February","March","April",
+                "May","June","July","August",
+                "September","October","November","December"
+              ].map(m => (
+                <MenuItem key={m} value={m}>
+                  {m}
+                </MenuItem>
+              ))}
+            </TextField>
 
       {/* SUMMARY CARDS */}
 

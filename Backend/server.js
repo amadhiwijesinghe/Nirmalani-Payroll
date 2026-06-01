@@ -257,29 +257,85 @@ app.get("/payroll/:month?", (req, res) => {
 
 // });
 
-app.get("/dashboard/employees-summary", (req, res) => {
+app.get(
+"/dashboard/employees-summary/:month",
+(req,res)=>{
 
-  const sql = `
-    SELECT
-      COALESCE(SUM(basic_salary),0) AS totalRequired
-    FROM employees
-  `;
+ const month =
+   req.params.month;
 
-  db.query(sql, (err, result) => {
+ db.query(
+   `
+   SELECT
+     e.basic_salary,
+     IFNULL(
+       SUM(a.amount),
+       0
+     ) AS allowance
 
-    if (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
+   FROM employees e
 
-    res.json({
-      totalRequired: result[0].totalRequired,
-      totalEPF: 0,
-      totalETF: 0
-    });
+   LEFT JOIN allowances a
+   ON e.memberid = a.memberid
+   AND a.month = ?
 
-  });
+   GROUP BY
+     e.memberid
+   `,
+   [month],
+   (err,result)=>{
 
+     if(err)
+       return res.status(500)
+       .json(err);
+
+     let totalRequired = 0;
+     let totalEPF = 0;
+     let totalETF = 0;
+
+     result.forEach(row=>{
+
+       const basic =
+         Number(
+           row.basic_salary
+         );
+
+       const allowance =
+         Number(
+           row.allowance
+         );
+
+       const epf20 =
+         basic * 0.20;
+
+       const etf =
+         basic * 0.03;
+
+       const netSalary =
+         basic -
+         (basic*0.08)
+         +
+         allowance;
+
+       totalRequired +=
+         netSalary +
+         epf20 +
+         etf;
+
+       totalEPF += epf20;
+
+       totalETF += etf;
+
+     });
+
+     res.json({
+       totalRequired,
+       totalEPF,
+       totalETF
+     });
+
+   }
+ );
 });
 
 
