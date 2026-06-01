@@ -746,14 +746,11 @@ app.get("/dashboard/plantation-summary/:month", (req, res) => {
 
   const sql = `
     SELECT
-      SUM(
-        (pa.days_worked * pa.rate_per_day)
-        + IFNULL(pa.allowance,0)
-      ) AS grossTotal
-
-    FROM plantation_attendance pa
-
-    WHERE pa.month = ?
+      days_worked,
+      rate_per_day,
+      allowance
+    FROM plantation_attendance
+    WHERE month = ?
   `;
 
   db.query(sql, [month], (err, result) => {
@@ -763,22 +760,39 @@ app.get("/dashboard/plantation-summary/:month", (req, res) => {
       return res.status(500).json(err);
     }
 
-    const gross =
-      Number(result[0].grossTotal || 0);
+    let totalRequired = 0;
+    let totalEPF = 0;
+    let totalETF = 0;
 
-    const epf20 =
-      gross * 0.20;
+    result.forEach(row => {
 
-    const etf =
-      gross * 0.03;
+      const amount =
+        (Number(row.days_worked || 0) *
+         Number(row.rate_per_day || 0))
+        +
+        Number(row.allowance || 0);
 
-    const totalRequired =
-      gross + epf20 + etf;
+      const epf8 = amount * 0.08;
+      const epf12 = amount * 0.12;
+      const epf20 = epf8 + epf12;
+      const etf = amount * 0.03;
+
+      const balance =
+        amount - epf8;
+
+      totalRequired +=
+        balance +
+        epf20 +
+        etf;
+
+      totalEPF += epf20;
+      totalETF += etf;
+    });
 
     res.json({
       totalRequired,
-      totalEPF: epf20,
-      totalETF: etf
+      totalEPF,
+      totalETF
     });
 
   });

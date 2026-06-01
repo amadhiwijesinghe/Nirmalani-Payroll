@@ -34,7 +34,22 @@ export default function FinancialDashboard() {
   const [plantationSummary, setPlantationSummary] = useState({});
   const [casualSummary, setCasualSummary] = useState({});
   const [rubberSummary, setRubberSummary] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState("May");
+  const [selectedMonth, setSelectedMonth] = useState("2026-05");
+
+  const months = [
+  { label: "January", value: "2026-01" },
+  { label: "February", value: "2026-02" },
+  { label: "March", value: "2026-03" },
+  { label: "April", value: "2026-04" },
+  { label: "May", value: "2026-05" },
+  { label: "June", value: "2026-06" },
+  { label: "July", value: "2026-07" },
+  { label: "August", value: "2026-08" },
+  { label: "September", value: "2026-09" },
+  { label: "October", value: "2026-10" },
+  { label: "November", value: "2026-11" },
+  { label: "December", value: "2026-12" }
+];
   useEffect(() => {
     fetchDashboard();
   }, [selectedMonth]);
@@ -339,15 +354,13 @@ const yearlyProfit =
               onChange={(e) =>
                 setSelectedMonth(e.target.value)
               }
-              sx={{ mb:2, width: 150}}
             >
-              {[
-                "January","February","March","April",
-                "May","June","July","August",
-                "September","October","November","December"
-              ].map(m => (
-                <MenuItem key={m} value={m}>
-                  {m}
+              {months.map((m) => (
+                <MenuItem
+                  key={m.value}
+                  value={m.value}
+                >
+                  {m.label}
                 </MenuItem>
               ))}
             </TextField>
