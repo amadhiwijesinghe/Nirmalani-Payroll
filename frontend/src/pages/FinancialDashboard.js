@@ -88,6 +88,11 @@ export default function FinancialDashboard() {
       setCasualSummary(casualRes.data);
       setRubberSummary(rubberRes.data);
 
+      console.log("Employee Summary:", employeeRes.data);
+      console.log("Plantation Summary:", plantationRes.data);
+      console.log("Casual Summary:", casualRes.data);
+      console.log("Rubber Summary:", rubberRes.data);
+
     } catch (error) {
 
       console.error(error);

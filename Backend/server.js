@@ -239,20 +239,45 @@ app.get("/payroll/:month?", (req, res) => {
   }
 });
 
-// SUMMARY
+// // SUMMARY
+// app.get("/dashboard/employees-summary", (req, res) => {
+
+//   const sql = `
+//     SELECT
+//       SUM(net_salary) AS totalRequired,
+//       SUM(epf_20) AS totalEPF,
+//       SUM(etf) AS totalETF
+//     FROM payroll
+//   `;
+
+//   db.query(sql, (err, result) => {
+//     if (err) return res.status(500).json(err);
+//     res.json(result[0]);
+//   });
+
+// });
+
 app.get("/dashboard/employees-summary", (req, res) => {
 
   const sql = `
     SELECT
-      SUM(net_salary) AS totalRequired,
-      SUM(epf_20) AS totalEPF,
-      SUM(etf) AS totalETF
-    FROM payroll
+      COALESCE(SUM(basic_salary),0) AS totalRequired
+    FROM employees
   `;
 
   db.query(sql, (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json(result[0]);
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json({
+      totalRequired: result[0].totalRequired,
+      totalEPF: 0,
+      totalETF: 0
+    });
+
   });
 
 });
@@ -1680,18 +1705,25 @@ app.put(
   }
 );
 
-// SUMMARY
+//SUMMARY
+
 app.get("/dashboard/casual-summary", (req, res) => {
 
   const sql = `
     SELECT
-      SUM(total_earning) AS totalRequired
-    FROM casual_workers_attendance
+      COALESCE(SUM(total_earning),0) AS totalRequired
+    FROM casual_worker_attendance
   `;
 
   db.query(sql, (err, result) => {
-    if (err) return res.status(500).json(err);
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
     res.json(result[0]);
+
   });
 
 });
@@ -1969,7 +2001,7 @@ app.put("/expenditure/:id", (req,res)=>{
 app.get("/dashboard/total-income", (req, res) => {
 
   db.query(
-    "SELCT SUM(amount) AS total FROM income",
+    "SELECT COALESCE(SUM(amount),0) AS total FROM income",
     (err, result) => {
 
       if (err) return res.status(500).json(err);
@@ -1984,7 +2016,7 @@ app.get("/dashboard/total-income", (req, res) => {
 app.get("/dashboard/total-expenditure", (req, res) => {
 
   db.query(
-    "SELCT SUM(amount) AS total FROM expenditure",
+    "SELECT COALESCE(SUM(amount),0) AS total FROM expenditure",
     (err, result) => {
 
       if (err) return res.status(500).json(err);
