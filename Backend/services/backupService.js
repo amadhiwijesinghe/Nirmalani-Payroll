@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const mysqldump = require("mysqldump");
 const path = require("path");
 const fs = require("fs");
+console.log("✅ Backup Service Loaded");
 
 const backupDir = path.join(__dirname, "../backups");
 
@@ -35,11 +36,22 @@ const createBackup = async () => {
   }
 };
 
-// Run every day at 12 AM
-cron.schedule("0 0 * * *", () => {
-  console.log("Running Daily Backup...");
-  createBackup();
-});
+// Create one backup when server starts
+createBackup();
+
+// Run every day at 12:00 AM Sri Lanka time
+cron.schedule(
+  "* * * * *",
+  async () => {
+    console.log("🔄 Running Daily Backup...");
+    await createBackup();
+  },
+  {
+    timezone: "Asia/Colombo"
+  }
+);
+
+console.log("✅ Backup Scheduler Started");
 
 // Export for manual backup
 module.exports = { createBackup };
