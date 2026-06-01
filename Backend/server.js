@@ -239,104 +239,6 @@ app.get("/payroll/:month?", (req, res) => {
   }
 });
 
-// // SUMMARY
-// app.get("/dashboard/employees-summary", (req, res) => {
-
-//   const sql = `
-//     SELECT
-//       SUM(net_salary) AS totalRequired,
-//       SUM(epf_20) AS totalEPF,
-//       SUM(etf) AS totalETF
-//     FROM payroll
-//   `;
-
-//   db.query(sql, (err, result) => {
-//     if (err) return res.status(500).json(err);
-//     res.json(result[0]);
-//   });
-
-// });
-
-app.get(
-"/dashboard/employees-summary/:month",
-(req,res)=>{
-
- const month =
-   req.params.month;
-
- db.query(
-   `
-   SELECT
-     e.basic_salary,
-     IFNULL(
-       SUM(a.amount),
-       0
-     ) AS allowance
-
-   FROM employees e
-
-   LEFT JOIN allowances a
-   ON e.memberid = a.memberid
-   AND a.month = ?
-
-   GROUP BY
-     e.memberid
-   `,
-   [month],
-   (err,result)=>{
-
-     if(err)
-       return res.status(500)
-       .json(err);
-
-     let totalRequired = 0;
-     let totalEPF = 0;
-     let totalETF = 0;
-
-     result.forEach(row=>{
-
-       const basic =
-         Number(
-           row.basic_salary
-         );
-
-       const allowance =
-         Number(
-           row.allowance
-         );
-
-       const epf20 =
-         basic * 0.20;
-
-       const etf =
-         basic * 0.03;
-
-       const netSalary =
-         basic -
-         (basic*0.08)
-         +
-         allowance;
-
-       totalRequired +=
-         netSalary +
-         epf20 +
-         etf;
-
-       totalEPF += epf20;
-
-       totalETF += etf;
-
-     });
-
-     res.json({
-       totalRequired,
-       totalEPF,
-       totalETF
-     });
-
-   }
- );
-});
 
 
 // ================= PLANTATION WORKERS =================
@@ -739,65 +641,6 @@ app.get("/plantation-weekly-report", (req, res) => {
   );
 });
 
-// SUMMARY
-app.get("/dashboard/plantation-summary/:month", (req, res) => {
-
-  const month = req.params.month;
-
-  const sql = `
-    SELECT
-      days_worked,
-      rate_per_day,
-      allowance
-    FROM plantation_attendance
-    WHERE month = ?
-  `;
-
-  db.query(sql, [month], (err, result) => {
-
-    if (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
-
-    let totalRequired = 0;
-    let totalEPF = 0;
-    let totalETF = 0;
-
-    result.forEach(row => {
-
-      const amount =
-        (Number(row.days_worked || 0) *
-         Number(row.rate_per_day || 0))
-        +
-        Number(row.allowance || 0);
-
-      const epf8 = amount * 0.08;
-      const epf12 = amount * 0.12;
-      const epf20 = epf8 + epf12;
-      const etf = amount * 0.03;
-
-      const balance =
-        amount - epf8;
-
-      totalRequired +=
-        balance +
-        epf20 +
-        etf;
-
-      totalEPF += epf20;
-      totalETF += etf;
-    });
-
-    res.json({
-      totalRequired,
-      totalEPF,
-      totalETF
-    });
-
-  });
-
-});
 
 
 // ================= RUBBER TAPPERS ============
@@ -1008,21 +851,6 @@ app.put("/rubber-tappers-attendance/:id", (req, res) => {
   );
 });
 
-// SUMMARY
-app.get("/dashboard/rubber-summary", (req, res) => {
-
-  const sql = `
-    SELECT
-      SUM(total_earning) AS totalRequired
-    FROM rubber_tappers_attendance
-  `;
-
-  db.query(sql, (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json(result[0]);
-  });
-
-});
 
 // ================= FULL SYSTEM PDF REPORT =================
 
