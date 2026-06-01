@@ -34,7 +34,7 @@ export default function FinancialDashboard() {
   const [plantationSummary, setPlantationSummary] = useState({});
   const [casualSummary, setCasualSummary] = useState({});
   const [rubberSummary, setRubberSummary] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("May");
   useEffect(() => {
     fetchDashboard();
   }, [selectedMonth]);
@@ -66,9 +66,9 @@ export default function FinancialDashboard() {
         ),
 
         axios.get(`${API}/dashboard/employees-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/dashboard/plantation-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/dashboard/casual-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/dashboard/rubber-summary/${selectedMonth}`)
+        axios.get(`${API}/dashboard/plantation-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/casual-summary`),
+        axios.get(`${API}/dashboard/rubber-summary`)
 
       ]);
 

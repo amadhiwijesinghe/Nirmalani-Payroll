@@ -744,15 +744,44 @@ app.get("/dashboard/plantation-summary", (req, res) => {
 
   const sql = `
     SELECT
-      SUM(balance) AS totalRequired,
-      SUM(epf_20) AS totalEPF,
-      SUM(etf) AS totalETF
-    FROM plantation_payroll_summary
+      SUM(
+        (
+          COUNT_DAYS.days_worked *
+          pa.rate_per_day
+        )
+        +
+        IFNULL(pa.allowance,0)
+      ) AS totalRequired
+
+    FROM plantation_attendance pa
+
+    JOIN (
+      SELECT
+        worker_id,
+        COUNT(*) AS days_worked
+      FROM plantation_daily_attendance
+      WHERE status='present'
+      GROUP BY worker_id
+    ) COUNT_DAYS
+
+    ON pa.worker_id =
+       COUNT_DAYS.worker_id
   `;
 
   db.query(sql, (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json(result[0]);
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json({
+      totalRequired:
+        result[0].totalRequired || 0,
+      totalEPF: 0,
+      totalETF: 0
+    });
+
   });
 
 });
