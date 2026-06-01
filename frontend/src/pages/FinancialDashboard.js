@@ -96,9 +96,19 @@ export default function FinancialDashboard() {
 
     } catch (error) {
 
-      console.error(error);
+        console.log("ERROR URL:",
+          error.config?.url
+        );
 
-    } finally {
+        console.log("ERROR DATA:",
+          error.response?.data
+        );
+
+        console.log("FULL ERROR:",
+          error
+        );
+
+      }finally {
 
       setLoading(false);
     }
