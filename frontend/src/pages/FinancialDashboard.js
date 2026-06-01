@@ -66,7 +66,7 @@ export default function FinancialDashboard() {
         ),
 
         axios.get(`${API}/dashboard/employees-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/plantation-summary`),
+        axios.get(`${API}/dashboard/plantation-summary/${selectedMonth}`),
         axios.get(`${API}/dashboard/casual-summary`),
         axios.get(`${API}/dashboard/rubber-summary`)
 

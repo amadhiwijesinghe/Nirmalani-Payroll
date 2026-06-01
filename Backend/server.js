@@ -740,46 +740,45 @@ app.get("/plantation-weekly-report", (req, res) => {
 });
 
 // SUMMARY
-app.get("/dashboard/plantation-summary", (req, res) => {
+app.get("/dashboard/plantation-summary/:month", (req, res) => {
+
+  const month = req.params.month;
 
   const sql = `
     SELECT
       SUM(
-        (
-          COUNT_DAYS.days_worked *
-          pa.rate_per_day
-        )
-        +
-        IFNULL(pa.allowance,0)
-      ) AS totalRequired
+        (pa.days_worked * pa.rate_per_day)
+        + IFNULL(pa.allowance,0)
+      ) AS grossTotal
 
     FROM plantation_attendance pa
 
-    JOIN (
-      SELECT
-        worker_id,
-        COUNT(*) AS days_worked
-      FROM plantation_daily_attendance
-      WHERE status='present'
-      GROUP BY worker_id
-    ) COUNT_DAYS
-
-    ON pa.worker_id =
-       COUNT_DAYS.worker_id
+    WHERE pa.month = ?
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(sql, [month], (err, result) => {
 
     if (err) {
       console.log(err);
       return res.status(500).json(err);
     }
 
+    const gross =
+      Number(result[0].grossTotal || 0);
+
+    const epf20 =
+      gross * 0.20;
+
+    const etf =
+      gross * 0.03;
+
+    const totalRequired =
+      gross + epf20 + etf;
+
     res.json({
-      totalRequired:
-        result[0].totalRequired || 0,
-      totalEPF: 0,
-      totalETF: 0
+      totalRequired,
+      totalEPF: epf20,
+      totalETF: etf
     });
 
   });
