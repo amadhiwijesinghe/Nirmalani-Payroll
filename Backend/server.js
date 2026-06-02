@@ -657,21 +657,15 @@ app.get("/plantation-weekly-report", (req, res) => {
 });
 
 app.get(
-  "/dashboard/plantation-summary/:month",
+  "/dashboard/plantation-total-required/:month",
   (req, res) => {
 
     const month = req.params.month;
 
     const sql = `
       SELECT
-        IFNULL(MAX(pa.rate_per_day),0)
-          AS rate_per_day,
-
-        IFNULL(MAX(pa.allowance),0)
-          AS allowance,
-
-        COUNT(pda.id)
-          AS days_worked
+        SUM(pda.rate_per_day) AS amount,
+        IFNULL(MAX(pa.allowance),0) AS allowance
 
       FROM plantation_workers pw
 
@@ -680,16 +674,10 @@ app.get(
 
       LEFT JOIN plantation_attendance pa
         ON pa.worker_id = pw.id
-        AND pa.month = DATE_FORMAT(
-          pda.date,
-          '%Y-%m'
-        )
+        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
 
-      WHERE pda.status = 'present'
-      AND DATE_FORMAT(
-        pda.date,
-        '%Y-%m'
-      ) = ?
+      WHERE pda.status='present'
+      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
 
       GROUP BY pw.id
     `;
@@ -701,40 +689,30 @@ app.get(
       }
 
       let totalRequired = 0;
-      let totalEPF = 0;
-      let totalETF = 0;
 
       result.forEach(row=>{
 
-        const basic =
-          row.days_worked *
-          Number(row.rate_per_day || 0);
-
-        const allowance =
+        const gross =
+          Number(row.amount || 0) +
           Number(row.allowance || 0);
 
-        const gross =
-          basic + allowance;
+        const epf8 = gross * 0.08;
+        const epf12 = gross * 0.12;
+        const epf20 = epf8 + epf12;
+        const etf = gross * 0.03;
 
-        const epf20 =
-          basic * 0.20;
-
-        const etf =
-          basic * 0.03;
+        const balance =
+          gross - epf8;
 
         totalRequired +=
-          gross + epf20 + etf;
-
-        totalEPF += epf20;
-        totalETF += etf;
+          balance +
+          epf20 +
+          etf;
       });
 
       res.json({
-        totalRequired,
-        totalEPF,
-        totalETF
+        totalRequired
       });
-
     });
   }
 );

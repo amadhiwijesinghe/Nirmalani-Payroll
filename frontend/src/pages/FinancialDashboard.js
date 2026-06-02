@@ -34,7 +34,7 @@ export default function FinancialDashboard() {
   const [plantationSummary, setPlantationSummary] = useState({});
   const [casualSummary, setCasualSummary] = useState({});
   const [rubberSummary, setRubberSummary] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState("2026-05");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const months = [
   { label: "January", value: "2026-01" },
@@ -79,7 +79,8 @@ export default function FinancialDashboard() {
           `${API}/dashboard/monthly-profit-loss`
         ),
 
-        axios.get(`${API}/dashboard/plantation-summary/${selectedMonth}`),
+        axios.get(
+  `${API}/dashboard/plantation-total-required/${selectedMonth}`),
         axios.get(`${API}/dashboard/casual-summary/${selectedMonth}`),
         axios.get(`${API}/dashboard/rubber-summary/${selectedMonth}`)
 
@@ -346,6 +347,7 @@ const yearlyProfit =
               onChange={(e) =>
                 setSelectedMonth(e.target.value)
               }
+              sx={{ mb: 3, width: 150}}
             >
               {months.map((m) => (
                 <MenuItem
