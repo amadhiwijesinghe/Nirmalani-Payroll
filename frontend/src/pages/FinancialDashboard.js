@@ -18,6 +18,10 @@ import {
   MenuItem,
   TextField
 } from "@mui/material";
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 const API =
   process.env.REACT_APP_API_URL ||
   "https://nirmalani-payroll-production.up.railway.app";
@@ -35,6 +39,8 @@ export default function FinancialDashboard() {
   const [casualSummary, setCasualSummary] = useState({});
   const [rubberSummary, setRubberSummary] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+
+  const [salaryReport, setSalaryReport] = useState([]);
 
   const months = [
   { label: "January", value: "2026-01" },
@@ -64,7 +70,8 @@ export default function FinancialDashboard() {
         profitRes,
         plantationRes,
         casualRes,
-        rubberRes
+        rubberRes,
+        reportRes
       ] = await Promise.all([
 
         axios.get(
@@ -77,6 +84,10 @@ export default function FinancialDashboard() {
 
         axios.get(
           `${API}/dashboard/monthly-profit-loss`
+        ),
+
+        axios.get(
+          `${API}/dashboard/all-worker-salary-report/${selectedMonth}`
         ),
 
         axios.get(
@@ -97,6 +108,8 @@ export default function FinancialDashboard() {
       setProfitData(
         profitRes.data || []
       );
+
+      setSalaryReport(reportRes.data);
 
       setPlantationSummary(plantationRes.data);
       setCasualSummary(casualRes.data);
@@ -314,6 +327,79 @@ const yearlyProfit =
   win.document.write(html);
 
   win.document.close();
+};
+
+const downloadSalaryPDF = () => {
+
+  const doc = new jsPDF("landscape");
+
+  doc.setFontSize(16);
+
+  doc.text(
+    `Nirmalani Plantation Salary Report - ${selectedMonth}`,
+    14,
+    15
+  );
+
+  autoTable(doc, {
+    startY: 25,
+
+    head: [[
+      "Name",
+      "Month",
+      "Days",
+      "Rate",
+      "Amount",
+      "EPF 8%",
+      "EPF 12%",
+      "EPF 20%",
+      "ETF",
+      "Allowance",
+      "Net Salary"
+    ]],
+
+    body: salaryReport.map(row => {
+
+      const amount =
+        Number(row.amount || 0);
+
+      const allowance =
+        Number(row.allowance || 0);
+
+      const epf8 =
+        amount * 0.08;
+
+      const epf12 =
+        amount * 0.12;
+
+      const epf20 =
+        epf8 + epf12;
+
+      const etf =
+        amount * 0.03;
+
+      const netSalary =
+        amount - epf8 + allowance;
+
+      return [
+        row.name,
+        row.month,
+        row.days,
+        row.rate,
+        amount.toFixed(2),
+        epf8.toFixed(2),
+        epf12.toFixed(2),
+        epf20.toFixed(2),
+        etf.toFixed(2),
+        allowance.toFixed(2),
+        netSalary.toFixed(2)
+      ];
+    })
+  });
+
+  doc.save(
+    `Salary-Report-${selectedMonth}.pdf`
+  );
 };
 
   return (
@@ -600,8 +686,19 @@ const yearlyProfit =
             </Typography>
           </Paper>
         </Grid>
-
       </Grid>
+
+      <Button
+        variant="contained"
+        onClick={downloadSalaryPDF}
+        sx={{
+          ml: 2,
+          background:
+          "linear-gradient(135deg,#22c55e,#16a34a)"
+        }}
+      >
+        📄 Download Salary PDF
+      </Button>
 
 
       <TextField

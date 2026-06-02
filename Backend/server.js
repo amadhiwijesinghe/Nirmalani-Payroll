@@ -2164,6 +2164,34 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
 });
 
+// =================== ALL WORKER REPORT ================
+app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
+  const month = req.params.month;
+
+  try {
+
+    let report = [];
+
+    // Plantation Workers
+    // Push:
+    // name, month, days, rate, amount, allowance
+
+    // Casual Workers
+    // Push:
+    // name, month, days, rate, amount, allowance
+
+    // Rubber Tappers
+    // Push:
+    // name, month, days, rate, amount, allowance
+
+    res.json(report);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
