@@ -49,6 +49,8 @@ export default function PlantationWorkers({ setPage }) {
   const [editName, setEditName] = useState("");
   const [editEpf, setEditEpf] = useState("");
   const [tableSearch, setTableSearch] = useState("");
+  
+  const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
   useEffect(() => {
     fetchWorkers();
@@ -131,7 +133,7 @@ const fetchData = async () => {
     setAllowance("");
   };
 
-const viewAttendance = async (workerId, month) => {
+const viewAttendance = async (workerId, month, name) => {
 
   console.log("CLICKED →", workerId, month); 
 
@@ -150,6 +152,7 @@ const viewAttendance = async (workerId, month) => {
 
     console.log("DATA:", res.data);
 
+    setSelectedWorkerName(name);
     setAttendanceDates(res.data);
     setOpen(true);
 
@@ -1586,7 +1589,7 @@ const rowsHTML = rows.map((row) => {
                       <Button
                         size="small"
                         onClick={() =>
-                          viewAttendance(row.worker_id, row.month)
+                          viewAttendance(row.worker_id, row.month, row.name)
                         }
                         sx={{
                           background: "#38bdf8",
@@ -1664,8 +1667,24 @@ const rowsHTML = rows.map((row) => {
       </Paper>
       {open && (
   <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
-    <Typography sx={{ color: "#fff", mb: 1 }}>
-      Worked Days:
+    <Typography
+      variant="h6"
+      sx={{
+        color: "#22c55e",
+        fontWeight: "bold",
+        mb: 1
+      }}
+    >
+      👤 {selectedWorkerName}
+    </Typography>
+
+    <Typography
+      sx={{
+        color: "#22c55e",
+        mb: 2,
+      }}
+    >
+      Total Days Worked: {attendanceDates.length}
     </Typography>
 
     {attendanceDates.length === 0 ? (
@@ -1679,23 +1698,20 @@ const rowsHTML = rows.map((row) => {
           key={d.id}
           sx={{
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: 2,
-            mb: 1
+            p: 1,
+            mb: 1,
+            borderRadius: 1,
+            background: "rgba(255,255,255,0.05)"
           }}
         >
 
-          <Typography sx={{ color: "#38bdf8" }}>
-            {new Date(d.date).toLocaleDateString(
-              "en-CA",
-              {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit"
-              }
-            )}
+          <Typography sx={{ color: "#fff" }}>
 
-            {" - "}
+            {new Date(d.date).toLocaleDateString("en-CA")}
+
+            {" | "}
 
             {new Date(d.date).toLocaleDateString(
               "en-US",
@@ -1704,23 +1720,21 @@ const rowsHTML = rows.map((row) => {
               }
             )}
 
-            {" - Rs."}
+            {" | Rate: Rs."}
 
-            {d.rate_per_day ?? 0}
+            {Number(d.rate_per_day || 0).toFixed(2)}
 
           </Typography>
 
           <Button
             size="small"
-            onClick={() =>
-              deleteAttendance(d.id)
-            }
+            onClick={() => deleteAttendance(d.id)}
             sx={{
               background: "#ef4444",
               color: "#fff"
             }}
           >
-            Delete
+            DELETE
           </Button>
 
         </Box>

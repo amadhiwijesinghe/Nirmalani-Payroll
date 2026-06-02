@@ -43,6 +43,8 @@ export default function RubberTappers() {
   const [brc, setBrc] = useState("");
   const [kg, setKg] = useState("");
 
+  const [selectedWorkerName, setSelectedWorkerName] = useState("");
+
   useEffect(() => {
     fetchWorkers();
     fetchData();
@@ -1366,9 +1368,25 @@ const editAttendance = async (row) => {
       </Paper>
       {open && (
   <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
-    <Typography sx={{ color: "#fff", mb: 1 }}>
-      Worked Days:
+    <Typography
+      variant="h6"
+      sx={{
+        color: "#22c55e",
+        fontWeight: "bold",
+        mb: 1
+      }}
+    >
+      👤 {selectedWorkerName}
     </Typography>
+
+    <Typography
+          sx={{
+            color: "#22c55e",
+            mb: 2,
+          }}
+        >
+          Total Days Worked: {attendanceDates.length}
+        </Typography>
 
     {attendanceDates.length === 0 ? (
       <Typography sx={{ color: "#aaa" }}>
