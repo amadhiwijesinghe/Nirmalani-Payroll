@@ -2179,6 +2179,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
     const plantationSql = `
       SELECT
         pw.name,
+        pw.epf_no,
         DATE_FORMAT(pda.date,'%Y-%m') AS month,
 
         SUM(
@@ -2209,6 +2210,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       GROUP BY
         pw.id,
+        pw.epf_no,
         DATE_FORMAT(pda.date,'%Y-%m')
     `;
 
@@ -2229,6 +2231,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       report.push({
         type: "Plantation",
+        epf_no: row.epf_no,
         name: row.name,
         month: row.month,
         days: row.days,
@@ -2346,6 +2349,25 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
       });
 
     });
+
+    report.sort((a, b) => {
+
+    const typeOrder = {
+      Plantation: 1,
+      Casual: 2,
+      Rubber: 3
+    };
+
+    if (typeOrder[a.type] !== typeOrder[b.type]) {
+      return typeOrder[a.type] - typeOrder[b.type];
+    }
+
+    return String(a.epf_no || "").localeCompare(
+      String(b.epf_no || ""),
+      undefined,
+      { numeric: true }
+    );
+  });
 
     res.json(report);
 

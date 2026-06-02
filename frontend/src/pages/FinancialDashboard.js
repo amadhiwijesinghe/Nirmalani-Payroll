@@ -341,12 +341,6 @@ const downloadSalaryPDF = () => {
 
   doc.setFontSize(16);
 
-  doc.text(
-    `Nirmalani Plantation Salary Report - ${selectedMonth}`,
-    14,
-    10
-  );
-
   const totalAmount = salaryReport.reduce(
   (sum, row) => sum + Number(row.amount || 0),
   0
@@ -410,7 +404,20 @@ const downloadSalaryPDF = () => {
         9: { cellWidth: 30 }  // Net Salary
       },
 
-    head: [[
+    head: [
+      [
+        {
+          content: `NIRMALANI PLANTATION SALARY PAY - ${selectedMonth}`,
+          colSpan: 12,
+          styles: {
+            halign: "center",
+            fontStyle: "bold",
+            fontSize: 10
+          }
+        }
+      ],
+    
+    [
       "Type",
       "Name",
       "Month",
