@@ -380,22 +380,6 @@ const downloadSalaryPDF = () => {
     totalETF +
     totalAllowance;
 
-    doc.setFontSize(18);
-
-    doc.text(
-      "Nirmalani Plantation",
-      14,
-      12
-    );
-
-    doc.setFontSize(12);
-
-    doc.text(
-      `Salary Report - ${selectedMonth}`,
-      14,
-      20
-    );
-
   autoTable(doc, {
     startY: 25,
 
@@ -488,11 +472,13 @@ const downloadSalaryPDF = () => {
             "",
             "",
             "",
-            totalAmount.toFixed(2),
-            totalEPF20.toFixed(2),
-            totalETF.toFixed(2),
-            totalAllowance.toFixed(2),
-            totalRequired.toFixed(2)
+            totalAmount.toFixed(2),     // Amount
+            "",                         // EPF 8%
+            "",                         // EPF 12%
+            totalEPF20.toFixed(2),      // EPF 20%
+            totalETF.toFixed(2),        // ETF
+            totalAllowance.toFixed(2),  // Allowance
+            totalRequired.toFixed(2)    // Net Salary column
           ]
         ]
       : []
