@@ -333,7 +333,11 @@ const yearlyProfit =
 
 const downloadSalaryPDF = () => {
 
-  const doc = new jsPDF("landscape");
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4"
+  });
 
   doc.setFontSize(16);
 
@@ -348,10 +352,22 @@ const downloadSalaryPDF = () => {
   0
   );
 
-  const totalEPF8 = totalAmount * 0.08;
-  const totalEPF12 = totalAmount * 0.12;
-  const totalEPF20 = totalEPF8 + totalEPF12;
-  const totalETF = totalAmount * 0.03;
+  const plantationAmount =
+    salaryReport
+      .filter(
+        row => row.type === "Plantation"
+      )
+      .reduce(
+        (sum, row) =>
+          sum + Number(row.amount || 0),
+        0
+      );
+
+  const totalEPF20 =
+    plantationAmount * 0.20;
+
+  const totalETF =
+    plantationAmount * 0.03;
 
   const totalAllowance = salaryReport.reduce(
     (sum, row) => sum + Number(row.allowance || 0),
@@ -364,8 +380,51 @@ const downloadSalaryPDF = () => {
     totalETF +
     totalAllowance;
 
+    doc.setFontSize(18);
+
+    doc.text(
+      "Nirmalani Plantation",
+      14,
+      12
+    );
+
+    doc.setFontSize(12);
+
+    doc.text(
+      `Salary Report - ${selectedMonth}`,
+      14,
+      20
+    );
+
   autoTable(doc, {
     startY: 25,
+
+      theme: "grid",
+
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: "linebreak",
+        halign: "center"
+      },
+
+      headStyles: {
+        fillColor: [41, 128, 185],
+        fontSize: 8
+      },
+
+      columnStyles: {
+        0: { cellWidth: 20 }, // Type
+        1: { cellWidth: 35 }, // Name
+        2: { cellWidth: 20 }, // Month
+        3: { cellWidth: 15 }, // Days
+        4: { cellWidth: 20 }, // Rate
+        5: { cellWidth: 25 }, // Amount
+        6: { cellWidth: 25 }, // EPF 20%
+        7: { cellWidth: 20 }, // ETF
+        8: { cellWidth: 25 }, // Allowance
+        9: { cellWidth: 30 }  // Net Salary
+      },
 
     head: [[
       "Type",
@@ -389,10 +448,20 @@ const downloadSalaryPDF = () => {
             const amount = Number(row.amount || 0);
             const allowance = Number(row.allowance || 0);
 
-            const epf8 = amount * 0.08;
-            const epf12 = amount * 0.12;
-            const epf20 = epf8 + epf12;
-            const etf = amount * 0.03;
+            const isPlantation =
+              row.type === "Plantation";
+
+            const epf8 =
+              isPlantation ? amount * 0.08 : 0;
+
+            const epf12 =
+              isPlantation ? amount * 0.12 : 0;
+
+            const epf20 =
+              isPlantation ? amount * 0.20 : 0;
+
+            const etf =
+              isPlantation ? amount * 0.03 : 0;
 
             const netSalary =
               amount - epf8 + allowance;
@@ -431,13 +500,28 @@ const downloadSalaryPDF = () => {
       
   });
 
+  const pageCount = doc.internal.getNumberOfPages();
+
+    for (let i = 1; i <= pageCount; i++) {
+
+      doc.setPage(i);
+
+      doc.setFontSize(8);
+
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        270,
+        200
+      );
+    }
+
   const finalY =
   doc.lastAutoTable.finalY + 15;
 
   doc.setFontSize(12);
 
   doc.text(
-    `Total EPF 20% : Rs. ${totalEPF8.toFixed(2)}`,
+    `Total EPF 20% : Rs. ${totalEPF20.toFixed(2)}`,
     14,
     finalY
   );
