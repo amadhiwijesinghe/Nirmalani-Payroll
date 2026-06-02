@@ -281,7 +281,7 @@ const totals = groupedData
       <table style="width:100%; font-size:12px;">
         <tr>
           <td><b>Total Earnings</b></td>
-          <td style="text-align:right;"><b>${c.calculated_total.toFixed(2)}</b></td>
+          <td style="text-align:right;"><b>${c.amount.toFixed(2)}</b></td>
         </tr>
       </table>
 
@@ -1248,7 +1248,7 @@ const editAttendance = async (row) => {
             <TableRow>
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Date</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Days Worked</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Kg Amount</TableCell>
@@ -1270,7 +1270,7 @@ const editAttendance = async (row) => {
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{new Date(row.date) .toLocaleDateString( "en-CA")}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.worked_days}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.kg}</TableCell>
