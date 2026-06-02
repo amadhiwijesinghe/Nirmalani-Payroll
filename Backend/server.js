@@ -507,7 +507,7 @@ app.get('/plantation-data', (req, res) => {
       pw.name,
       pw.epf_no,
 
-      IFNULL(MAX(pa.rate_per_day), 0) AS rate_per_day,
+      IFNULL(MIN(pda.rate_per_day) AS rate_per_day,
       IFNULL(MAX(pa.allowance), 0) AS allowance,
 
       SUM(

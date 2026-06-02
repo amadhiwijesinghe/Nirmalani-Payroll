@@ -302,7 +302,7 @@ const totals = groupedData
         row.allowance
       );
 
-      acc.amount += c.amount;
+      acc.amount += Number(row.amount || 0);
       acc.epf_8 += c.epf_8;
       acc.epf_12 += c.epf_12;
       acc.epf_20 += c.epf_20;
@@ -754,21 +754,29 @@ const printMonthlyReport = () => {
     return;
   }
 
-  const rows = groupedData.filter(
-    (row) => row.month === filterMonth
-  );
+  const rows = groupedData
+    .filter(
+      (row) => row.month === filterMonth
+    )
+    .sort(
+      (a, b) =>
+        Number(a.epf_no || 0) -
+        Number(b.epf_no || 0)
+    );
 
   let grandTotal = 0;
 
 const rowsHTML = rows.map((row) => {
 
   const c = calculate(
-    row.days_worked,
-    row.rate_per_day,
-    row.allowance
+    row.amount || 0,
+    row.allowance || 0
   );
 
-  grandTotal += c.balance;
+  grandTotal +=
+    c.balance +
+    c.epf_20 +
+    c.etf;
 
   return `
     <tr>
@@ -901,6 +909,15 @@ const rowsHTML = rows.map((row) => {
 
   win.document.close();
 };
+
+const workedDays = attendanceDates.reduce(
+  (sum, d) => {
+    const day = new Date(d.date).getDay();
+
+    return sum + (day === 0 ? 1.5 : 1);
+  },
+  0
+);
 
   return (
     <Box
@@ -1697,7 +1714,7 @@ const rowsHTML = rows.map((row) => {
         </Table>
       </Paper>
       {open && (
-  <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
+    <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
     <Typography
       variant="h6"
       sx={{
@@ -1713,9 +1730,12 @@ const rowsHTML = rows.map((row) => {
       sx={{
         color: "#22c55e",
         mb: 2,
+        fontWeight: "bold"
       }}
     >
-      Total Days Worked: {attendanceDates.length}
+      Total Days Worked:
+      {" "}
+      {workedDays.toFixed(2)}
     </Typography>
 
     {attendanceDates.length === 0 ? (
