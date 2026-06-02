@@ -62,7 +62,6 @@ export default function FinancialDashboard() {
         incomeRes,
         expenseRes,
         profitRes,
-        employeeRes,
         plantationRes,
         casualRes,
         rubberRes
@@ -80,7 +79,6 @@ export default function FinancialDashboard() {
           `${API}/dashboard/monthly-profit-loss`
         ),
 
-        axios.get(`${API}/dashboard/employees-summary`),
         axios.get(`${API}/dashboard/plantation-summary/${selectedMonth}`),
         axios.get(`${API}/dashboard/casual-summary/${selectedMonth}`),
         axios.get(`${API}/dashboard/rubber-summary/${selectedMonth}`)
@@ -99,12 +97,10 @@ export default function FinancialDashboard() {
         profitRes.data || []
       );
 
-      setEmployeeSummary(employeeRes.data);
       setPlantationSummary(plantationRes.data);
       setCasualSummary(casualRes.data);
       setRubberSummary(rubberRes.data);
 
-      console.log("Employee Summary:", employeeRes.data);
       console.log("Plantation Summary:", plantationRes.data);
       console.log("Casual Summary:", casualRes.data);
       console.log("Rubber Summary:", rubberRes.data);
@@ -140,13 +136,11 @@ export default function FinancialDashboard() {
     Number(casualSummary.totalRequired || 0)
     +
     Number(rubberSummary.totalRequired || 0);
+
   const totalEPF =
-    Number(employeeSummary.totalEPF || 0)
-    +
     Number(plantationSummary.totalEPF || 0);
+
   const totalETF =
-    Number(employeeSummary.totalETF || 0)
-    +
     Number(plantationSummary.totalETF || 0);
   if (loading) {
     return (

@@ -650,14 +650,18 @@ app.get(
 
     const sql = `
       SELECT
-        rate_per_day,
-        allowance,
-        COUNT(*) AS days_worked
+        pa.rate_per_day AS rate_per_day,
+        pa.allowance AS allowance,
+        COUNT(pda.id) AS days_worked
+
       FROM plantation_daily_attendance pda
 
       LEFT JOIN plantation_attendance pa
         ON pa.worker_id = pda.worker_id
-        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+        AND pa.month = DATE_FORMAT(
+          pda.date,
+          '%Y-%m'
+        )
 
       WHERE DATE_FORMAT(
         pda.date,
@@ -665,49 +669,53 @@ app.get(
       ) = ?
 
       GROUP BY
-        pda.worker_id
+        pda.worker_id,
+        pa.rate_per_day,
+        pa.allowance
     `;
 
-    db.query(sql,[month],(err,result)=>{
+    db.query(
+      sql,
+      [month],
+      (err, result) => {
 
-      if(err){
-        return res.status(500).json(err);
+        if (err) {
+          console.log(
+            "PLANTATION SUMMARY ERROR:",
+            err
+          );
+          return res.status(500).json(err);
+        }
+
+        let totalRequired = 0;
+        let totalEPF = 0;
+        let totalETF = 0;
+
+        result.forEach((row) => {
+
+          const gross =
+            (Number(row.days_worked || 0) *
+            Number(row.rate_per_day || 0))
+            +
+            Number(row.allowance || 0);
+
+          const epf20 = gross * 0.20;
+          const etf = gross * 0.03;
+
+          totalRequired +=
+            gross + epf20 + etf;
+
+          totalEPF += epf20;
+          totalETF += etf;
+        });
+
+        res.json({
+          totalRequired,
+          totalEPF,
+          totalETF
+        });
       }
-
-      let totalRequired = 0;
-      let totalEPF = 0;
-      let totalETF = 0;
-
-      result.forEach(row=>{
-
-        const gross =
-          row.days_worked *
-          Number(row.rate_per_day || 0)
-          +
-          Number(row.allowance || 0);
-
-        const epf20 =
-          gross * 0.20;
-
-        const etf =
-          gross * 0.03;
-
-        totalRequired +=
-          gross +
-          epf20 +
-          etf;
-
-        totalEPF += epf20;
-        totalETF += etf;
-      });
-
-      res.json({
-        totalRequired,
-        totalEPF,
-        totalETF
-      });
-
-    });
+    );
   }
 );
 
