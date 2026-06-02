@@ -1343,10 +1343,18 @@ const editAttendance = async (row) => {
                   fontWeight: "bold"
                 }}
               >
-                {groupedData.reduce(
-                  (sum, row) => sum + Number(row.kg.toFixed(2)),
-                  0
-                )}
+                {groupedData
+                  .filter(
+                    (row) =>
+                      !filterMonth ||
+                      row.month === filterMonth
+                  )
+                  .reduce(
+                    (sum, row) =>
+                      sum + Number(row.kg || 0),
+                    0
+                  )
+                  .toFixed(2)}
               </TableCell>
 
               {/* Earnings Total */}
