@@ -190,18 +190,37 @@ const calculateKG = (
 
   // 🔥 GRAND TOTAL
 
-const groupedData = data.map((row) => {
+const groupedData = Object.values(
 
-  const total =
-    (Number(row.kg || 0) *
-    Number(row.rate || 0)) +
-    Number(row.allowance || 0);
+  data.reduce((acc, row) => {
+    const key =
+      `${row.worker_id}-${row.month}`;
+    if (!acc[key]) {
+      acc[key] = {
+        worker_id: row.worker_id,
+        name: row.name,
+        month: row.month,
+        rate: Number(row.rate || 0),
+        kg: 0,
+        allowance: 0,
+        worked_days: 0,
+        calculated_total: 0
+      };
+    }
+    acc[key].kg +=
+      Number(row.kg || 0);
+    acc[key].allowance +=
+      Number(row.allowance || 0);
+    acc[key].worked_days += 1;
+    acc[key].calculated_total +=
+      (Number(row.kg || 0) *
+      Number(row.rate || 0))
+      +
+      Number(row.allowance || 0);
+    return acc;
+  }, {})
 
-  return {
-    ...row,
-    calculated_total: total
-  };
-});
+);
 
 
 const totals = groupedData
@@ -212,14 +231,10 @@ const totals = groupedData
   )
   .reduce(
     (acc, row) => {
-
       acc.kg += Number(row.kg || 0);
-
       acc.amount +=
         Number(row.calculated_total || 0);
-
       return acc;
-
     },
     {
       kg: 0,
@@ -239,13 +254,17 @@ const totals = groupedData
       <p><b>Name:</b> ${row.name}</p>
       <p><b>EPF No:</b> ${row.epf_no || "-"}</p>
       <p><b>Month:</b> ${row.month}</p>
+      <p>
+        <b>Worked Days:</b>
+        ${row.worked_days}
+      </p>
 
       <hr/>
 
       <table style="width:100%; font-size:12px;">
         <tr>
-          <td>Liter</td>
-          <td style="text-align:right;">${row.liter}</td>
+          <td>Total KG</td>
+          <td style="text-align:right;">${row.kg.toFixed(2)}</td>
         </tr>
         <tr>
           <td>Rate per Day</td>
@@ -253,7 +272,7 @@ const totals = groupedData
         </tr>
         <tr>
           <td>Allowance</td>
-          <td style="text-align:right;">${row.allowance || 0}</td>
+          <td style="text-align:right;">${row.allowance.toFixed(2)}</td>
         </tr>
       </table>
 
@@ -261,8 +280,8 @@ const totals = groupedData
 
       <table style="width:100%; font-size:12px;">
         <tr>
-          <td><b>Balance Pay</b></td>
-          <td style="text-align:right;"><b>${c.balance.toFixed(2)}</b></td>
+          <td><b>Total Earnings</b></td>
+          <td style="text-align:right;"><b>${c.calculated_total.toFixed(2)}</b></td>
         </tr>
       </table>
 
