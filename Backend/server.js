@@ -2164,71 +2164,31 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
 });
 
-// =================== ALL WORKER REPORT ================
 app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
   const month = req.params.month;
 
   try {
 
-    const plantation = await new Promise((resolve, reject) => {
-
-      db.query(
-        "SELECT * FROM plantation_data WHERE month = ?",
-        [month],
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-
-    });
-
-    const casual = await new Promise((resolve, reject) => {
-
-      db.query(
-        `
-        SELECT *
-        FROM casual_worker_attendance
-        WHERE month = ?
-        `,
-        [month],
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-
-    });
-
-    const rubber = await new Promise((resolve, reject) => {
-
-      db.query(
-        `
-        SELECT *
-        FROM rubber_tappers_attendance
-        WHERE DATE_FORMAT(date,'%Y-%m') = ?
-        `,
-        [month],
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-
-    });
-
-    res.json({
-      plantation,
-      casual,
-      rubber
-    });
+    res.json([
+      {
+        name: "Test Worker",
+        month,
+        days: 10,
+        rate: 1000,
+        amount: 10000,
+        allowance: 500
+      }
+    ]);
 
   } catch (err) {
 
     console.log(err);
 
-    res.status(500).json(err);
+    res.status(500).json({
+      error: err.message
+    });
+
   }
 
 });
