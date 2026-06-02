@@ -357,57 +357,78 @@ const downloadSalaryPDF = () => {
         0
       );
 
+  const totalEPF8 =
+    plantationAmount * 0.08;
+
+  const totalEPF12 =
+    plantationAmount * 0.12;
+
   const totalEPF20 =
-    plantationAmount * 0.20;
+    totalEPF8 + totalEPF12;
 
   const totalETF =
     plantationAmount * 0.03;
 
-  const totalAllowance = salaryReport.reduce(
-    (sum, row) => sum + Number(row.allowance || 0),
-    0
-  );
+  const totalAllowance =
+    salaryReport.reduce(
+      (sum, row) =>
+        sum + Number(row.allowance || 0),
+      0
+    );
+
+  const totalNetSalary =
+    salaryReport.reduce((sum, row) => {
+
+      const amount =
+        Number(row.amount || 0);
+
+      const allowance =
+        Number(row.allowance || 0);
+
+      const epf8 =
+        row.type === "Plantation"
+          ? amount * 0.08
+          : 0;
+
+      return sum + (
+        amount -
+        epf8 +
+        allowance
+      );
+
+    }, 0);
 
   const totalRequired =
-    totalAmount +
+    totalNetSalary +
     totalEPF20 +
-    totalETF +
-    totalAllowance;
+    totalETF;
 
   autoTable(doc, {
-    startY: 25,
+    startY: 8,
 
-      theme: "grid",
+    margin: {
+      left: 5,
+      right: 5
+    },
 
-      styles: {
-        fontSize: 8,
-        cellPadding: 2,
-        overflow: "linebreak",
-        halign: "left"
-      },
+    tableWidth: "auto",
 
-      headStyles: {
-        fontSize: 6,
-        cellPadding: 1
-      },
+    theme: "grid",
 
-      columnStyles: {
-        0: { cellWidth: 20 }, // Type
-        1: { cellWidth: 35 }, // Name
-        2: { cellWidth: 20 }, // Month
-        3: { cellWidth: 15 }, // Days
-        4: { cellWidth: 20 }, // Rate
-        5: { cellWidth: 25 }, // Amount
-        6: { cellWidth: 25 }, // EPF 20%
-        7: { cellWidth: 20 }, // ETF
-        8: { cellWidth: 25 }, // Allowance
-        9: { cellWidth: 30 }  // Net Salary
-      },
+    styles: {
+      fontSize: 7,
+      cellPadding: 1,
+      halign: "center"
+    },
+
+    headStyles: {
+      fontSize: 8
+    },
 
     head: [
       [
         {
-          content: `NIRMALANI PLANTATION SALARY PAY - ${selectedMonth}`,
+          content: `NIRMALANI PLANTATION BALANCE PAY - ${selectedMonth}`,
           colSpan: 12,
           styles: {
             halign: "center",
@@ -479,61 +500,34 @@ const downloadSalaryPDF = () => {
             "",
             "",
             "",
-            totalAmount.toFixed(2),     // Amount
-            "",                         // EPF 8%
-            "",                         // EPF 12%
-            totalEPF20.toFixed(2),      // EPF 20%
-            totalETF.toFixed(2),        // ETF
-            totalAllowance.toFixed(2),  // Allowance
-            totalRequired.toFixed(2)    // Net Salary column
+            totalAmount.toFixed(2),
+            totalEPF8.toFixed(2),
+            totalEPF12.toFixed(2),
+            totalEPF20.toFixed(2),
+            totalETF.toFixed(2),
+            totalAllowance.toFixed(2),
+            totalNetSalary.toFixed(2)
+          ],
+
+          [
+            "",
+            "TOTAL REQUIRED",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            totalRequired.toFixed(2)
           ]
         ]
       : []
 
       
   });
-
-  const pageCount = doc.internal.getNumberOfPages();
-
-    for (let i = 1; i <= pageCount; i++) {
-
-      doc.setPage(i);
-
-      doc.setFontSize(8);
-
-      doc.text(
-        `Page ${i} of ${pageCount}`,
-        270,
-        200
-      );
-    }
-
-  let finalY = doc.lastAutoTable.finalY + 10;
-
-  if (finalY > 180) {
-    doc.addPage();
-    finalY = 20;
-  }
-
-  doc.setFontSize(12);
-
-  doc.text(
-    `Total EPF 20% : Rs. ${totalEPF20.toFixed(2)}`,
-    14,
-    finalY
-  );
-
-  doc.text(
-    `Total ETF : Rs. ${totalETF.toFixed(2)}`,
-    14,
-    finalY + 8
-  );
-
-  doc.text(
-    `Total Labour Cost Required : Rs. ${totalRequired.toFixed(2)}`,
-    14,
-    finalY + 16
-  );
 
   doc.save(
     `Salary-Report-${selectedMonth}.pdf`
@@ -835,7 +829,7 @@ const downloadSalaryPDF = () => {
           "linear-gradient(135deg,#22c55e,#16a34a)"
         }}
       >
-        📄 Download Salary PDF
+        📄 Download BALANCE PAY PDF
       </Button>
 
 
@@ -850,6 +844,7 @@ const downloadSalaryPDF = () => {
         }
         sx={{
             mb:3,
+            mt: 8,
             minWidth:150
         }}
         >
