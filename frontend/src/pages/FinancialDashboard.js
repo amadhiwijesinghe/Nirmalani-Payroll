@@ -68,10 +68,10 @@ export default function FinancialDashboard() {
         incomeRes,
         expenseRes,
         profitRes,
+        reportRes,
         plantationRes,
         casualRes,
-        rubberRes,
-        reportRes
+        rubberRes
       ] = await Promise.all([
 
         axios.get(
@@ -110,6 +110,8 @@ export default function FinancialDashboard() {
       );
 
       setSalaryReport(reportRes.data);
+      console.log("REPORT DATA:", reportRes.data);
+      console.log("IS ARRAY:", Array.isArray(reportRes.data));
 
       setPlantationSummary(plantationRes.data);
       setCasualSummary(casualRes.data);
@@ -358,43 +360,38 @@ const downloadSalaryPDF = () => {
       "Net Salary"
     ]],
 
-    body: salaryReport.map(row => {
+    body: Array.isArray(salaryReport)
+      ? salaryReport.map((row) => {
 
-      const amount =
-        Number(row.amount || 0);
+          const amount =
+            Number(row.amount || 0);
 
-      const allowance =
-        Number(row.allowance || 0);
+          const allowance =
+            Number(row.allowance || 0);
 
-      const epf8 =
-        amount * 0.08;
+          const epf8 = amount * 0.08;
+          const epf12 = amount * 0.12;
+          const epf20 = epf8 + epf12;
+          const etf = amount * 0.03;
 
-      const epf12 =
-        amount * 0.12;
+          const netSalary =
+            amount - epf8 + allowance;
 
-      const epf20 =
-        epf8 + epf12;
-
-      const etf =
-        amount * 0.03;
-
-      const netSalary =
-        amount - epf8 + allowance;
-
-      return [
-        row.name,
-        row.month,
-        row.days,
-        row.rate,
-        amount.toFixed(2),
-        epf8.toFixed(2),
-        epf12.toFixed(2),
-        epf20.toFixed(2),
-        etf.toFixed(2),
-        allowance.toFixed(2),
-        netSalary.toFixed(2)
-      ];
-    })
+          return [
+            row.name,
+            row.month,
+            row.days,
+            row.rate,
+            amount.toFixed(2),
+            epf8.toFixed(2),
+            epf12.toFixed(2),
+            epf20.toFixed(2),
+            etf.toFixed(2),
+            allowance.toFixed(2),
+            netSalary.toFixed(2)
+          ];
+        })
+      : []
   });
 
   doc.save(
