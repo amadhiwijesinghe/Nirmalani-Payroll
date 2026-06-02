@@ -518,7 +518,7 @@ app.get('/plantation-data', (req, res) => {
         END
       ) AS days_worked,
 
-      SUM(pda.rate_per_day) AS amount
+      SUM(pda.rate_per_day) AS amount,
 
       DATE_FORMAT(pda.date, '%Y-%m') AS month
 
