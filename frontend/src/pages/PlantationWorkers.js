@@ -160,6 +160,19 @@ const viewAttendance = async (workerId, month, name) => {
     console.error(err);
     alert("Server error");
   }
+
+  const workedDays = attendanceDates.reduce(
+  (sum, row) => {
+
+    const day =
+      new Date(row.date).getDay();
+
+    return sum +
+      (day === 0 ? 1.5 : 1);
+
+  },
+  0
+);
 };
 
 const addDailyAttendance = async () => {
@@ -236,27 +249,34 @@ const addDailyAttendance = async () => {
 };
 
 
-  // 🔥 CALCULATE
-  const calculate = (days, rate, allowance = 0) => {
-    const amount = (days * rate) + Number(allowance || 0);
-    const epf_8 = amount * 0.08;
-    const epf_12 = amount * 0.12;
-    const epf_20 = epf_8 + epf_12;
-    const etf = amount * 0.03;
-    const total_deduction = epf_8;
-    const balance = amount - total_deduction;
+// 🔥 CALCULATE
+const calculate = (amount, allowance = 0) => {
 
-    return {
-      amount,
-      epf_8,
-      epf_12,
-      epf_20,
-      etf,
-      allowance,
-      total_deduction,
-      balance,
-    };
+  const gross =
+    Number(amount || 0) +
+    Number(allowance || 0);
+
+  const epf_8 = gross * 0.08;
+  const epf_12 = gross * 0.12;
+  const epf_20 = epf_8 + epf_12;
+  const etf = gross * 0.03;
+
+  const total_deduction = epf_8;
+
+  const balance =
+    gross - total_deduction;
+
+  return {
+    amount: gross,
+    epf_8,
+    epf_12,
+    epf_20,
+    etf,
+    allowance,
+    total_deduction,
+    balance
   };
+};
 
   // 🔥 GRAND TOTAL
 
@@ -277,7 +297,10 @@ const totals = groupedData
 )
   .reduce(
     (acc, row) => {
-      const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+      const c = calculate(
+        row.amount,
+        row.allowance
+      );
 
       acc.amount += c.amount;
       acc.epf_8 += c.epf_8;
@@ -387,7 +410,10 @@ const printSlip = () => {
     const chunk = rows.slice(i, i + 2);
 
     const slips = chunk.map(row => {
-      const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+      const c = calculate(
+        row.amount || 0,
+        row.allowance || 0
+      );
       return generateSlipHTML(row, c);
     }).join("");
 

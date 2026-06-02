@@ -477,11 +477,18 @@ app.get("/plantation-attendance-days", (req, res) => {
   const { worker_id, month } = req.query;
 
   const sql = `
-    SELECT COUNT(*) AS days
+    SELECT
+    SUM(
+      CASE
+        WHEN DAYOFWEEK(date)=1
+        THEN 1.5
+        ELSE 1
+      END
+    ) AS days
     FROM plantation_daily_attendance
     WHERE worker_id = ?
-    AND DATE_FORMAT(date, '%Y-%m') = ?
-    AND status = 'present'
+    AND DATE_FORMAT(date,'%Y-%m') = ?
+    AND status='present'
   `;
 
   db.query(sql, [worker_id, month], (err, result) => {
@@ -503,7 +510,15 @@ app.get('/plantation-data', (req, res) => {
       IFNULL(MAX(pa.rate_per_day), 0) AS rate_per_day,
       IFNULL(MAX(pa.allowance), 0) AS allowance,
 
-      COUNT(pda.id) AS days_worked,
+      SUM(
+        CASE
+          WHEN DAYOFWEEK(pda.date)=1
+          THEN 1.5
+          ELSE 1
+        END
+      ) AS days_worked,
+
+      SUM(pda.rate_per_day) AS amount
 
       DATE_FORMAT(pda.date, '%Y-%m') AS month
 
