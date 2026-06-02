@@ -418,7 +418,7 @@ const downloadSalaryPDF = () => {
     styles: {
       fontSize: 7,
       cellPadding: 1,
-      halign: "center"
+      halign: "left"
     },
 
     headStyles: {
