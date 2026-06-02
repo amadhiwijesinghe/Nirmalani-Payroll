@@ -1421,19 +1421,37 @@ const editAttendance = async (row) => {
             {new Date(d.date).toLocaleDateString("en-CA")}
             {" | "}
             KG: {d.kg}
+            {" | "}
+            Rate: {d.rate}
           </Typography>
 
-          <Button
-            size="small"
-            onClick={() => deleteAttendance(d.id)}
-            sx={{
-              background: "#ef4444",
-              color: "#fff",
-              minWidth: "80px"
-            }}
-          >
-            DELETE
-          </Button>
+          <Box sx={{ display: "flex", gap: 1 }}>
+
+            <Button
+              size="small"
+              onClick={() => editAttendance(d)}
+              sx={{
+                background: "#facc15",
+                color: "#000",
+                minWidth: "80px"
+              }}
+            >
+              EDIT
+            </Button>
+
+            <Button
+              size="small"
+              onClick={() => deleteAttendance(d.id)}
+              sx={{
+                background: "#ef4444",
+                color: "#fff",
+                minWidth: "80px"
+              }}
+            >
+              DELETE
+            </Button>
+
+          </Box>
 
         </Box>
       ))
