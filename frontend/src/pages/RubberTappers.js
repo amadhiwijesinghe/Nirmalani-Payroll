@@ -1272,7 +1272,7 @@ const editAttendance = async (row) => {
                   <TableCell sx={{ color: "#fff" }}>{row.worked_days}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.kg}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.kg.toFixed(2)}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
                     {c.amount.toFixed(2)}
@@ -1334,7 +1334,7 @@ const editAttendance = async (row) => {
                 TOTAL
               </TableCell>
 
-              {/* Liter Total */}
+              {/* KG Total */}
               <TableCell
                 sx={{
                   color: "#38bdf8",
@@ -1342,7 +1342,7 @@ const editAttendance = async (row) => {
                 }}
               >
                 {groupedData.reduce(
-                  (sum, row) => sum + Number(row.kg || 0),
+                  (sum, row) => sum + Number(row.kg.toFixed(2)),
                   0
                 )}
               </TableCell>
