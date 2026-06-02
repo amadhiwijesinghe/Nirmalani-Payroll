@@ -344,7 +344,7 @@ const downloadSalaryPDF = () => {
   doc.text(
     `Nirmalani Plantation Salary Report - ${selectedMonth}`,
     14,
-    15
+    10
   );
 
   const totalAmount = salaryReport.reduce(
@@ -389,12 +389,12 @@ const downloadSalaryPDF = () => {
         fontSize: 8,
         cellPadding: 2,
         overflow: "linebreak",
-        halign: "center"
+        halign: "left"
       },
 
       headStyles: {
-        fillColor: [41, 128, 185],
-        fontSize: 8
+        fontSize: 6,
+        cellPadding: 1
       },
 
       columnStyles: {
@@ -501,8 +501,12 @@ const downloadSalaryPDF = () => {
       );
     }
 
-  const finalY =
-  doc.lastAutoTable.finalY + 15;
+  let finalY = doc.lastAutoTable.finalY + 10;
+
+  if (finalY > 180) {
+    doc.addPage();
+    finalY = 20;
+  }
 
   doc.setFontSize(12);
 
@@ -515,13 +519,13 @@ const downloadSalaryPDF = () => {
   doc.text(
     `Total ETF : Rs. ${totalETF.toFixed(2)}`,
     14,
-    finalY + 16
+    finalY + 8
   );
 
   doc.text(
     `Total Labour Cost Required : Rs. ${totalRequired.toFixed(2)}`,
     14,
-    finalY + 24
+    finalY + 16
   );
 
   doc.save(
