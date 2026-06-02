@@ -360,7 +360,7 @@ const downloadSalaryPDF = () => {
 
   const totalRequired =
     totalAmount +
-    totalEPF12 +
+    totalEPF20 +
     totalETF +
     totalAllowance;
 
@@ -420,8 +420,6 @@ const downloadSalaryPDF = () => {
             "",
             "",
             totalAmount.toFixed(2),
-            totalEPF8.toFixed(2),
-            totalEPF12.toFixed(2),
             totalEPF20.toFixed(2),
             totalETF.toFixed(2),
             totalAllowance.toFixed(2),
@@ -439,15 +437,9 @@ const downloadSalaryPDF = () => {
   doc.setFontSize(12);
 
   doc.text(
-    `Total EPF 8% : Rs. ${totalEPF8.toFixed(2)}`,
+    `Total EPF 20% : Rs. ${totalEPF8.toFixed(2)}`,
     14,
     finalY
-  );
-
-  doc.text(
-    `Total EPF 12% : Rs. ${totalEPF12.toFixed(2)}`,
-    14,
-    finalY + 8
   );
 
   doc.text(

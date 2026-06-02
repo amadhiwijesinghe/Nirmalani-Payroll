@@ -2179,7 +2179,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
     const plantationSql = `
       SELECT
         pw.name,
-        DATE_FORMAT(pda.date,'%Y-%m') ? AS month,
+        DATE_FORMAT(pda.date,'%Y-%m') AS month,
 
         SUM(
           CASE
