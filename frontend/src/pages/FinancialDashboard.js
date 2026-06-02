@@ -343,6 +343,27 @@ const downloadSalaryPDF = () => {
     15
   );
 
+  const totalAmount = salaryReport.reduce(
+  (sum, row) => sum + Number(row.amount || 0),
+  0
+  );
+
+  const totalEPF8 = totalAmount * 0.08;
+  const totalEPF12 = totalAmount * 0.12;
+  const totalEPF20 = totalEPF8 + totalEPF12;
+  const totalETF = totalAmount * 0.03;
+
+  const totalAllowance = salaryReport.reduce(
+    (sum, row) => sum + Number(row.allowance || 0),
+    0
+  );
+
+  const totalRequired =
+    totalAmount +
+    totalEPF12 +
+    totalETF +
+    totalAllowance;
+
   autoTable(doc, {
     startY: 25,
 
@@ -362,39 +383,84 @@ const downloadSalaryPDF = () => {
     ]],
 
     body: Array.isArray(salaryReport)
-      ? salaryReport.map((row) => {
+      ? [
+          ...salaryReport.map((row) => {
 
-          const amount =
-            Number(row.amount || 0);
+            const amount = Number(row.amount || 0);
+            const allowance = Number(row.allowance || 0);
 
-          const allowance =
-            Number(row.allowance || 0);
+            const epf8 = amount * 0.08;
+            const epf12 = amount * 0.12;
+            const epf20 = epf8 + epf12;
+            const etf = amount * 0.03;
 
-          const epf8 = amount * 0.08;
-          const epf12 = amount * 0.12;
-          const epf20 = epf8 + epf12;
-          const etf = amount * 0.03;
+            const netSalary =
+              amount - epf8 + allowance;
 
-          const netSalary =
-            amount - epf8 + allowance;
+            return [
+              row.type,
+              row.name,
+              row.month,
+              row.days,
+              row.rate,
+              amount.toFixed(2),
+              epf8.toFixed(2),
+              epf12.toFixed(2),
+              epf20.toFixed(2),
+              etf.toFixed(2),
+              allowance.toFixed(2),
+              netSalary.toFixed(2)
+            ];
+          }),
 
-          return [
-            row.type,
-            row.name,
-            row.month,
-            row.days,
-            row.rate,
-            amount.toFixed(2),
-            epf8.toFixed(2),
-            epf12.toFixed(2),
-            epf20.toFixed(2),
-            etf.toFixed(2),
-            allowance.toFixed(2),
-            netSalary.toFixed(2)
-          ];
-        })
+          [
+            "",
+            "GRAND TOTAL",
+            "",
+            "",
+            "",
+            totalAmount.toFixed(2),
+            totalEPF8.toFixed(2),
+            totalEPF12.toFixed(2),
+            totalEPF20.toFixed(2),
+            totalETF.toFixed(2),
+            totalAllowance.toFixed(2),
+            totalRequired.toFixed(2)
+          ]
+        ]
       : []
+
+      
   });
+
+  const finalY =
+  doc.lastAutoTable.finalY + 15;
+
+  doc.setFontSize(12);
+
+  doc.text(
+    `Total EPF 8% : Rs. ${totalEPF8.toFixed(2)}`,
+    14,
+    finalY
+  );
+
+  doc.text(
+    `Total EPF 12% : Rs. ${totalEPF12.toFixed(2)}`,
+    14,
+    finalY + 8
+  );
+
+  doc.text(
+    `Total ETF : Rs. ${totalETF.toFixed(2)}`,
+    14,
+    finalY + 16
+  );
+
+  doc.text(
+    `Total Labour Cost Required : Rs. ${totalRequired.toFixed(2)}`,
+    14,
+    finalY + 24
+  );
 
   doc.save(
     `Salary-Report-${selectedMonth}.pdf`

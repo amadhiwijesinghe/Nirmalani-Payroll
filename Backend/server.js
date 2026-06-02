@@ -2179,7 +2179,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
     const plantationSql = `
       SELECT
         pw.name,
-        DATE_FORMAT(pda.date,'%Y-%m') AS month,
+        DATE_FORMAT(pda.date,'%Y-%m') ? AS month,
 
         SUM(
           CASE
@@ -2207,7 +2207,9 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
       WHERE pda.status='present'
       AND DATE_FORMAT(pda.date,'%Y-%m') = ?
 
-      GROUP BY pw.id
+      GROUP BY
+        pw.id,
+        DATE_FORMAT(pda.date,'%Y-%m')
     `;
 
     const plantation = await new Promise((resolve, reject) => {
@@ -2313,7 +2315,9 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       WHERE DATE_FORMAT(rta.date,'%Y-%m') = ?
 
-      GROUP BY rt.id
+      GROUP BY
+        rt.id,
+        DATE_FORMAT(rta.date,'%Y-%m')
     `;
 
     const rubber = await new Promise((resolve, reject) => {
