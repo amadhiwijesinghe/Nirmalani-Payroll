@@ -576,7 +576,7 @@ const printMonthlyReport = () => {
         <td>${row.allowance || 0}</td>
 
         <td>
-          ${row.calculated_total.toFixed(2)}
+          ${Number(row.calculated_total || 0).toFixed(2)}
         </td>
 
       </tr>
@@ -1265,7 +1265,8 @@ const editAttendance = async (row) => {
                 (!filterMonth || row.month === filterMonth)
               )
               .map((row) => {
-              const c = calculate(row.kg,row.rate, row.allowance);
+              const c = {
+                amount: Number(row.calculated_total || 0)};
 
               return (
                 <TableRow key={row.id}>
