@@ -252,7 +252,6 @@ const totals = groupedData
       </h3>
 
       <p><b>Name:</b> ${row.name}</p>
-      <p><b>EPF No:</b> ${row.epf_no || "-"}</p>
       <p><b>Month:</b> ${row.month}</p>
       <p>
         <b>Worked Days:</b>
@@ -1382,34 +1381,31 @@ const editAttendance = async (row) => {
           key={d.id}
           sx={{
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            gap: 2,
-            mb: 1
+            p: 1,
+            mb: 1,
+            borderRadius: 1,
+            background: "rgba(255,255,255,0.05)"
           }}
         >
 
-          <Typography sx={{ color: "#38bdf8" }}>
-             {new Date(d.date).toLocaleDateString(
-              "en-CA",
-              {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit"
-              }
-            )}
+          <Typography sx={{ color: "#fff" }}>
+            {new Date(d.date).toLocaleDateString("en-CA")}
+            {" | "}
+            KG: {d.kg}
           </Typography>
 
           <Button
             size="small"
-            onClick={() =>
-              deleteAttendance(d.id)
-            }
+            onClick={() => deleteAttendance(d.id)}
             sx={{
               background: "#ef4444",
-              color: "#fff"
+              color: "#fff",
+              minWidth: "80px"
             }}
           >
-            Delete
+            DELETE
           </Button>
 
         </Box>
