@@ -2164,26 +2164,190 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
 });
 
+
+// ALL WORKER REPORT
 app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
   const month = req.params.month;
 
   try {
 
-    res.json([
-      {
-        name: "Test Worker",
-        month,
-        days: 10,
-        rate: 1000,
-        amount: 10000,
-        allowance: 500
-      }
-    ]);
+    let report = [];
+
+    // ================= PLANTATION =================
+
+    const plantationSql = `
+      SELECT
+        pw.name,
+        DATE_FORMAT(pda.date,'%Y-%m') AS month,
+
+        SUM(
+          CASE
+            WHEN DAYOFWEEK(pda.date)=1
+            THEN 1.5
+            ELSE 1
+          END
+        ) AS days,
+
+        MIN(pda.rate_per_day) AS rate,
+
+        SUM(pda.rate_per_day) AS amount,
+
+        IFNULL(MAX(pa.allowance),0) AS allowance
+
+      FROM plantation_workers pw
+
+      JOIN plantation_daily_attendance pda
+        ON pw.id = pda.worker_id
+
+      LEFT JOIN plantation_attendance pa
+        ON pa.worker_id = pw.id
+        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+
+      WHERE pda.status='present'
+      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
+
+      GROUP BY pw.id
+    `;
+
+    const plantation = await new Promise((resolve, reject) => {
+
+      db.query(
+        plantationSql,
+        [month],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+
+    });
+
+    plantation.forEach(row => {
+
+      report.push({
+        type: "Plantation",
+        name: row.name,
+        month: row.month,
+        days: row.days,
+        rate: row.rate,
+        amount: row.amount,
+        allowance: row.allowance
+      });
+
+    });
+
+    // ================= CASUAL =================
+
+    const casualSql = `
+      SELECT
+        cw.name,
+        cwa.month,
+
+        COUNT(*) AS days,
+
+        MAX(cwa.daily_rate) AS rate,
+
+        SUM(cwa.total_earning) AS amount,
+
+        SUM(cwa.allowance) AS allowance
+
+      FROM casual_worker_attendance cwa
+
+      JOIN casual_workers cw
+        ON cw.id = cwa.worker_id
+
+      WHERE cwa.month = ?
+
+      GROUP BY cw.id,cwa.month
+    `;
+
+    const casual = await new Promise((resolve, reject) => {
+
+      db.query(
+        casualSql,
+        [month],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+
+    });
+
+    casual.forEach(row => {
+
+      report.push({
+        type: "Casual",
+        name: row.name,
+        month: row.month,
+        days: row.days,
+        rate: row.rate,
+        amount: row.amount,
+        allowance: row.allowance
+      });
+
+    });
+
+    // ================= RUBBER =================
+
+    const rubberSql = `
+      SELECT
+
+        rt.name,
+
+        DATE_FORMAT(rta.date,'%Y-%m') AS month,
+
+        COUNT(*) AS days,
+
+        MAX(rta.rate) AS rate,
+
+        SUM(rta.total_earning) AS amount,
+
+        SUM(rta.allowance) AS allowance
+
+      FROM rubber_tappers_attendance rta
+
+      JOIN rubber_tappers rt
+        ON rt.id = rta.worker_id
+
+      WHERE DATE_FORMAT(rta.date,'%Y-%m') = ?
+
+      GROUP BY rt.id
+    `;
+
+    const rubber = await new Promise((resolve, reject) => {
+
+      db.query(
+        rubberSql,
+        [month],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+
+    });
+
+    rubber.forEach(row => {
+
+      report.push({
+        type: "Rubber",
+        name: row.name,
+        month: row.month,
+        days: row.days,
+        rate: row.rate,
+        amount: row.amount,
+        allowance: row.allowance
+      });
+
+    });
+
+    res.json(report);
 
   } catch (err) {
 
-    console.log(err);
+    console.log("REPORT ERROR:", err);
 
     res.status(500).json({
       error: err.message

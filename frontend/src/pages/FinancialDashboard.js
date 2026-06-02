@@ -347,6 +347,7 @@ const downloadSalaryPDF = () => {
     startY: 25,
 
     head: [[
+      "Type",
       "Name",
       "Month",
       "Days",
@@ -378,6 +379,7 @@ const downloadSalaryPDF = () => {
             amount - epf8 + allowance;
 
           return [
+            row.type,
             row.name,
             row.month,
             row.days,
