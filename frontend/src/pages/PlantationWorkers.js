@@ -1572,7 +1572,10 @@ const rowsHTML = rows.map((row) => {
                   Number(a.epf_no) - Number(b.epf_no)
               )
               .map((row) => {
-              const c = calculate(row.days_worked || 0, row.rate_per_day, row.allowance || 0);
+              const c = calculate(
+                row.amount || 0,
+                row.allowance || 0
+              );
 
               return (
                 <TableRow key={row.id}>
@@ -1580,7 +1583,9 @@ const rowsHTML = rows.map((row) => {
                   <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.rate_per_day}</TableCell>
-                  <TableCell sx={{ color: "#22c55e" }}>{c.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {Number(row.amount || 0).toFixed(2)}
+                  </TableCell>
                   <TableCell sx={{ color: "#facc15" }}>
                     {c.epf_8.toFixed(2)}
                   </TableCell>
