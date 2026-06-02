@@ -482,80 +482,122 @@ const yearlyProfit =
       <Grid
         container
         spacing={3}
-        sx={{ mt: 1, mb: 3 }}
+        sx={{ mt: 2, mb: 3 }}
       >
-      <Grid item xs={12} md={4}>
-        <Paper sx={{ p:2 }}>
-          <Typography>
-            🌱 Plantation Labour Cost
-          </Typography>
 
-          <Typography variant="h5">
-            Rs.
-            {Number(
-              plantationSummary.totalRequired || 0
-            ).toLocaleString()}
-          </Typography>
-        </Paper>
-      </Grid>
-
-      <Grid item xs={12} md={4}>
-        <Paper sx={{ p:2 }}>
-          <Typography>
-            👷 Casual Labour Cost
-          </Typography>
-
-          <Typography variant="h5">
-            Rs.
-            {Number(
-              casualSummary.totalRequired || 0
-            ).toLocaleString()}
-          </Typography>
-        </Paper>
-      </Grid>
-
-      <Grid item xs={12} md={4}>
-        <Paper sx={{ p:2 }}>
-          <Typography>
-            🥛 Rubber Labour Cost
-          </Typography>
-
-          <Typography variant="h5">
-            Rs.
-            {Number(
-              rubberSummary.totalRequired || 0
-            ).toLocaleString()}
-          </Typography>
-        </Paper>
-      </Grid>
-
-      <Grid item xs={12} md={4}>
-        <Paper
-          sx={{
-            p: 2,
-            borderRadius: 4,
-            background: "rgba(59,130,246,0.15)",
-            backdropFilter: "blur(10px)",
-            color: "#fff"
-          }}
-        >
-          <Typography>
-            💰 Total Labour Cost
-          </Typography>
-
-          <Typography
-            variant="h5"
+        <Grid item xs={12} md={3}>
+          <Paper
             sx={{
-              color: "#3b82f6",
-              fontWeight: "bold"
+              p: 3,
+              height: 130,
+              borderRadius: 4,
+              background: "rgba(34,197,94,0.15)",
+              backdropFilter: "blur(10px)"
             }}
           >
-            Rs.
-            {totalPayrollRequired.toLocaleString()}
-          </Typography>
+            <Typography sx={{ color: "#cbd5e1" }}>
+              🌱 Plantation Labour Cost
+            </Typography>
 
-        </Paper>
-      </Grid>
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#22c55e",
+                fontWeight: "bold"
+              }}
+            >
+              Rs.
+              {Number(
+                plantationSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Paper
+            sx={{
+              p: 3,
+              height: 130,
+              borderRadius: 4,
+              background: "rgba(249,115,22,0.15)",
+              backdropFilter: "blur(10px)"
+            }}
+          >
+            <Typography sx={{ color: "#cbd5e1" }}>
+              👷 Casual Labour Cost
+            </Typography>
+
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#f97316",
+                fontWeight: "bold"
+              }}
+            >
+              Rs.
+              {Number(
+                casualSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Paper
+            sx={{
+              p: 3,
+              height: 130,
+              borderRadius: 4,
+              background: "rgba(6,182,212,0.15)",
+              backdropFilter: "blur(10px)"
+            }}
+          >
+            <Typography sx={{ color: "#cbd5e1" }}>
+              🥛 Rubber Labour Cost
+            </Typography>
+
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#06b6d4",
+                fontWeight: "bold"
+              }}
+            >
+              Rs.
+              {Number(
+                rubberSummary.totalRequired || 0
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Paper
+            sx={{
+              p: 3,
+              height: 130,
+              borderRadius: 4,
+              background: "rgba(59,130,246,0.15)",
+              backdropFilter: "blur(10px)"
+            }}
+          >
+            <Typography sx={{ color: "#cbd5e1" }}>
+              💰 Total Labour Cost
+            </Typography>
+
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#3b82f6",
+                fontWeight: "bold"
+              }}
+            >
+              Rs.
+              {totalPayrollRequired.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
 
       </Grid>
 

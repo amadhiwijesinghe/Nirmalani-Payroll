@@ -641,7 +641,6 @@ app.get("/plantation-weekly-report", (req, res) => {
   );
 });
 
-// PLANTATION WORKERS SUMMARY
 app.get(
   "/dashboard/plantation-summary/:month",
   (req, res) => {
@@ -650,72 +649,78 @@ app.get(
 
     const sql = `
       SELECT
-        pa.rate_per_day AS rate_per_day,
-        pa.allowance AS allowance,
-        COUNT(pda.id) AS days_worked
+        IFNULL(MAX(pa.rate_per_day),0)
+          AS rate_per_day,
 
-      FROM plantation_daily_attendance pda
+        IFNULL(MAX(pa.allowance),0)
+          AS allowance,
+
+        COUNT(pda.id)
+          AS days_worked
+
+      FROM plantation_workers pw
+
+      JOIN plantation_daily_attendance pda
+        ON pw.id = pda.worker_id
 
       LEFT JOIN plantation_attendance pa
-        ON pa.worker_id = pda.worker_id
+        ON pa.worker_id = pw.id
         AND pa.month = DATE_FORMAT(
           pda.date,
           '%Y-%m'
         )
 
-      WHERE DATE_FORMAT(
+      WHERE pda.status = 'present'
+      AND DATE_FORMAT(
         pda.date,
         '%Y-%m'
       ) = ?
 
-      GROUP BY
-        pda.worker_id,
-        pa.rate_per_day,
-        pa.allowance
+      GROUP BY pw.id
     `;
 
-    db.query(
-      sql,
-      [month],
-      (err, result) => {
+    db.query(sql,[month],(err,result)=>{
 
-        if (err) {
-          console.log(
-            "PLANTATION SUMMARY ERROR:",
-            err
-          );
-          return res.status(500).json(err);
-        }
-
-        let totalRequired = 0;
-        let totalEPF = 0;
-        let totalETF = 0;
-
-        result.forEach((row) => {
-
-          const gross =
-            (Number(row.days_worked || 0) *
-            Number(row.rate_per_day || 0))
-            +
-            Number(row.allowance || 0);
-
-          const epf20 = gross * 0.20;
-          const etf = gross * 0.03;
-
-          totalRequired +=
-            gross + epf20 + etf;
-
-          totalEPF += epf20;
-          totalETF += etf;
-        });
-
-        res.json({
-          totalRequired,
-          totalEPF,
-          totalETF
-        });
+      if(err){
+        return res.status(500).json(err);
       }
-    );
+
+      let totalRequired = 0;
+      let totalEPF = 0;
+      let totalETF = 0;
+
+      result.forEach(row=>{
+
+        const basic =
+          row.days_worked *
+          Number(row.rate_per_day || 0);
+
+        const allowance =
+          Number(row.allowance || 0);
+
+        const gross =
+          basic + allowance;
+
+        const epf20 =
+          basic * 0.20;
+
+        const etf =
+          basic * 0.03;
+
+        totalRequired +=
+          gross + epf20 + etf;
+
+        totalEPF += epf20;
+        totalETF += etf;
+      });
+
+      res.json({
+        totalRequired,
+        totalEPF,
+        totalETF
+      });
+
+    });
   }
 );
 
