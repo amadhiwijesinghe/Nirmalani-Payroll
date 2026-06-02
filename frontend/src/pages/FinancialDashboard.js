@@ -80,10 +80,10 @@ export default function FinancialDashboard() {
           `${API}/dashboard/monthly-profit-loss`
         ),
 
-        axios.get(`${API}/dashboard/employees-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/employees-summary`),
         axios.get(`${API}/dashboard/plantation-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/casual-summary`),
-        axios.get(`${API}/dashboard/rubber-summary`)
+        axios.get(`${API}/dashboard/casual-summary/${selectedMonth}`),
+        axios.get(`${API}/dashboard/rubber-summary/${selectedMonth}`)
 
       ]);
 
@@ -135,8 +135,6 @@ export default function FinancialDashboard() {
 
   const totalPayrollRequired =
 
-    Number(employeeSummary.totalRequired || 0)
-    +
     Number(plantationSummary.totalRequired || 0)
     +
     Number(casualSummary.totalRequired || 0)
@@ -492,8 +490,82 @@ const yearlyProfit =
         spacing={3}
         sx={{ mt: 1, mb: 3 }}
       >
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p:2 }}>
+          <Typography>
+            🌱 Plantation Labour Cost
+          </Typography>
+
+          <Typography variant="h5">
+            Rs.
+            {Number(
+              plantationSummary.totalRequired || 0
+            ).toLocaleString()}
+          </Typography>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p:2 }}>
+          <Typography>
+            👷 Casual Labour Cost
+          </Typography>
+
+          <Typography variant="h5">
+            Rs.
+            {Number(
+              casualSummary.totalRequired || 0
+            ).toLocaleString()}
+          </Typography>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p:2 }}>
+          <Typography>
+            🥛 Rubber Labour Cost
+          </Typography>
+
+          <Typography variant="h5">
+            Rs.
+            {Number(
+              rubberSummary.totalRequired || 0
+            ).toLocaleString()}
+          </Typography>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper
+          sx={{
+            p: 2,
+            borderRadius: 4,
+            background: "rgba(59,130,246,0.15)",
+            backdropFilter: "blur(10px)",
+            color: "#fff"
+          }}
+        >
+          <Typography>
+            💰 Total Labour Cost
+          </Typography>
+
+          <Typography
+            variant="h5"
+            sx={{
+              color: "#3b82f6",
+              fontWeight: "bold"
+            }}
+          >
+            Rs.
+            {totalPayrollRequired.toLocaleString()}
+          </Typography>
+
+        </Paper>
+      </Grid>
 
       </Grid>
+
+
       <TextField
         select
         label="Year"

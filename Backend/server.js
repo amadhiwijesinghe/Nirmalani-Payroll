@@ -641,6 +641,75 @@ app.get("/plantation-weekly-report", (req, res) => {
   );
 });
 
+// PLANTATION WORKERS SUMMARY
+app.get(
+  "/dashboard/plantation-summary/:month",
+  (req, res) => {
+
+    const month = req.params.month;
+
+    const sql = `
+      SELECT
+        rate_per_day,
+        allowance,
+        COUNT(*) AS days_worked
+      FROM plantation_daily_attendance pda
+
+      LEFT JOIN plantation_attendance pa
+        ON pa.worker_id = pda.worker_id
+        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+
+      WHERE DATE_FORMAT(
+        pda.date,
+        '%Y-%m'
+      ) = ?
+
+      GROUP BY
+        pda.worker_id
+    `;
+
+    db.query(sql,[month],(err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      let totalRequired = 0;
+      let totalEPF = 0;
+      let totalETF = 0;
+
+      result.forEach(row=>{
+
+        const gross =
+          row.days_worked *
+          Number(row.rate_per_day || 0)
+          +
+          Number(row.allowance || 0);
+
+        const epf20 =
+          gross * 0.20;
+
+        const etf =
+          gross * 0.03;
+
+        totalRequired +=
+          gross +
+          epf20 +
+          etf;
+
+        totalEPF += epf20;
+        totalETF += etf;
+      });
+
+      res.json({
+        totalRequired,
+        totalEPF,
+        totalETF
+      });
+
+    });
+  }
+);
 
 
 // ================= RUBBER TAPPERS ============
@@ -851,6 +920,47 @@ app.put("/rubber-tappers-attendance/:id", (req, res) => {
   );
 });
 
+// SUMMARY
+app.get(
+  "/dashboard/rubber-summary/:month",
+  (req, res) => {
+
+    const month =
+      req.params.month;
+
+    const sql = `
+      SELECT
+        SUM(total_earning)
+          AS total
+      FROM rubber_tappers_attendance
+      WHERE DATE_FORMAT(
+        date,
+        '%Y-%m'
+      ) = ?
+    `;
+
+    db.query(
+      sql,
+      [month],
+      (err, result) => {
+
+        if (err) {
+          return res
+            .status(500)
+            .json(err);
+        }
+
+        res.json({
+          totalRequired:
+            Number(
+              result[0].total || 0
+            )
+        });
+
+      }
+    );
+  }
+);
 
 // ================= FULL SYSTEM PDF REPORT =================
 
@@ -1363,6 +1473,8 @@ app.get("/rubber-collection", (req, res) => {
   });
 });
 
+
+
 // ================= CASUAL WORKERS =========
 app.get("/casual-workers-data", (req, res) => {
 
@@ -1632,27 +1744,39 @@ app.put(
 );
 
 //SUMMARY
+app.get(
+  "/dashboard/casual-summary/:month",
+  (req,res)=>{
 
-app.get("/dashboard/casual-summary", (req, res) => {
+    db.query(
+      `
+      SELECT
+      COALESCE(
+        SUM(total_earning),
+        0
+      ) AS total
+      FROM casual_worker_attendance
+      WHERE month = ?
+      `,
+      [req.params.month],
+      (err,result)=>{
 
-  const sql = `
-    SELECT
-      COALESCE(SUM(total_earning),0) AS totalRequired
-    FROM casual_worker_attendance
-  `;
+        if(err){
+          return res.status(500).json(err);
+        }
 
-  db.query(sql, (err, result) => {
+        res.json({
+          totalRequired:
+            Number(
+              result[0].total
+            )
+        });
 
-    if (err) {
-      console.log(err);
-      return res.status(500).json(err);
-    }
+      }
+    );
 
-    res.json(result[0]);
-
-  });
-
-});
+  }
+);
 
 // ================= INCOME ================
 // GET INCOME
