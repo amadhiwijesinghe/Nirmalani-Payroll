@@ -429,7 +429,7 @@ const downloadSalaryPDF = () => {
       [
         {
           content: `NIRMALANI PLANTATION BALANCE PAY - ${selectedMonth}`,
-          colSpan: 12,
+          colSpan: 13,
           styles: {
             halign: "center",
             fontStyle: "bold",
@@ -440,6 +440,7 @@ const downloadSalaryPDF = () => {
     
     [
       "Type",
+      "EPF",
       "Name",
       "Month",
       "Days",
@@ -480,6 +481,7 @@ const downloadSalaryPDF = () => {
 
             return [
               row.type,
+              row.epf_no || "",
               row.name,
               row.month,
               row.days,
@@ -496,6 +498,7 @@ const downloadSalaryPDF = () => {
 
           [
             "",
+            "",
             "GRAND TOTAL",
             "",
             "",
@@ -510,6 +513,7 @@ const downloadSalaryPDF = () => {
           ],
 
           [
+            "",
             "",
             "TOTAL REQUIRED",
             "",
