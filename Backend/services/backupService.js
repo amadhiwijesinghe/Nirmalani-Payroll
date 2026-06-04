@@ -6,17 +6,32 @@ console.log("✅ Backup Service Loaded");
 
 const backupDir = path.join(__dirname, "../backups");
 
+console.log("Backup Directory:", backupDir);
+
 if (!fs.existsSync(backupDir)) {
-  fs.mkdirSync(backupDir);
+  fs.mkdirSync(backupDir, { recursive: true });
 }
 
 const createBackup = async () => {
   try {
-    const date = new Date().toISOString().split("T")[0];
+    const now = new Date();
+
+    const timestamp =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      "_" +
+      String(now.getHours()).padStart(2, "0") +
+      "-" +
+      String(now.getMinutes()).padStart(2, "0") +
+      "-" +
+      String(now.getSeconds()).padStart(2, "0");
 
     const filePath = path.join(
       backupDir,
-      `backup-${date}.sql`
+      `backup-${timestamp}.sql`
     );
 
     await mysqldump({
