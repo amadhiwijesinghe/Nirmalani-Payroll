@@ -289,12 +289,19 @@ const calculate = (amount, allowance = 0) => {
 );
 
 
+const currentMonth = new Date()
+  .toISOString()
+  .slice(0, 7);
+
+const selectedMonth =
+  filterMonth || currentMonth;
+
 const totals = groupedData
-  .filter((row) =>
-  row.days_worked > 0 &&
-  row.month &&
-  (!filterMonth || row.month === filterMonth)
-)
+  .filter(
+    (row) =>
+      row.days_worked > 0 &&
+      row.month === selectedMonth
+  )
   .reduce(
     (acc, row) => {
       const c = calculate(

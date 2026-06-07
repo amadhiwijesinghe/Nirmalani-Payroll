@@ -224,12 +224,17 @@ const groupedData = Object.values(
 
 );
 
+const currentMonth = new Date()
+  .toISOString()
+  .slice(0, 7);
+
+const selectedMonth =
+  filterMonth || currentMonth;
 
 const totals = groupedData
   .filter(
     (row) =>
-      !filterMonth ||
-      row.month === filterMonth
+      row.month === selectedMonth
   )
   .reduce(
     (acc, row) => {
@@ -1214,8 +1219,7 @@ const editAttendance = async (row) => {
                   {
                     groupedData.filter(
                       row =>
-                        !filterMonth ||
-                        row.month === filterMonth
+                        row.month === selectedMonth
                     ).length
                   }
                 </Typography>
@@ -1262,7 +1266,7 @@ const editAttendance = async (row) => {
           <TableBody>
             {groupedData
               .filter((row) =>
-                (!filterMonth || row.month === filterMonth)
+                row.month === selectedMonth
               )
               .map((row) => {
               const c = {
@@ -1346,11 +1350,7 @@ const editAttendance = async (row) => {
               >
                 {groupedData
                  .filter((row) => {
-                    const currentMonth = new Date()
-                      .toISOString()
-                      .slice(0, 7);
-
-                    return row.month === (filterMonth || currentMonth);
+                    return row.month === selectedMonth;
                   })
                   .reduce(
                     (sum, row) =>
