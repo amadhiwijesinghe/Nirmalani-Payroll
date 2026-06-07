@@ -1569,18 +1569,18 @@ const workedDays = attendanceDates.reduce(
           <TableBody>
             {groupedData
               .filter((row) => {
-                const searchText =
-                  tableSearch.toLowerCase();
+                const searchText = tableSearch.toLowerCase();
+
+                const currentMonth = new Date()
+                  .toISOString()
+                  .slice(0, 7);
+
                 return (
                   row.days_worked > 0 &&
-                  (!filterMonth ||
-                    row.month === filterMonth) &&
+                  row.month === (filterMonth || currentMonth) &&
                   (
-                    row.name
-                      .toLowerCase()
-                      .includes(searchText) ||
-                    String(row.epf_no)
-                      .includes(searchText)
+                    row.name.toLowerCase().includes(searchText) ||
+                    String(row.epf_no).includes(searchText)
                   )
                 );
               })

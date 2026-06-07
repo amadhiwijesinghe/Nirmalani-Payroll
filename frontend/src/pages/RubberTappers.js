@@ -1345,11 +1345,13 @@ const editAttendance = async (row) => {
                 }}
               >
                 {groupedData
-                  .filter(
-                    (row) =>
-                      !filterMonth ||
-                      row.month === filterMonth
-                  )
+                 .filter((row) => {
+                    const currentMonth = new Date()
+                      .toISOString()
+                      .slice(0, 7);
+
+                    return row.month === (filterMonth || currentMonth);
+                  })
                   .reduce(
                     (sum, row) =>
                       sum + Number(row.kg || 0),
