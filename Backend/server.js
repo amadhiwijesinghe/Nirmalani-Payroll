@@ -2164,6 +2164,54 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
 });
 
+// MONTHLY FINANCIAL REPORT 
+app.get(
+  "/dashboard/monthly-financial-report/:month",
+  async (req, res) => {
+
+    try {
+
+      const { month } = req.params;
+
+      const [incomeRows] =
+        await db.promise().query(
+          `
+          SELECT
+            category,
+            SUM(amount) amount
+          FROM income
+          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          GROUP BY category
+          `,
+          [month]
+        );
+
+      const [expenseRows] =
+        await db.promise().query(
+          `
+          SELECT
+            category,
+            SUM(amount) amount
+          FROM expenditure
+          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          GROUP BY category
+          `,
+          [month]
+        );
+
+      res.json({
+        income: incomeRows,
+        expenditure: expenseRows
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json(err);
+    }
+});
+
 
 // ALL WORKER REPORT
 app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {

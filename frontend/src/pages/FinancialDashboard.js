@@ -538,6 +538,126 @@ const downloadSalaryPDF = () => {
   );
 };
 
+const downloadFinancialReport = async () => {
+
+  try {
+
+    const month =
+      `${selectedYear}-${String(selectedMonth).padStart(2,"0")}`;
+
+    const res =
+      await axios.get(
+        `${API}/dashboard/monthly-financial-report/${month}`
+      );
+
+    const income =
+      res.data.income;
+
+    const expenditure =
+      res.data.expenditure;
+
+    const doc =
+      new jsPDF();
+
+    doc.setFontSize(16);
+
+    doc.text(
+      "NIRMALANI PLANTATION",
+      70,
+      15
+    );
+
+    doc.text(
+      "MONTHLY FINANCIAL REPORT",
+      55,
+      25
+    );
+
+    doc.text(
+      `Month : ${month}`,
+      14,
+      35
+    );
+
+    let totalIncome = 0;
+
+    autoTable(doc,{
+      startY:45,
+
+      head:[["Income Category","Amount"]],
+
+      body:income.map(row=>{
+
+        totalIncome +=
+          Number(row.amount);
+
+        return [
+          row.category,
+          Number(row.amount)
+            .toFixed(2)
+        ];
+      })
+    });
+
+    autoTable(doc,{
+      startY:
+        doc.lastAutoTable.finalY + 15,
+
+      head:[["Expense Category","Amount"]],
+
+      body:expenditure.map(row=>{
+
+        return [
+          row.category,
+          Number(row.amount)
+            .toFixed(2)
+        ];
+      })
+    });
+
+    const totalExpense =
+      expenditure.reduce(
+        (sum,row)=>
+          sum + Number(row.amount),
+        0
+      );
+
+    const profit =
+      totalIncome - totalExpense;
+
+    let y =
+      doc.lastAutoTable.finalY + 15;
+
+    doc.text(
+      `Total Income : Rs.${totalIncome.toFixed(2)}`,
+      14,
+      y
+    );
+
+    doc.text(
+      `Total Expenditure : Rs.${totalExpense.toFixed(2)}`,
+      14,
+      y + 10
+    );
+
+    doc.text(
+      `Net Profit : Rs.${profit.toFixed(2)}`,
+      14,
+      y + 20
+    );
+
+    doc.save(
+      `Financial_Report_${month}.pdf`
+    );
+
+  } catch(err) {
+
+    console.error(err);
+
+    alert("Report generation failed");
+  }
+};
+
   return (
 
     <Box
@@ -701,6 +821,22 @@ const downloadSalaryPDF = () => {
 
         </Grid>
 
+        <Button
+          variant="contained"
+          onClick={downloadFinancialReport}
+          sx={{
+            ml: 2,
+            mt: 4,
+            background:"linear-gradient(135deg,#22c55e,#16a34a)",
+            height: 50,
+            fontWeight: "bold"
+            
+          }}
+            
+        >
+          DOWNLOAD MONTHLY FINANCIAL REPORT
+        </Button>
+
       </Grid>
 
       <Grid
@@ -822,19 +958,24 @@ const downloadSalaryPDF = () => {
             </Typography>
           </Paper>
         </Grid>
+
+        <Button
+          variant="contained"
+          onClick={downloadSalaryPDF}
+          sx={{
+            ml: 2,
+            mt: 7,
+            background:
+              "linear-gradient(135deg,#facc15,#eab308)",
+            height: 50,
+            fontWeight: "bold"
+          }}
+          >
+          📄 Download BALANCE PAY PDF
+        </Button>
       </Grid>
 
-      <Button
-        variant="contained"
-        onClick={downloadSalaryPDF}
-        sx={{
-          ml: 2,
-          background:
-          "linear-gradient(135deg,#22c55e,#16a34a)"
-        }}
-      >
-        📄 Download BALANCE PAY PDF
-      </Button>
+
 
 
       <TextField
@@ -848,7 +989,7 @@ const downloadSalaryPDF = () => {
         }
         sx={{
             mb:3,
-            mt: 8,
+            mt: 4,
             minWidth:150
         }}
         >
