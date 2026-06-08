@@ -17,10 +17,6 @@ import {
   TableRow
 } from "@mui/material";
 
-import { useRef } from "react";
-
-const fileInputRef = useRef(null);
-
 const API =
 "https://nirmalani-payroll-production.up.railway.app";
 
