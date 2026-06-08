@@ -17,6 +17,10 @@ import {
   TableRow
 } from "@mui/material";
 
+import { useRef } from "react";
+
+const fileInputRef = useRef(null);
+
 const API =
 "https://nirmalani-payroll-production.up.railway.app";
 
@@ -291,6 +295,7 @@ const categories = {
       setAmount("");
       setNote("");
       setDate("");
+      setPhoto(null);
 
       fetchData();
 
