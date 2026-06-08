@@ -4,7 +4,6 @@ const path = require("path");
 const fs = require("fs");
 console.log("✅ Backup Service Loaded");
 const { sendBackupEmail } = require("./emailService");
-const { uploadFile } = require("./driveService");
 
 const backupDir = path.join(__dirname, "../backups");
 
@@ -47,25 +46,18 @@ const createBackup = async () => {
       dumpToFile: filePath,
     });
 
-    await sendBackupEmail(
-      filePath,
-      path.basename(filePath)
-    );
+  await sendBackupEmail(
+    filePath,
+    path.basename(filePath)
+  );
 
-    console.log("✅ Backup Email Sent");
+  console.log("✅ Backup Email Sent");
 
-    fs.unlinkSync(filePath);
+  fs.unlinkSync(filePath);
 
-    console.log("🗑️ Local Backup Deleted");
+  console.log("🗑️ Local Backup Deleted");
 
-    console.log("✅ Uploaded to Google Drive");
-
-    // Delete local backup after successful upload
-    fs.unlinkSync(filePath);
-
-    console.log("🗑️ Local backup deleted");
-
-    console.log(`✅ Backup Created: ${path.basename(filePath)}`);
+  console.log(`✅ Backup Created: ${path.basename(filePath)}`);
   } catch (error) {
     console.error("❌ Backup Failed:", error);
   }
