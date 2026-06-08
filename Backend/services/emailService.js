@@ -9,31 +9,15 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendBackupEmail = async (filePath, fileName) => {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: process.env.BACKUP_RECEIVER,
-    subject: `Payroll Backup - ${new Date().toISOString().split("T")[0]}`,
-    text: "Automatic database backup from payroll system.",
-    attachments: [
-      {
-        filename: fileName,
-        path: filePath,
-      },
-    ],
-  });
-
-  console.log("✅ Backup Email Sent");
-};
-
-const sendBackupEmail = async (filePath, fileName) => {
-
   console.log("EMAIL_USER:", process.env.EMAIL_USER);
   console.log("BACKUP_RECEIVER:", process.env.BACKUP_RECEIVER);
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.BACKUP_RECEIVER,
-    subject: `Payroll Backup - ${new Date().toISOString().split("T")[0]}`,
+    subject: `Payroll Backup - ${
+      new Date().toISOString().split("T")[0]
+    }`,
     text: "Automatic database backup from payroll system.",
     attachments: [
       {
