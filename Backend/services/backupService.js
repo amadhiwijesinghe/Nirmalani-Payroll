@@ -3,6 +3,7 @@ const mysqldump = require("mysqldump");
 const path = require("path");
 const fs = require("fs");
 console.log("✅ Backup Service Loaded");
+const { uploadBackup } = require("./s3Service");
 const { sendBackupEmail } = require("./emailService");
 
 const backupDir = path.join(__dirname, "../backups");
@@ -46,7 +47,7 @@ const createBackup = async () => {
       dumpToFile: filePath,
     });
 
-  await sendBackupEmail(
+  await uploadBackup(
     filePath,
     path.basename(filePath)
   );
