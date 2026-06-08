@@ -3,6 +3,7 @@ const mysqldump = require("mysqldump");
 const path = require("path");
 const fs = require("fs");
 console.log("✅ Backup Service Loaded");
+const { sendBackupEmail } = require("./emailService");
 const { uploadFile } = require("./driveService");
 
 const backupDir = path.join(__dirname, "../backups");
@@ -46,10 +47,16 @@ const createBackup = async () => {
       dumpToFile: filePath,
     });
 
-    await uploadFile(
+    await sendBackupEmail(
       filePath,
       path.basename(filePath)
     );
+
+    console.log("✅ Backup Email Sent");
+
+    fs.unlinkSync(filePath);
+
+    console.log("🗑️ Local Backup Deleted");
 
     console.log("✅ Uploaded to Google Drive");
 
@@ -75,7 +82,7 @@ cron.schedule(
     await createBackup();
   },
   {
-    timezone: "Asia/Colombo"
+    timezone: "Asia/Colombo",
   }
 );
 
