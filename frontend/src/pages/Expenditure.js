@@ -43,7 +43,7 @@ export default function Expenditure() {
   const [weekEnd, setWeekEnd] = useState("");
 
   const [editingId, setEditingId] = useState(null);
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState([]);
 
 const categories = {
 
@@ -267,9 +267,9 @@ const categories = {
       formData.append("note", note);
       formData.append("date", date);
 
-      if (photo) {
-        formData.append("photo", photo);
-      }
+      photo.forEach((file) => {
+        formData.append("photos", file);
+      });
 
       await axios.post(
         `${API}/expenditure`,
@@ -848,9 +848,10 @@ const updateExpense = async (id) => {
               <input
                 type="file"
                 hidden
+                multiple
                 accept="image/*"
                 onChange={(e) =>
-                  setPhoto(e.target.files[0])
+                  setPhoto([...e.target.files])
                 }
               />
             </Button>
@@ -1038,17 +1039,21 @@ const updateExpense = async (id) => {
                     .toLocaleDateString("en-CA")}
                 </TableCell>
 
-                <TableCell>
-                  {row.photo && (
-                    <a
-                      href={`${API}/uploads/expenditure/${row.photo}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View Receipt
-                    </a>
-                  )}
-                </TableCell>
+                  <TableCell>
+                    {photos.map((file) => (
+                      <div key={file}>
+                        <a
+                          href={`${API}/uploads/expenditure/${file}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {file.endsWith(".pdf")
+                            ? "📄 PDF"
+                            : "🖼️ Image"}
+                        </a>
+                      </div>
+                    ))}
+                  </TableCell>
 
                 <TableCell>
 

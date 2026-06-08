@@ -1965,13 +1965,12 @@ app.get("/expenditure", (req,res)=>{
 // ADD EXPENDITURE
 app.post(
   "/expenditure",
-  upload.single("photo"),
+  upload.array("photos", 10),
   (req,res)=>{
 
-    const photo =
-      req.file
-        ? req.file.filename
-        : null;
+    const photos = req.files
+      ? req.files.map(f => f.filename)
+      : [];
 
   const {
     category,
@@ -2006,7 +2005,7 @@ app.post(
       note || null,
 
       date || null,
-      photo
+      JSON.stringify(photos)
     ],
     (err,result)=>{
 
