@@ -1040,19 +1040,25 @@ const updateExpense = async (id) => {
                 </TableCell>
 
                   <TableCell>
-                    {photos.map((file) => (
-                      <div key={file}>
-                        <a
-                          href={`${API}/uploads/expenditure/${file}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {file.endsWith(".pdf")
-                            ? "📄 PDF"
-                            : "🖼️ Image"}
-                        </a>
-                      </div>
-                    ))}
+                    {(() => {
+                      const photos = JSON.parse(
+                        row.photos || "[]"
+                      );
+
+                      return photos.map((file) => (
+                        <div key={file}>
+                          <a
+                            href={`${API}/uploads/expenditure/${file}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {file.endsWith(".pdf")
+                              ? "📄 PDF"
+                              : "🖼️ Image"}
+                          </a>
+                        </div>
+                      ));
+                    })()}
                   </TableCell>
 
                 <TableCell>
