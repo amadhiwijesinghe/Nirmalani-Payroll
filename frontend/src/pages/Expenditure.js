@@ -43,6 +43,7 @@ export default function Expenditure() {
   const [weekEnd, setWeekEnd] = useState("");
 
   const [editingId, setEditingId] = useState(null);
+  const [photo, setPhoto] = useState(null);
 
 const categories = {
 
@@ -245,20 +246,39 @@ const categories = {
 
     try {
 
+      const formData = new FormData();
+
+      formData.append(
+        "category",
+        customCategory || category
+      );
+
+      formData.append(
+        "sub_category",
+        categories[category]?.hasSub
+          ? (
+              customSubCategory ||
+              subCategory
+            )
+          : ""
+      );
+
+      formData.append("amount", amount);
+      formData.append("note", note);
+      formData.append("date", date);
+
+      if (photo) {
+        formData.append("photo", photo);
+      }
+
       await axios.post(
         `${API}/expenditure`,
+        formData,
         {
-          category: customCategory || category,
-          sub_category:
-            categories[category]?.hasSub
-                ? (
-                    customSubCategory ||
-                    subCategory
-                )
-                : "",
-          amount,
-          note,
-          date
+          headers: {
+            "Content-Type":
+              "multipart/form-data",
+          },
         }
       );
 
@@ -817,6 +837,33 @@ const updateExpense = async (id) => {
             />
           </Grid>
 
+          <Grid item xs={12} md={3}>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+            >
+              Upload Receipt
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={(e) =>
+                  setPhoto(e.target.files[0])
+                }
+              />
+            </Button>
+
+            {photo && (
+              <Typography
+                variant="caption"
+                sx={{ color: "#fff" }}
+              >
+                {photo.name}
+              </Typography>
+            )}
+          </Grid>
+
           <Grid item xs={12} md={2}>
             <Button
               fullWidth
@@ -951,6 +998,10 @@ const updateExpense = async (id) => {
                 </TableCell>
 
                 <TableCell sx={{color:"#aaa"}}>
+                  Receipt
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
                 Actions
                 </TableCell>
 
@@ -984,6 +1035,18 @@ const updateExpense = async (id) => {
                 <TableCell sx={{color:"#fff"}}>
                     {new Date(row.date)
                     .toLocaleDateString("en-CA")}
+                </TableCell>
+
+                <TableCell>
+                  {row.photo && (
+                    <a
+                      href={`${API}/uploads/expenditure/${row.photo}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Receipt
+                    </a>
+                  )}
                 </TableCell>
 
                 <TableCell>

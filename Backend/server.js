@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");   // ✅ FIXED
+const cors = require("cors");  
 const mysql = require("mysql2");
+const multer = require("multer");
 
 const mysqldump = require("mysqldump");
 const fs = require("fs");
@@ -17,6 +18,29 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/expenditure");
+  },
+
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() +
+      path.extname(file.originalname)
+    );
+  }
+});
+
+const upload = multer({
+  storage
+});
+
+app.use(
+  "/uploads",
+  express.static("uploads")
+);
 
 require("./services/backupService");
 
@@ -1925,7 +1949,15 @@ app.get("/expenditure", (req,res)=>{
 });
 
 // ADD EXPENDITURE
-app.post("/expenditure", (req,res)=>{
+app.post(
+  "/expenditure",
+  upload.single("photo"),
+  (req,res)=>{
+
+    const photo =
+      req.file
+        ? req.file.filename
+        : null;
 
   const {
     category,
@@ -1938,13 +1970,14 @@ app.post("/expenditure", (req,res)=>{
   const sql = `
     INSERT INTO expenditure
     (
-      category,
-      sub_category,
-      amount,
-      note,
-      date
+    category,
+    sub_category,
+    amount,
+    note,
+    date,
+    photo
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -1958,7 +1991,8 @@ app.post("/expenditure", (req,res)=>{
 
       note || null,
 
-      date || null
+      date || null,
+      photo
     ],
     (err,result)=>{
 
