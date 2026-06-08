@@ -3,6 +3,7 @@ const mysqldump = require("mysqldump");
 const path = require("path");
 const fs = require("fs");
 console.log("✅ Backup Service Loaded");
+const { uploadFile } = require("./driveService");
 
 const backupDir = path.join(__dirname, "../backups");
 
@@ -45,7 +46,19 @@ const createBackup = async () => {
       dumpToFile: filePath,
     });
 
-    console.log(`✅ Backup Created: ${filePath}`);
+    await uploadFile(
+      filePath,
+      path.basename(filePath)
+    );
+
+    console.log("✅ Uploaded to Google Drive");
+
+    // Delete local backup after successful upload
+    fs.unlinkSync(filePath);
+
+    console.log("🗑️ Local backup deleted");
+
+    console.log(`✅ Backup Created: ${path.basename(filePath)}`);
   } catch (error) {
     console.error("❌ Backup Failed:", error);
   }
@@ -56,7 +69,7 @@ createBackup();
 
 // Run every day at 12:00 AM Sri Lanka time
 cron.schedule(
-  "* * * * *",
+  "0 0 * * *",
   async () => {
     console.log("🔄 Running Daily Backup...");
     await createBackup();
