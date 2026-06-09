@@ -51,6 +51,7 @@ const categories = {
     hasSub: true,
 
     subs: [
+      "Employee Salaries",
       "Checkroll Salaries",
       "Casual Worker Wages",
       "Coconut Pluckers"
