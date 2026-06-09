@@ -44,6 +44,7 @@ export default function Expenditure() {
 
   const [editingId, setEditingId] = useState(null);
   const [photo, setPhoto] = useState([]);
+  const [transactionType, setTransactionType] = useState("Expense");
 
 const categories = {
 
@@ -235,19 +236,27 @@ const categories = {
 
   const addExpense = async () => {
 
-    if (
-      (!category && !customCategory) ||
-      !amount ||
-      !date
-    ) {
-      alert("Fill all fields");
+  if (
+    transactionType === "Expense" &&
+    (!category && !customCategory)
+  ) {
+    alert("Select category");
+    return;
+  }
 
-      return;
-    }
+  if (!amount || !date) {
+    alert("Fill all fields");
+    return;
+  }
 
     try {
 
       const formData = new FormData();
+
+      formData.append(
+        "transaction_type",
+        transactionType
+      );
 
       formData.append(
         "category",
@@ -333,6 +342,11 @@ const updateExpense = async (id) => {
     const formData = new FormData();
 
     formData.append(
+      "transaction_type",
+      transactionType
+    );
+
+    formData.append(
       "category",
       customCategory || category
     );
@@ -383,12 +397,39 @@ const updateExpense = async (id) => {
     alert("Update Failed");
   }
 };
-  const totalExpense =
-    data.reduce(
-      (sum,row)=>
-        sum + Number(row.amount || 0),
-      0
-    );
+
+  const filteredData = filterMonth
+  ? data.filter(
+      row =>
+        row.date &&
+        row.date.startsWith(filterMonth)
+    )
+  : data;
+
+const totalExpense = filteredData
+  .filter(
+    row =>
+      row.transaction_type !== "Received"
+  )
+  .reduce(
+    (sum,row)=>
+      sum + Number(row.amount || 0),
+    0
+  );
+
+const totalReceived = filteredData
+  .filter(
+    row =>
+      row.transaction_type === "Received"
+  )
+  .reduce(
+    (sum,row)=>
+      sum + Number(row.amount || 0),
+    0
+  );
+
+const balance =
+  totalReceived - totalExpense;
 
   const printMonthlyReport = () => {
 
@@ -425,11 +466,23 @@ const updateExpense = async (id) => {
 
           <td>${row.sub_category || "-"}</td>
 
-          <td>${row.amount}</td>
-
           <td>${row.note || "-"}</td>
 
-          
+          <td>
+            ${
+              row.transaction_type === "Received"
+              ? row.amount
+              : "-"
+            }
+          </td>
+
+          <td>
+            ${
+              row.transaction_type === "Expense"
+              ? row.amount
+              : "-"
+            }
+          </td>
 
         </tr>
       `;
@@ -499,9 +552,13 @@ const updateExpense = async (id) => {
 
                 <th>Sub Category</th>
 
-                <th>Amount</th>
-
                 <th>Note</th>
+
+                <th>Amount Received</th>
+
+                <th>Amount Spent</th>
+
+                
 
               </tr>
 
@@ -546,16 +603,14 @@ const updateExpense = async (id) => {
       return;
     }
 
-  const rows = data
-    .filter(
-      (row) =>
-        row.date.startsWith(filterMonth)
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.date) -
-        new Date(b.date)
+  const rows = data.filter((row) => {
+    const rowDate = row.date.split("T")[0];
+
+    return (
+      rowDate >= weekStart &&
+      rowDate <= weekEnd
     );
+  });
 
     let total = 0;
 
@@ -572,9 +627,25 @@ const updateExpense = async (id) => {
 
           <td>${row.sub_category || "-"}</td>
 
-          <td>${row.amount}</td>
-
           <td>${row.note || "-"}</td>
+
+          <td>
+            ${
+              row.transaction_type === "Received"
+              ? row.amount
+              : "-"
+            }
+          </td>
+
+          <td>
+            ${
+              row.transaction_type === "Expense"
+              ? row.amount
+              : "-"
+            }
+          </td>
+
+          
 
         </tr>
       `;
@@ -634,11 +705,11 @@ const updateExpense = async (id) => {
 
                 <th>Sub Category</th>
 
-                <th>Amount</th>
-
                 <th>Note</th>
 
-                
+                <th>Amount Received</th>
+
+                <th>Amount Spent</th>
 
               </tr>
 
@@ -674,6 +745,7 @@ const updateExpense = async (id) => {
     win.document.close();
   };
 
+
   return (
 
     <Box
@@ -708,6 +780,32 @@ const updateExpense = async (id) => {
 
         <Grid container spacing={2}>
 
+        <Grid item xs={12} md={2}>
+          <TextField
+            select
+            fullWidth
+            label="Transaction Type"
+            value={transactionType}
+            onChange={(e) =>
+              setTransactionType(e.target.value)
+            }
+            sx={{
+              input: { color: "#fff" },
+              label: { color: "#aaa" }
+            }}
+          >
+            <MenuItem value="Expense">
+              Expense
+            </MenuItem>
+
+            <MenuItem value="Received">
+              Money Received
+            </MenuItem>
+          </TextField>
+        </Grid>
+
+        {transactionType === "Expense" && (
+          <>
           <Grid item xs={12} md={2}>
             <TextField
               select
@@ -821,6 +919,10 @@ const updateExpense = async (id) => {
                 />
 
                 </Grid>
+          </>
+        )}
+
+          
 
           <Grid item xs={12} md={2}>
             <TextField
@@ -1019,6 +1121,14 @@ const updateExpense = async (id) => {
 
             <TableRow>
 
+              <TableCell sx={{color:"#aaa"}}>
+                Date
+              </TableCell>
+
+              <TableCell sx={{ color:"#aaa" }}>
+                Type
+              </TableCell>
+
                 <TableCell sx={{color:"#aaa"}}>
                 Category
                 </TableCell>
@@ -1028,15 +1138,15 @@ const updateExpense = async (id) => {
                 </TableCell>
 
                 <TableCell sx={{color:"#aaa"}}>
-                Amount
+                  Amount Received
+                </TableCell>
+
+                <TableCell sx={{color:"#aaa"}}>
+                  Amount Spent
                 </TableCell>
 
                 <TableCell sx={{color:"#aaa"}}>
                 Note
-                </TableCell>
-
-                <TableCell sx={{color:"#aaa"}}>
-                Date
                 </TableCell>
 
                 <TableCell sx={{color:"#aaa"}}>
@@ -1053,9 +1163,25 @@ const updateExpense = async (id) => {
 
             <TableBody>
 
-            {data.map((row)=>(
+            {filteredData.map((row) => (
 
                 <TableRow key={row.id}>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {new Date(row.date)
+                    .toLocaleDateString("en-CA")}
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    color:
+                      row.transaction_type === "Received"
+                        ? "#22c55e"
+                        : "#ef4444"
+                  }}
+                >
+                  {row.transaction_type}
+                </TableCell>
 
                 <TableCell sx={{color:"#fff"}}>
                     {row.category}
@@ -1065,18 +1191,22 @@ const updateExpense = async (id) => {
                     {row.sub_category || "-"}
                 </TableCell>
 
-                <TableCell sx={{color:"#ef4444"}}>
-                    Rs.{Number(row.amount)
-                    .toFixed(2)}
+                <TableCell sx={{ color:"#38bdf8" }}>
+                  {row.transaction_type === "Received"
+                    ? `Rs. ${Number(row.amount).toFixed(2)}`
+                    : "-"
+                  }
+                </TableCell>
+
+                <TableCell sx={{ color:"#ef4444" }}>
+                  {row.transaction_type === "Expense"
+                    ? `Rs. ${Number(row.amount).toFixed(2)}`
+                    : "-"
+                  }
                 </TableCell>
 
                 <TableCell sx={{color:"#fff"}}>
                     {row.note || "-"}
-                </TableCell>
-
-                <TableCell sx={{color:"#fff"}}>
-                    {new Date(row.date)
-                    .toLocaleDateString("en-CA")}
                 </TableCell>
 
                   <TableCell>
@@ -1128,7 +1258,7 @@ const updateExpense = async (id) => {
                           row.date.split("T")[0]
                         );
 
-                        setPhoto([]); // clear old selection
+                        setPhoto([]);
                     }}
                     >
                     Edit
@@ -1153,32 +1283,51 @@ const updateExpense = async (id) => {
             ))}
 
             <TableRow>
+              <TableCell
+                sx={{ color:"#38bdf8", fontWeight:"bold" }}
+              >
+                MONEY RECEIVED
+              </TableCell>
 
-                <TableCell
-                sx={{
-                    color:"#fff",
-                    fontWeight:"bold"
-                }}
-                >
-                TOTAL
-                </TableCell>
+              <TableCell
+                sx={{ color:"#38bdf8", fontWeight:"bold" }}
+              >
+                Rs. {totalReceived.toFixed(2)}
+              </TableCell>
 
-                <TableCell />
+              <TableCell/>
+            </TableRow>
 
-                <TableCell
-                sx={{
-                    color:"#22c55e",
-                    fontWeight:"bold"
-                }}
-                >
-                Rs.
-                {totalExpense.toFixed(2)}
-                </TableCell>
+            <TableRow>
+              <TableCell
+                sx={{ color:"#ef4444", fontWeight:"bold" }}
+              >
+                TOTAL EXPENSE
+              </TableCell>
 
-                <TableCell />
-                <TableCell />
-                <TableCell />
+              <TableCell
+                sx={{ color:"#ef4444", fontWeight:"bold" }}
+              >
+                Rs. {totalExpense.toFixed(2)}
+              </TableCell>
 
+              <TableCell/>
+            </TableRow>
+
+            <TableRow>
+              <TableCell 
+                sx={{ color:"#22c55e", fontWeight:"bold" }}
+              >
+                BALANCE
+              </TableCell>
+
+              <TableCell
+                sx={{ color:"#22c55e", fontWeight:"bold" }}
+              >
+                Rs. {balance.toFixed(2)}
+              </TableCell>
+
+              <TableCell />
             </TableRow>
 
             </TableBody>

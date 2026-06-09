@@ -1982,7 +1982,9 @@ app.post(
     sub_category,
     amount,
     note,
-    date
+    transaction_type,
+    date,
+    
   } = req.body;
 
   const sql = `
@@ -1993,9 +1995,10 @@ app.post(
       amount,
       note,
       date,
+      transaction_type || "Expense",
       photos
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
