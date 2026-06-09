@@ -1995,7 +1995,7 @@ app.post(
       amount,
       note,
       date,
-      transaction_type || "Expense",
+      transaction_type,
       photos
     )
     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -2013,6 +2013,9 @@ app.post(
       note || null,
 
       date || null,
+
+      transaction_type || "Expense",
+      
       JSON.stringify(photos)
     ],
     (err,result)=>{
