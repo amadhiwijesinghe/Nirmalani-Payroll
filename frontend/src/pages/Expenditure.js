@@ -867,7 +867,7 @@ const updateExpense = async (id) => {
                 type="file"
                 hidden
                 multiple
-                accept="image/*"
+                accept="image/*,.pdf"
                 onChange={(e) =>
                   setPhoto([...e.target.files])
                 }
@@ -886,7 +886,9 @@ const updateExpense = async (id) => {
                       fontSize: "12px"
                     }}
                   >
-                    📎 {file.name}
+                    📎 {file.type === "application/pdf"
+                        ? "📄"
+                        : "🖼️"} {file.name}
                   </Typography>
                 ))}
               </Box>
@@ -1074,14 +1076,14 @@ const updateExpense = async (id) => {
 
                       return photos.map((file) => (
                         <div key={file}>
-                          <a
+                         <a
                             href={`${API}/uploads/expenditure/${file}`}
                             target="_blank"
                             rel="noreferrer"
                           >
                             {file.endsWith(".pdf")
-                              ? "📄 PDF"
-                              : "🖼️ Image"}
+                              ? "📄 PDF Receipt"
+                              : "🖼️ Image Receipt"}
                           </a>
                         </div>
                       ));
