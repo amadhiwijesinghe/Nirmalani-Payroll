@@ -291,7 +291,7 @@ const categories = {
       setAmount("");
       setNote("");
       setDate("");
-      setPhoto(null);
+      setPhoto([]);
 
       fetchData();
 
@@ -329,16 +329,34 @@ const updateExpense = async (id) => {
 
   try {
 
+    const formData = new FormData();
+
+    formData.append(
+      "category",
+      customCategory || category
+    );
+
+    formData.append(
+      "sub_category",
+      customSubCategory || subCategory
+    );
+
+    formData.append("amount", amount);
+    formData.append("note", note);
+    formData.append("date", date);
+
+    photo.forEach((file) => {
+      formData.append("photos", file);
+    });
+
     await axios.put(
       `${API}/expenditure/${id}`,
+      formData,
       {
-        category: customCategory || category,
-        sub_category:
-            customSubCategory ||
-            subCategory,
-        amount,
-        note,
-        date
+        headers: {
+          "Content-Type":
+            "multipart/form-data"
+        }
       }
     );
 
@@ -349,10 +367,11 @@ const updateExpense = async (id) => {
     setCategory("");
     setCustomCategory("");
     setSubCategory("");
-    setCustomCategory("");
+    setCustomSubCategory("");
     setAmount("");
     setNote("");
     setDate("");
+    setPhoto([]);
 
     fetchData();
 
@@ -363,7 +382,6 @@ const updateExpense = async (id) => {
     alert("Update Failed");
   }
 };
-
   const totalExpense =
     data.reduce(
       (sum,row)=>
@@ -856,7 +874,7 @@ const updateExpense = async (id) => {
               />
             </Button>
 
-            {photo.length > 0 && (
+            {Array.isArray(photo) && photo.length > 0 && (
               <Box sx={{ mt: 1 }}>
                 {photo.map((file, index) => (
                   <Typography
@@ -1083,26 +1101,23 @@ const updateExpense = async (id) => {
 
                         setEditingId(row.id);
 
-                        setCategory(
-                        row.category
-                        );
+                        setCategory(row.category);
 
                         setSubCategory(
-                        row.sub_category || ""
+                          row.sub_category || ""
                         );
 
-                        setAmount(
-                        row.amount
-                        );
+                        setAmount(row.amount);
 
                         setNote(
-                        row.note || ""
+                          row.note || ""
                         );
 
                         setDate(
-                        row.date
-                            .split("T")[0]
+                          row.date.split("T")[0]
                         );
+
+                        setPhoto([]); // clear old selection
                     }}
                     >
                     Edit

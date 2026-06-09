@@ -2052,50 +2052,63 @@ app.delete("/expenditure/:id", (req,res)=>{
 });
 
 // UPDATE EXPENDITURE
-app.put("/expenditure/:id", (req,res)=>{
+app.put(
+  "/expenditure/:id",
+  upload.array("photos", 10),
+  (req, res) => {
 
-  const {
-    category,
-    sub_category,
-    amount,
-    note,
-    date
-  } = req.body;
+    const photos = req.files
+      ? req.files.map(
+          file => file.filename
+        )
+      : [];
 
-  const sql = `
-    UPDATE expenditure
-    SET
-      category=?,
-      sub_category=?,
-      amount=?,
-      note=?,
-      date=?
-    WHERE id=?
-  `;
-
-  db.query(
-    sql,
-    [
+    const {
       category,
       sub_category,
       amount,
       note,
-      date,
-      req.params.id
-    ],
-    (err,result)=>{
+      date
+    } = req.body;
 
-      if(err){
+    const sql = `
+      UPDATE expenditure
+      SET
+        category=?,
+        sub_category=?,
+        amount=?,
+        note=?,
+        date=?,
+        photos=?
+      WHERE id=?
+    `;
 
-        return res.status(500).json(err);
+    db.query(
+      sql,
+      [
+        category,
+        sub_category,
+        amount,
+        note,
+        date,
+        JSON.stringify(photos),
+        req.params.id
+      ],
+      (err, result) => {
+
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
+
+        res.json({
+          success: true,
+          message: "Expense Updated"
+        });
       }
-
-      res.json({
-        success:true
-      });
-    }
-  );
-});
+    );
+  }
+);
 
 // ================ FINANCIAL DASHBOARD ==============
 
