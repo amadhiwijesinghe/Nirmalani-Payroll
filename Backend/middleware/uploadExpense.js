@@ -19,8 +19,7 @@ filename: (req, file, cb) => {
   cb(
     null,
     Date.now() +
-    "-" +
-    file.originalname
+    path.extname(file.originalname)
   );
 },
 });
