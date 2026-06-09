@@ -38,13 +38,18 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
 
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      Date.now() +
-      path.extname(file.originalname)
-    );
-  }
+filename: (req, file, cb) => {
+
+  console.log(
+    "UPLOADED FILE:",
+    file.originalname
+  );
+
+  cb(
+    null,
+    file.originalname
+  );
+}
 });
 
 const upload = multer({
@@ -1949,7 +1954,7 @@ app.put("/income/:id", (req,res)=>{
 app.get("/expenditure", (req,res)=>{
 
   db.query(
-    "SELECT * FROM expenditure ORDER BY date DESC",
+    "SELECT * FROM expenditure ORDER BY date DESC, id DESC",
     (err,result)=>{
 
       if(err){
