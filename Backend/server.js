@@ -1983,12 +1983,12 @@ app.post(
   const sql = `
     INSERT INTO expenditure
     (
-    category,
-    sub_category,
-    amount,
-    note,
-    date,
-    photo
+      category,
+      sub_category,
+      amount,
+      note,
+      date,
+      photos
     )
     VALUES (?, ?, ?, ?, ?, ?)
   `;
