@@ -485,6 +485,8 @@ const updateExpense = async (id) => {
 
               <tr>
 
+                <th>Date</th>
+
                 <th>Category</th>
 
                 <th>Sub Category</th>
@@ -492,8 +494,6 @@ const updateExpense = async (id) => {
                 <th>Amount</th>
 
                 <th>Note</th>
-
-                <th>Date</th>
 
               </tr>
 
@@ -538,16 +538,16 @@ const updateExpense = async (id) => {
       return;
     }
 
-    const rows = data.filter((row)=>{
-
-      const current =
-        new Date(row.date);
-
-      return (
-        current >= new Date(weekStart) &&
-        current <= new Date(weekEnd)
-      );
-    });
+  const rows = data
+    .filter(
+      (row) =>
+        row.date.startsWith(filterMonth)
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.date) -
+        new Date(b.date)
+    );
 
     let total = 0;
 
@@ -557,7 +557,9 @@ const updateExpense = async (id) => {
 
       return `
         <tr>
-
+        
+          <td>${row.date.split("T")[0]}</td>
+          
           <td>${row.category}</td>
 
           <td>${row.sub_category || "-"}</td>
@@ -565,8 +567,6 @@ const updateExpense = async (id) => {
           <td>${row.amount}</td>
 
           <td>${row.note || "-"}</td>
-
-          <td>${row.date}</td>
 
         </tr>
       `;
