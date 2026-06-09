@@ -2057,12 +2057,6 @@ app.put(
   upload.array("photos", 10),
   (req, res) => {
 
-    const photos = req.files
-      ? req.files.map(
-          file => file.filename
-        )
-      : [];
-
     const {
       category,
       sub_category,
@@ -2071,40 +2065,71 @@ app.put(
       date
     } = req.body;
 
-    const sql = `
-      UPDATE expenditure
-      SET
-        category=?,
-        sub_category=?,
-        amount=?,
-        note=?,
-        date=?,
-        photos=?
-      WHERE id=?
-    `;
-
     db.query(
-      sql,
-      [
-        category,
-        sub_category,
-        amount,
-        note,
-        date,
-        JSON.stringify(photos),
-        req.params.id
-      ],
+      "SELECT photos FROM expenditure WHERE id=?",
+      [req.params.id],
       (err, result) => {
 
         if (err) {
-          console.log(err);
           return res.status(500).json(err);
         }
 
-        res.json({
-          success: true,
-          message: "Expense Updated"
-        });
+        let existingPhotos = [];
+
+        if (
+          result.length > 0 &&
+          result[0].photos
+        ) {
+          existingPhotos = JSON.parse(
+            result[0].photos
+          );
+        }
+
+        const newPhotos = req.files
+          ? req.files.map(
+              file => file.filename
+            )
+          : [];
+
+        const allPhotos = [
+          ...existingPhotos,
+          ...newPhotos
+        ];
+
+        const sql = `
+          UPDATE expenditure
+          SET
+            category=?,
+            sub_category=?,
+            amount=?,
+            note=?,
+            date=?,
+            photos=?
+          WHERE id=?
+        `;
+
+        db.query(
+          sql,
+          [
+            category,
+            sub_category,
+            amount,
+            note,
+            date,
+            JSON.stringify(allPhotos),
+            req.params.id
+          ],
+          (err) => {
+
+            if (err) {
+              return res.status(500).json(err);
+            }
+
+            res.json({
+              success: true
+            });
+          }
+        );
       }
     );
   }

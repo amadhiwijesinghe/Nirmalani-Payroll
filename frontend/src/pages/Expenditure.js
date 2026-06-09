@@ -1082,9 +1082,7 @@ const updateExpense = async (id) => {
                             target="_blank"
                             rel="noreferrer"
                           >
-                            {file.endsWith(".pdf")
-                              ? "📄 PDF Receipt"
-                              : "🖼️ Image Receipt"}
+                            {file}
                           </a>
                         </div>
                       ));
