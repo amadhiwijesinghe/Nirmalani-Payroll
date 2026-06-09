@@ -856,13 +856,22 @@ const updateExpense = async (id) => {
               />
             </Button>
 
-            {photo && (
-              <Typography
-                variant="caption"
-                sx={{ color: "#fff" }}
-              >
-                {photo.name}
-              </Typography>
+            {photo.length > 0 && (
+              <Box sx={{ mt: 1 }}>
+                {photo.map((file, index) => (
+                  <Typography
+                    key={index}
+                    variant="caption"
+                    display="block"
+                    sx={{
+                      color: "#fff",
+                      fontSize: "12px"
+                    }}
+                  >
+                    📎 {file.name}
+                  </Typography>
+                ))}
+              </Box>
             )}
           </Grid>
 
