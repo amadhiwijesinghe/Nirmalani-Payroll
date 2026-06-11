@@ -2000,7 +2000,7 @@ app.post(
       transaction_type,
       photos
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -2121,6 +2121,7 @@ app.put(
             amount=?,
             note=?,
             date=?,
+            transaction_type=?,
             photos=?
           WHERE id=?
         `;
