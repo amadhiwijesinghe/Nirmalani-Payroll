@@ -1137,6 +1137,8 @@ const nationsSummary = getSummary(nationsData);
             onChange={(e)=>
               setReportBank(e.target.value)
             }
+
+            sx={{width: 200}}
           >
             <MenuItem value="">
               All Accounts
