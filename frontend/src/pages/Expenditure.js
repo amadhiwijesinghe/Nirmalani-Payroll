@@ -502,11 +502,18 @@ const nationsSummary = getSummary(nationsData);
     )
   );
 
-    let total = 0;
+    let totalExpense = 0;
+    let totalReceived = 0;
 
     const rowsHTML = rows.map((row)=>{
 
-      total += Number(row.amount);
+      if (row.transaction_type === "Expense") {
+        totalExpense += Number(row.amount);
+      }
+
+      if (row.transaction_type === "Received") {
+        totalReceived += Number(row.amount);
+      }
 
       return `
         <tr>
@@ -624,8 +631,18 @@ const nationsSummary = getSummary(nationsData);
           </table>
 
           <h3>
+            Money Received:
+            Rs.${totalReceived.toFixed(2)}
+          </h3>
+
+          <h3>
             Total Expense:
-            Rs.${total.toFixed(2)}
+            Rs.${totalExpense.toFixed(2)}
+          </h3>
+
+          <h3>
+            Balance:
+            Rs.${(totalReceived - totalExpense).toFixed(2)}
           </h3>
 
           <script>
@@ -669,11 +686,18 @@ const nationsSummary = getSummary(nationsData);
     );
   });
 
-    let total = 0;
+    let totalExpense = 0;
+    let totalReceived = 0;
 
     const rowsHTML = rows.map((row)=>{
 
-      total += Number(row.amount);
+      if (row.transaction_type === "Expense") {
+        totalExpense += Number(row.amount);
+      }
+
+      if (row.transaction_type === "Received") {
+        totalReceived += Number(row.amount);
+      }
 
       return `
         <tr>
@@ -781,8 +805,18 @@ const nationsSummary = getSummary(nationsData);
           </table>
 
           <h3>
+            Money Received:
+            Rs.${totalReceived.toFixed(2)}
+          </h3>
+
+          <h3>
             Total Expense:
-            Rs.${total.toFixed(2)}
+            Rs.${totalExpense.toFixed(2)}
+          </h3>
+
+          <h3>
+            Balance:
+            Rs.${(totalReceived - totalExpense).toFixed(2)}
           </h3>
 
           <script>
