@@ -451,6 +451,39 @@ const totalReceived = filteredData
 const balance =
   totalReceived - totalExpense;
 
+  const sampathData = filteredData.filter(
+  row => row.bank_account === "Sampath"
+);
+
+const nationsData = filteredData.filter(
+  row => row.bank_account === "Nations Trust"
+);
+
+const getSummary = (rows) => {
+  const received = rows
+    .filter(r => r.transaction_type === "Received")
+    .reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
+
+  const expense = rows
+    .filter(r => r.transaction_type === "Expense")
+    .reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
+
+  return {
+    received,
+    expense,
+    balance: received - expense
+  };
+};
+
+const sampathSummary = getSummary(sampathData);
+const nationsSummary = getSummary(nationsData);
+
   const printMonthlyReport = () => {
 
     if (!filterMonth) {
@@ -459,6 +492,7 @@ const balance =
 
       return;
     }
+
 
   const rows = data.filter(row =>
     row.date.startsWith(filterMonth) &&
@@ -1355,53 +1389,99 @@ const balance =
                 </TableRow>
             ))}
 
-            <TableRow>
-              <TableCell
-                sx={{ color:"#38bdf8", fontWeight:"bold" }}
-              >
-                MONEY RECEIVED
-              </TableCell>
+            {reportBank === "" ? (
+              <Table sx={{ mt: 3 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ color:"#aaa", fontWeight:"bold" }}>
+                      Bank Account
+                    </TableCell>
 
-              <TableCell
-                sx={{ color:"#38bdf8", fontWeight:"bold" }}
-              >
-                Rs. {totalReceived.toFixed(2)}
-              </TableCell>
+                    <TableCell sx={{ color:"#22c55e", fontWeight:"bold" }}>
+                      Money Received
+                    </TableCell>
 
-              <TableCell/>
-            </TableRow>
+                    <TableCell sx={{ color:"#ef4444", fontWeight:"bold" }}>
+                      Total Expense
+                    </TableCell>
 
-            <TableRow>
-              <TableCell
-                sx={{ color:"#ef4444", fontWeight:"bold" }}
-              >
-                TOTAL EXPENSE
-              </TableCell>
+                    <TableCell sx={{ color:"#38bdf8", fontWeight:"bold" }}>
+                      Balance
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
 
-              <TableCell
-                sx={{ color:"#ef4444", fontWeight:"bold" }}
-              >
-                Rs. {totalExpense.toFixed(2)}
-              </TableCell>
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ color:"#fff" }}>
+                      Sampath Bank
+                    </TableCell>
 
-              <TableCell/>
-            </TableRow>
+                    <TableCell sx={{ color:"#22c55e" }}>
+                      Rs. {sampathSummary.received.toFixed(2)}
+                    </TableCell>
 
-            <TableRow>
-              <TableCell 
-                sx={{ color:"#22c55e", fontWeight:"bold" }}
-              >
-                BALANCE
-              </TableCell>
+                    <TableCell sx={{ color:"#ef4444" }}>
+                      Rs. {sampathSummary.expense.toFixed(2)}
+                    </TableCell>
 
-              <TableCell
-                sx={{ color:"#22c55e", fontWeight:"bold" }}
-              >
-                Rs. {balance.toFixed(2)}
-              </TableCell>
+                    <TableCell sx={{ color:"#38bdf8" }}>
+                      Rs. {sampathSummary.balance.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
 
-              <TableCell />
-            </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ color:"#fff" }}>
+                      Nations Trust Bank
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#22c55e" }}>
+                      Rs. {nationsSummary.received.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#ef4444" }}>
+                      Rs. {nationsSummary.expense.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#38bdf8" }}>
+                      Rs. {nationsSummary.balance.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            ) : (
+              <Table sx={{ mt: 3 }}>
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ color:"#22c55e" }}>
+                      Money Received
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#ef4444" }}>
+                      Total Expense
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#38bdf8" }}>
+                      Balance
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell sx={{ color:"#22c55e" }}>
+                      Rs. {totalReceived.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#ef4444" }}>
+                      Rs. {totalExpense.toFixed(2)}
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#38bdf8" }}>
+                      Rs. {balance.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
 
             </TableBody>
 
