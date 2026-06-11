@@ -2135,6 +2135,7 @@ app.put(
             amount,
             note,
             date,
+            transaction_type,
             JSON.stringify(allPhotos),
             req.params.id
           ],
