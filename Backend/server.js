@@ -2078,6 +2078,7 @@ app.put(
       sub_category,
       amount,
       note,
+      transaction_type,
       date
     } = req.body;
 
