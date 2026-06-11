@@ -36,7 +36,9 @@ export default function Expenditure() {
 
   const [date, setDate] = useState("");
 
-  const [filterMonth, setFilterMonth] = useState("");
+  const [filterMonth, setFilterMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
 
   const [weekStart, setWeekStart] = useState("");
 
@@ -45,6 +47,9 @@ export default function Expenditure() {
   const [editingId, setEditingId] = useState(null);
   const [photo, setPhoto] = useState([]);
   const [transactionType, setTransactionType] = useState("Expense");
+
+  const [bankAccount, setBankAccount] = useState("");
+  const [reportBank, setReportBank] = useState("");
 
 const categories = {
 
@@ -254,6 +259,11 @@ const categories = {
       const formData = new FormData();
 
       formData.append(
+        "bank_account",
+        bankAccount
+      );
+
+      formData.append(
         "transaction_type",
         transactionType
       );
@@ -342,6 +352,11 @@ const updateExpense = async (id) => {
     const formData = new FormData();
 
     formData.append(
+      "bank_account",
+      bankAccount
+    );
+
+    formData.append(
       "transaction_type",
       transactionType
     );
@@ -398,13 +413,18 @@ const updateExpense = async (id) => {
   }
 };
 
-  const filteredData = filterMonth
-  ? data.filter(
-      row =>
-        row.date &&
-        row.date.startsWith(filterMonth)
-    )
-  : data;
+  const filteredData = data.filter((row) => {
+
+    const monthMatch =
+      !filterMonth ||
+      row.date?.startsWith(filterMonth);
+
+    const bankMatch =
+      !reportBank ||
+      row.bank_account === reportBank;
+
+    return monthMatch && bankMatch;
+  });
 
 const totalExpense = filteredData
   .filter(
@@ -440,16 +460,13 @@ const balance =
       return;
     }
 
-    const rows = data
-      .filter(
-        (row) =>
-          row.date.startsWith(filterMonth)
-      )
-      .sort(
-        (a, b) =>
-          new Date(a.date) -
-          new Date(b.date)
-      );
+  const rows = data.filter(row =>
+    row.date.startsWith(filterMonth) &&
+    (
+      !reportBank ||
+      row.bank_account === reportBank
+    )
+  );
 
     let total = 0;
 
@@ -603,12 +620,18 @@ const balance =
       return;
     }
 
-  const rows = data.filter((row) => {
-    const rowDate = row.date.split("T")[0];
+  const rows = data.filter(row => {
+
+    const rowDate =
+      row.date.split("T")[0];
 
     return (
       rowDate >= weekStart &&
-      rowDate <= weekEnd
+      rowDate <= weekEnd &&
+      (
+        !reportBank ||
+        row.bank_account === reportBank
+      )
     );
   });
 
@@ -779,6 +802,27 @@ const balance =
       >
 
         <Grid container spacing={2}>
+
+        <Grid item xs={12} md={2}>
+          <TextField
+            select
+            fullWidth
+            label="Bank Account"
+            value={bankAccount}
+            onChange={(e) =>
+              setBankAccount(e.target.value)
+            }
+            sx={{ width: 200}}
+          >
+            <MenuItem value="Sampath">
+              Sampath Bank
+            </MenuItem>
+
+            <MenuItem value="Nations Trust">
+              Nations Trust Bank
+            </MenuItem>
+          </TextField>
+        </Grid>
 
         <Grid item xs={12} md={2}>
           <TextField
@@ -1052,6 +1096,27 @@ const balance =
             }}
         >
 
+          <TextField
+            select
+            label="Report Account"
+            value={reportBank}
+            onChange={(e)=>
+              setReportBank(e.target.value)
+            }
+          >
+            <MenuItem value="">
+              All Accounts
+            </MenuItem>
+
+            <MenuItem value="Sampath">
+              Sampath Bank
+            </MenuItem>
+
+            <MenuItem value="Nations Trust">
+              Nations Trust Bank
+            </MenuItem>
+          </TextField>
+
             <TextField
             type="month"
             value={filterMonth}
@@ -1125,6 +1190,10 @@ const balance =
                 Date
               </TableCell>
 
+              <TableCell sx={{color:"#aaa"}}>
+                Bank Account
+              </TableCell>
+
               <TableCell sx={{ color:"#aaa" }}>
                 Type
               </TableCell>
@@ -1170,6 +1239,10 @@ const balance =
                 <TableCell sx={{color:"#fff"}}>
                     {new Date(row.date)
                     .toLocaleDateString("en-CA")}
+                </TableCell>
+
+                <TableCell sx={{color:"#fff"}}>
+                  {row.bank_account}
                 </TableCell>
 
                 <TableCell

@@ -1978,6 +1978,7 @@ app.post(
       : [];
 
   const {
+    bank_account,
     category,
     sub_category,
     amount,
@@ -1990,6 +1991,7 @@ app.post(
   const sql = `
     INSERT INTO expenditure
     (
+      bank_account,
       category,
       sub_category,
       amount,
@@ -2004,6 +2006,8 @@ app.post(
   db.query(
     sql,
     [
+
+      bank_account || null, 
       category || null,
 
       sub_category || null,
@@ -2069,6 +2073,7 @@ app.put(
   (req, res) => {
 
     const {
+      bank_account,
       category,
       sub_category,
       amount,
@@ -2110,6 +2115,7 @@ app.put(
         const sql = `
           UPDATE expenditure
           SET
+            bank_account=?,
             category=?,
             sub_category=?,
             amount=?,
@@ -2122,6 +2128,7 @@ app.put(
         db.query(
           sql,
           [
+            bank_account,
             category,
             sub_category,
             amount,
