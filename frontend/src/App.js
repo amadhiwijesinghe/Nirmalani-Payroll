@@ -20,6 +20,7 @@ import CasualWorkers from './pages/CasualWorkers';
 import Income from "./pages/Income";
 import Expenditure from "./pages/Expenditure";
 import FinancialDashboard from "./pages/FinancialDashboard";
+import IngurupaththalaDashboard from "./pages/IngurupaththalaDashboard";
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const isMobile = useMediaQuery("(max-width:900px)");
+  const [plantation, setPlantation] = useState("nirmalani");
 
   const theme = createTheme({
     palette: {
@@ -66,6 +68,9 @@ function App() {
             <Topbar
               toggleDarkMode={() => setDarkMode(!darkMode)}
               darkMode={darkMode}
+              plantation={plantation}
+              setPlantation={setPlantation}
+              setPage={setPage}
             />
           )}
 
@@ -91,7 +96,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Employees />
+                  <Employees plantation={plantation} />
                 </motion.div>
               )}
 
@@ -103,7 +108,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Payslips />
+                  <Payslips plantation={plantation} />
                 </motion.div>
               )}
 
@@ -115,7 +120,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Attendance />
+                  <Attendance plantation={plantation} />
                 </motion.div>
               )}
 
@@ -127,7 +132,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Payroll />
+                  <Payroll plantation={plantation} />
                 </motion.div>
               )}
 
@@ -139,7 +144,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Allowance />
+                  <Allowance plantation={plantation} />
                 </motion.div>
               )}
 
@@ -151,7 +156,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <PlantationPayroll setPage={setPage} />
+                  <PlantationPayroll setPage={setPage} plantation={plantation}/>
                 </motion.div>
               )}
 
@@ -163,7 +168,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <RubberTappers />
+                  <RubberTappers plantation={plantation} />
                 </motion.div>
               )}
 
@@ -175,7 +180,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <TeaCollection />
+                  <TeaCollection plantation={plantation} />
                 </motion.div>
               )}
  
@@ -187,7 +192,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <RubberDispatch/>
+                  <RubberDispatch plantation={plantation} />
                 </motion.div>
               )}
 
@@ -199,7 +204,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                 <CasualWorkers />
+                 <CasualWorkers plantation={plantation} />
                 </motion.div>
               )}
 
@@ -211,7 +216,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                <Income />
+                <Income plantation={plantation} />
                 </motion.div>
               )}
 
@@ -223,7 +228,7 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                <Expenditure />
+                <Expenditure plantation={plantation} />
                 </motion.div>
               )}
 
@@ -235,7 +240,19 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                <FinancialDashboard />
+                <FinancialDashboard plantation={plantation} />
+                </motion.div>
+              )}
+
+              {page === "ingurupaththala" && (
+                <motion.div
+                  key="ingurupaththala"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <IngurupaththalaDashboard />
                 </motion.div>
               )}
 

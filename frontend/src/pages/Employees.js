@@ -16,7 +16,7 @@ import {
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
 
-export default function Employees() {
+export default function Employees({ plantation }) {
   const [employees, setEmployees] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -32,7 +32,7 @@ export default function Employees() {
   }, []);
 
   const fetchEmployees = () => {
-    axios.get(`${API}/employees`)
+    axios.get(`${API}/employees?plantation=${plantation}`)
       .then(res => {
         setEmployees(res.data);
         setFiltered(res.data);
