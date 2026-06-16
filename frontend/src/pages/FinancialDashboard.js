@@ -77,11 +77,11 @@ export default function FinancialDashboard({
       ] = await Promise.all([
 
         axios.get(
-          `${API}/dashboard/total-income?plantation=${plantation}`
+          `${API}/dashboard/total-income/${selectedMonth}?plantation=${plantation}`
         ),
 
         axios.get(
-          `${API}/dashboard/total-expenditure?plantation=${plantation}`
+          `${API}/dashboard/total-expenditure/${selectedMonth}?plantation=${plantation}`
         ),
 
         axios.get(

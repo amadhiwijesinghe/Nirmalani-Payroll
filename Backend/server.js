@@ -2173,13 +2173,26 @@ app.put(
 
 //Total Income
 
-app.get("/dashboard/total-income", (req, res) => {
+app.get("/dashboard/total-income/:month", (req,res)=>{
+
+  const month = req.params.month;
 
   db.query(
-    "SELECT COALESCE(SUM(amount),0) AS total FROM income",
-    (err, result) => {
+    `
+    SELECT
+      COALESCE(
+        SUM(amount),
+        0
+      ) AS total
+    FROM income
+    WHERE DATE_FORMAT(date,'%Y-%m') = ?
+    `,
+    [month],
+    (err,result)=>{
 
-      if (err) return res.status(500).json(err);
+      if(err){
+        return res.status(500).json(err);
+      }
 
       res.json(result[0]);
     }
@@ -2188,13 +2201,27 @@ app.get("/dashboard/total-income", (req, res) => {
 
 // Total Expenditure
 
-app.get("/dashboard/total-expenditure", (req, res) => {
+app.get("/dashboard/total-expenditure/:month", (req,res)=>{
+
+  const month = req.params.month;
 
   db.query(
-    "SELECT COALESCE(SUM(amount),0) AS total FROM expenditure",
-    (err, result) => {
+    `
+    SELECT
+      COALESCE(
+        SUM(amount),
+        0
+      ) AS total
+    FROM expenditure
+    WHERE DATE_FORMAT(date,'%Y-%m') = ?
+    AND transaction_type = 'Expense'
+    `,
+    [month],
+    (err,result)=>{
 
-      if (err) return res.status(500).json(err);
+      if(err){
+        return res.status(500).json(err);
+      }
 
       res.json(result[0]);
     }
