@@ -915,54 +915,138 @@ const downloadFinancialReport = async () => {
       <Grid container spacing={3} sx={{ mt: 2 }}>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Opening Balance</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Opening Balance
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                color: "#cbd5e1",
+                fontWeight: "bold"
+              }}>
               Rs.{Number(cashflow.opening).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Total Income</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Total Income
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                  color: "#cbd5e1",
+                  fontWeight: "bold"
+              }}>
               Rs.{Number(income).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Money Received</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Money Received
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                    color: "#cbd5e1",
+                    fontWeight: "bold"
+            }}>
               Rs.{Number(cashflow.received).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Total Expenditure</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Total Expenditure
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                    color: "#cbd5e1",
+                    fontWeight: "bold"
+            }}>
               Rs.{Number(expense).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Net Profit</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Net Profit
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                    color: "#cbd5e1",
+                    fontWeight: "bold"
+            }}>
               Rs.{Number(netProfit).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{ p: 2 }}>
-            <Typography>Closing Balance</Typography>
-            <Typography variant="h6">
+          <Paper sx={{
+              p: 3,
+              borderRadius: 4,
+              background: "rgba(241, 230, 16, 0.15)",
+              backdropFilter:
+                "blur(10px)"
+            }}>
+            <Typography sx={{
+                color: "#ffffff"
+              }}>
+                Closing Balance
+            </Typography>
+            <Typography variant="h6"
+              sx={{
+                    color: "#cbd5e1",
+                    fontWeight: "bold"
+            }}>
               Rs.{Number(cashflow.closing).toLocaleString()}
             </Typography>
           </Paper>

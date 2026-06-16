@@ -2465,6 +2465,39 @@ app.get(
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m') = ?
           AND transaction_type = 'Opening Balance'
+          AND bank_account = 'Sampath'
+          `,
+          [month]
+        );
+
+      const [[sampathReceivedRow]] =
+        await db.promise().query(
+          `
+          SELECT
+            COALESCE(
+              SUM(amount),
+              0
+            ) AS received
+          FROM expenditure
+          WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND transaction_type = 'Received'
+          AND bank_account = 'Sampath'
+          `,
+          [month]
+        );
+
+      const [[sampathExpenseRow]] =
+        await db.promise().query(
+          `
+          SELECT
+            COALESCE(
+              SUM(amount),
+              0
+            ) AS expense
+          FROM expenditure
+          WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND transaction_type = 'Expense'
+          AND bank_account = 'Sampath'
           `,
           [month]
         );
@@ -2480,6 +2513,7 @@ app.get(
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m')=?
           AND transaction_type='Received'
+          AND bank_account='Sampath'
           `,
           [month]
         );
@@ -2492,6 +2526,7 @@ app.get(
         FROM expenditure
         WHERE DATE_FORMAT(date,'%Y-%m')=?
         AND transaction_type='Expense'
+        AND bank_account='Sampath'
         `,
         [month]
       );
@@ -2506,15 +2541,13 @@ app.get(
         Number(expenseRow.expense);
 
       const closing =
-        opening +
-        received -
-        expense;
+        Number(openingRow.opening) +
+        Number(sampathReceivedRow.received) -
+        Number(sampathExpenseRow.expense);
 
       res.json({
-        opening,
-        received,
-        expense,
-        closing
+        opening: Number(openingRow.opening),
+        closing,
       });
 
     } catch(err){
