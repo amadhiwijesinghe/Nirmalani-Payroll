@@ -1324,9 +1324,9 @@ const nationsSummary = getSummary(nationsData);
                 <TableCell
                   sx={{
                     color:
-                      row.transaction_type === "Received"
-                        ? "#22c55e"
-                        : "#ef4444"
+                      row.transaction_type === "Expense"
+                        ? "#ef4444"
+                        : "#22c55e"
                   }}
                 >
                   {row.transaction_type}
@@ -1341,9 +1341,12 @@ const nationsSummary = getSummary(nationsData);
                 </TableCell>
 
                 <TableCell sx={{ color:"#38bdf8" }}>
-                  {row.transaction_type === "Received"
-                    ? `Rs. ${Number(row.amount).toFixed(2)}`
-                    : "-"
+                  {(
+                      row.transaction_type === "Received" ||
+                      row.transaction_type === "Opening Balance"
+                    )
+                      ? `Rs. ${Number(row.amount).toFixed(2)}`
+                      : "-"
                   }
                 </TableCell>
 
