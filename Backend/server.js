@@ -2443,6 +2443,95 @@ app.get(
     }
 });
 
+app.get(
+  "/dashboard/monthly-cashflow/:month",
+  async (req,res) => {
+
+    try {
+
+      const month = req.params.month;
+
+      const monthStart =
+        `${month}-01`;
+
+      const [[openingRow]] =
+        await db.promise().query(
+          `
+          SELECT
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type='Received'
+                THEN amount
+                ELSE -amount
+              END
+            ),
+            0
+          ) AS opening
+          FROM expenditure
+          WHERE date < ?
+          `,
+          [monthStart]
+        );
+
+      const [[receivedRow]] =
+        await db.promise().query(
+          `
+          SELECT
+          COALESCE(
+            SUM(amount),
+            0
+          ) AS received
+          FROM expenditure
+          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          AND transaction_type='Received'
+          `,
+          [month]
+        );
+
+      const [[expenseRow]] =
+        await db.promise().query(
+          `
+          SELECT
+          COALESCE(
+            SUM(amount),
+            0
+          ) AS expense
+          FROM expenditure
+          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          AND transaction_type='Expense'
+          `,
+          [month]
+        );
+
+      const opening =
+        Number(openingRow.opening);
+
+      const received =
+        Number(receivedRow.received);
+
+      const expense =
+        Number(expenseRow.expense);
+
+      const closing =
+        opening +
+        received -
+        expense;
+
+      res.json({
+        opening,
+        received,
+        expense,
+        closing
+      });
+
+    } catch(err){
+
+      console.log(err);
+
+      res.status(500).json(err);
+    }
+});
 
 // ALL WORKER REPORT
 app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {

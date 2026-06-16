@@ -32,6 +32,13 @@ export default function FinancialDashboard({
 
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
+  const [cashflow, setCashflow] =
+    useState({
+      opening: 0,
+      received: 0,
+      expense: 0,
+      closing: 0
+    });
   const [profitData, setProfitData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -70,6 +77,7 @@ export default function FinancialDashboard({
         incomeRes,
         expenseRes,
         profitRes,
+        cashflowRes,
         reportRes,
         plantationRes,
         casualRes,
@@ -86,6 +94,10 @@ export default function FinancialDashboard({
 
         axios.get(
           `${API}/dashboard/monthly-profit-loss?plantation=${plantation}`
+        ),
+
+        axios.get(
+          `${API}/dashboard/monthly-cashflow/${selectedMonth}`
         ),
 
         axios.get(
@@ -109,6 +121,10 @@ export default function FinancialDashboard({
 
       setProfitData(
         profitRes.data || []
+      );
+
+      setCashflow(
+        cashflowRes.data
       );
 
       setSalaryReport(reportRes.data);
@@ -272,20 +288,35 @@ const yearlyProfit =
           ${selectedYear}
         </h3>
 
+        <Typography>
+          Opening Balance
+        </Typography>
+
+        <Typography variant="h4">
+          Rs.{cashflow.opening.toLocaleString()}
+        </Typography>
+
         <h3>
           Total Income:
           Rs.${yearlyIncome}
         </h3>
 
+        Money Received
+          Rs.{cashflow.received.toLocaleString()}
+
         <h3>
           Total Expenditure:
           Rs.${yearlyExpense}
         </h3>
+        
 
         <h3>
           Net Profit:
           Rs.${yearlyProfit}
         </h3>
+
+        Closing Balance
+          Rs.{cashflow.closing.toLocaleString()}
 
         <table>
 
@@ -551,6 +582,14 @@ const downloadFinancialReport = async () => {
         `${API}/dashboard/monthly-financial-report/${month}`
       );
 
+      const cashflowRes =
+        await axios.get(
+          `${API}/dashboard/monthly-cashflow/${month}`
+        );
+
+      const cashflow =
+        cashflowRes.data;
+
     const income =
       res.data.income;
 
@@ -626,25 +665,58 @@ const downloadFinancialReport = async () => {
     const profit =
       totalIncome - totalExpense;
 
+    const openingBalance =
+      Number(cashflow.opening || 0);
+
+    const moneyReceived =
+      Number(cashflow.received || 0);
+
+    const netProfit =
+      totalIncome - totalExpense;
+
+    const closingBalance =
+      openingBalance +
+      totalIncome +
+      moneyReceived -
+      totalExpense;
+
     let y =
       doc.lastAutoTable.finalY + 15;
 
     doc.text(
-      `Total Income : Rs.${totalIncome.toFixed(2)}`,
+      `Opening Balance : Rs.${openingBalance.toFixed(2)}`,
       14,
       y
     );
 
     doc.text(
-      `Total Expenditure : Rs.${totalExpense.toFixed(2)}`,
+      `Total Income : Rs.${totalIncome.toFixed(2)}`,
       14,
       y + 10
     );
 
     doc.text(
-      `Net Profit : Rs.${profit.toFixed(2)}`,
+      `Money Received : Rs.${moneyReceived.toFixed(2)}`,
       14,
       y + 20
+    );
+
+    doc.text(
+      `Total Expenditure : Rs.${totalExpense.toFixed(2)}`,
+      14,
+      y + 30
+    );
+
+    doc.text(
+      `Net Profit : Rs.${netProfit.toFixed(2)}`,
+      14,
+      y + 40
+    );
+
+    doc.text(
+      `Closing Balance : Rs.${closingBalance.toFixed(2)}`,
+      14,
+      y + 50
     );
 
     doc.save(
@@ -837,6 +909,64 @@ const downloadFinancialReport = async () => {
         >
           DOWNLOAD MONTHLY FINANCIAL REPORT
         </Button>
+
+      </Grid>
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Opening Balance</Typography>
+            <Typography variant="h6">
+              Rs.{Number(cashflow.opening).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Total Income</Typography>
+            <Typography variant="h6">
+              Rs.{Number(income).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Money Received</Typography>
+            <Typography variant="h6">
+              Rs.{Number(cashflow.received).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Total Expenditure</Typography>
+            <Typography variant="h6">
+              Rs.{Number(expense).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Net Profit</Typography>
+            <Typography variant="h6">
+              Rs.{Number(netProfit).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={2}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Closing Balance</Typography>
+            <Typography variant="h6">
+              Rs.{Number(cashflow.closing).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
 
       </Grid>
 
