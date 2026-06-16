@@ -462,27 +462,47 @@ const nationsData = filteredData.filter(
 );
 
 const getSummary = (rows) => {
-  const received = rows
-    .filter(r => r.transaction_type === "Received")
+
+  const opening = rows
+    .filter(
+      r => r.transaction_type === "Opening Balance"
+    )
     .reduce(
-      (sum, r) => sum + Number(r.amount || 0),
+      (sum,r)=>
+        sum + Number(r.amount || 0),
+      0
+    );
+
+  const received = rows
+    .filter(
+      r => r.transaction_type === "Received"
+    )
+    .reduce(
+      (sum,r)=>
+        sum + Number(r.amount || 0),
       0
     );
 
   const expense = rows
-    .filter(r => r.transaction_type === "Expense")
+    .filter(
+      r => r.transaction_type === "Expense"
+    )
     .reduce(
-      (sum, r) => sum + Number(r.amount || 0),
+      (sum,r)=>
+        sum + Number(r.amount || 0),
       0
     );
 
   return {
+    opening,
     received,
     expense,
-    balance: received - expense
+    balance:
+      opening +
+      received -
+      expense
   };
 };
-
 const sampathSummary = getSummary(sampathData);
 const nationsSummary = getSummary(nationsData);
 
@@ -1444,8 +1464,13 @@ const nationsSummary = getSummary(nationsData);
           <Table sx={{ mt: 3 }}>
             <TableHead>
               <TableRow>
+
                 <TableCell sx={{ color:"#aaa", fontWeight:"bold" }}>
                   Bank Account
+                </TableCell>
+
+                <TableCell sx={{ color:"#f59e0b", fontWeight:"bold" }}>
+                  Opening Balance
                 </TableCell>
 
                 <TableCell sx={{ color:"#22c55e", fontWeight:"bold" }}>
@@ -1459,13 +1484,19 @@ const nationsSummary = getSummary(nationsData);
                 <TableCell sx={{ color:"#38bdf8", fontWeight:"bold" }}>
                   Balance
                 </TableCell>
+
               </TableRow>
             </TableHead>
 
             <TableBody>
               <TableRow>
+
                 <TableCell sx={{ color:"#fff" }}>
                   Sampath Bank
+                </TableCell>
+
+                <TableCell sx={{ color:"#f59e0b" }}>
+                  Rs. {sampathSummary.opening.toFixed(2)}
                 </TableCell>
 
                 <TableCell sx={{ color:"#22c55e" }}>
@@ -1479,11 +1510,16 @@ const nationsSummary = getSummary(nationsData);
                 <TableCell sx={{ color:"#38bdf8" }}>
                   Rs. {sampathSummary.balance.toFixed(2)}
                 </TableCell>
+
               </TableRow>
 
               <TableRow>
                 <TableCell sx={{ color:"#fff" }}>
                   Nations Trust Bank
+                </TableCell>
+
+                <TableCell sx={{ color:"#f59e0b" }}>
+                  Rs. {nationsSummary.opening.toFixed(2)}
                 </TableCell>
 
                 <TableCell sx={{ color:"#22c55e" }}>
