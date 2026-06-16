@@ -561,14 +561,17 @@ app.get("/plantation-attendance-days", (req, res) => {
 // 🌿 Combined Data
 app.get('/plantation-data', (req, res) => {
 
+  const plantation = req.query.plantation;
+
   const sql = `
-    SELECT 
+    SELECT
       pw.id AS worker_id,
       pw.name,
       pw.epf_no,
+      pw.plantation,
 
-      IFNULL(MIN(pda.rate_per_day), 0) AS rate_per_day,
-      IFNULL(MAX(pa.allowance), 0) AS allowance,
+      IFNULL(MIN(pda.rate_per_day),0) AS rate_per_day,
+      IFNULL(MAX(pa.allowance),0) AS allowance,
 
       SUM(
         CASE
@@ -580,7 +583,7 @@ app.get('/plantation-data', (req, res) => {
 
       SUM(pda.rate_per_day) AS amount,
 
-      DATE_FORMAT(pda.date, '%Y-%m') AS month
+      DATE_FORMAT(pda.date,'%Y-%m') AS month
 
     FROM plantation_workers pw
 
@@ -589,28 +592,21 @@ app.get('/plantation-data', (req, res) => {
 
     LEFT JOIN plantation_attendance pa
       ON pa.worker_id = pw.id
-      AND pa.month = DATE_FORMAT(pda.date, '%Y-%m')
+      AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
 
-    WHERE pda.status = 'present'
+    WHERE pda.status='present'
+    AND pw.plantation = ?
 
     GROUP BY
       pw.id,
       pw.name,
       pw.epf_no,
-      DATE_FORMAT(pda.date, '%Y-%m')
-
-    ORDER BY month DESC
+      DATE_FORMAT(pda.date,'%Y-%m')
   `;
 
-  db.query(sql, (err, result) => {
-
-    if (err) {
-
-      console.log("PLANTATION DATA ERROR:", err);
-
-      return res.status(500).json({
-        error: err.message
-      });
+  db.query(sql,[plantation],(err,result)=>{
+    if(err){
+      return res.status(500).json(err);
     }
 
     res.json(result);
