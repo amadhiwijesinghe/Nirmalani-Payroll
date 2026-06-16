@@ -2547,6 +2547,7 @@ app.get(
 
       res.json({
         opening: Number(openingRow.opening),
+        received,
         closing,
       });
 
