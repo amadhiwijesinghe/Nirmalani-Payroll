@@ -127,11 +127,11 @@ app.get("/employees", async (req, res) => {
 });
 
 app.post("/employees", (req, res) => {
-  const { name, memberid, NIC, basic_salary } = req.body;
+  const { name, memberid, NIC, basic_salary, plantation } = req.body;
 
   db.query(
-    "INSERT INTO employees (name, memberid, NIC, basic_salary) VALUES (?, ?, ?, ?)",
-    [name, memberid, NIC, basic_salary],
+    "INSERT INTO employees (name, memberid, NIC, basic_salary, plantation) VALUES (?, ?, ?, ?, ?)",
+    [name, memberid, NIC, basic_salary, plantation],
     (err, result) => {
       if (err) return res.status(500).json(err);
       res.json(result);
@@ -292,10 +292,12 @@ app.get("/payroll/:month?", (req, res) => {
 // ================= PLANTATION WORKERS =================
 // 🌿 Plantation Workers
 app.get('/plantation-workers', (req, res) => {
-  db.query("SELECT * FROM plantation_workers", (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.json(result);
-  });
+  const plantation = req.query.plantation;
+
+  db.query(
+    "SELECT * FROM plantation_workers WHERE plantation=?",
+    [plantation]
+  )
 });
 
 app.post('/plantation-workers', (req, res) => {
