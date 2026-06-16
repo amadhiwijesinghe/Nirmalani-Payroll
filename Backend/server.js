@@ -2257,14 +2257,10 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
     (
       SELECT
-      DATE_FORMAT(date,'%Y-%m')
-      AS month,
-
-      SUM(amount)
-      AS expense
-
+        DATE_FORMAT(date,'%Y-%m') AS month,
+        SUM(amount) AS expense
       FROM expenditure
-
+      WHERE transaction_type = 'Expense'
       GROUP BY month
 
     ) e
@@ -2326,6 +2322,94 @@ app.get(
     } catch (err) {
 
       console.error(err);
+
+      res.status(500).json(err);
+    }
+});
+
+app.get(
+  "/dashboard/monthly-cashflow",
+  async (req,res) => {
+
+    try {
+
+      const [rows] =
+        await db.promise().query(`
+          SELECT
+            DATE_FORMAT(date,'%Y-%m') AS month,
+            transaction_type,
+            amount
+          FROM expenditure
+          ORDER BY date ASC
+        `);
+
+      const monthly = {};
+
+      rows.forEach(row => {
+
+        if (!monthly[row.month]) {
+
+          monthly[row.month] = {
+            received: 0,
+            expense: 0
+          };
+        }
+
+        if (
+          row.transaction_type === "Received"
+        ) {
+
+          monthly[row.month].received +=
+            Number(row.amount);
+
+        } else {
+
+          monthly[row.month].expense +=
+            Number(row.amount);
+
+        }
+
+      });
+
+      let previousClosing = 0;
+
+      const result = [];
+
+      Object.keys(monthly)
+        .sort()
+        .forEach(month => {
+
+          const opening =
+            previousClosing;
+
+          const received =
+            monthly[month].received;
+
+          const expense =
+            monthly[month].expense;
+
+          const closing =
+            opening +
+            received -
+            expense;
+
+          result.push({
+            month,
+            opening,
+            received,
+            expense,
+            closing
+          });
+
+          previousClosing =
+            closing;
+        });
+
+      res.json(result);
+
+    } catch(err) {
+
+      console.log(err);
 
       res.status(500).json(err);
     }
