@@ -544,8 +544,7 @@ const downloadFinancialReport = async () => {
 
   try {
 
-    const month =
-      `${selectedYear}-${String(selectedMonth).padStart(2,"0")}`;
+    const month = selectedMonth;
 
     const res =
       await axios.get(
