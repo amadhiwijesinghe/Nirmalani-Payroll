@@ -915,6 +915,10 @@ const nationsSummary = getSummary(nationsData);
             <MenuItem value="Received">
               Money Received
             </MenuItem>
+
+            <MenuItem value="Opening Balance">
+              Opening Balance
+            </MenuItem>
           </TextField>
         </Grid>
 

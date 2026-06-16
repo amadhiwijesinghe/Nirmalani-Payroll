@@ -2458,20 +2458,15 @@ app.get(
         await db.promise().query(
           `
           SELECT
-          COALESCE(
-            SUM(
-              CASE
-                WHEN transaction_type='Received'
-                THEN amount
-                ELSE -amount
-              END
-            ),
-            0
-          ) AS opening
+            COALESCE(
+              SUM(amount),
+              0
+            ) AS opening
           FROM expenditure
-          WHERE date < ?
+          WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND transaction_type = 'Opening Balance'
           `,
-          [monthStart]
+          [month]
         );
 
       const [[receivedRow]] =
@@ -2489,20 +2484,17 @@ app.get(
           [month]
         );
 
-      const [[expenseRow]] =
-        await db.promise().query(
-          `
-          SELECT
-          COALESCE(
-            SUM(amount),
-            0
-          ) AS expense
-          FROM expenditure
-          WHERE DATE_FORMAT(date,'%Y-%m')=?
-          AND transaction_type='Expense'
-          `,
-          [month]
-        );
+     const [[expenseRow]] =
+      await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(amount),0) AS expense
+        FROM expenditure
+        WHERE DATE_FORMAT(date,'%Y-%m')=?
+        AND transaction_type='Expense'
+        `,
+        [month]
+      );
 
       const opening =
         Number(openingRow.opening);
