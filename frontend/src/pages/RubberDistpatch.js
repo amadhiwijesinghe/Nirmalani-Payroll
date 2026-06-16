@@ -18,7 +18,9 @@ import {
 const API =
   "https://nirmalani-payroll-production.up.railway.app";
 
-export default function RubberDispatch() {
+export default function RubberDispatch({
+  plantation
+}) {
 
   const [data, setData] = useState([]);
 
@@ -51,7 +53,7 @@ export default function RubberDispatch() {
     const fetchCollection = async () => {
 
     const res = await axios.get(
-        `${API}/rubber-collection`
+        `${API}/rubber-collection?plantation=${plantation}`
     );
 
     setCollectionData(res.data);
@@ -61,7 +63,7 @@ export default function RubberDispatch() {
   const fetchDispatch = async () => {
 
     const res = await axios.get(
-      `${API}/rubber-dispatch`
+      `${API}/rubber-dispatch?plantation=${plantation}`
     );
 
     setData(res.data);
@@ -71,7 +73,7 @@ export default function RubberDispatch() {
   const fetchRubber = async () => {
 
     const res = await axios.get(
-      `${API}/rubber-tappers-data`
+      `${API}/rubber-tappers-data?plantation=${plantation}`
     );
 
     setRubberData(res.data);

@@ -17,16 +17,18 @@ import jsPDF from "jspdf";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function Payslips() {
+export default function Payslips({
+  plantation
+}) {
   const [data, setData] = useState([]);
   const [month, setMonth] = useState("");
 
   useEffect(() => {
     if (month) {
-      axios.get(`${API}/payroll/${month}`)
+      axios.get(`${API}/payroll/${month}?plantation=${plantation}`)
         .then(res => setData(res.data));
     } else {
-      axios.get(`${API}/payroll`)
+      axios.get(`${API}/payroll?plantation=${plantation}`)
         .then(res => setData(res.data));
     }
   }, [month]);

@@ -20,7 +20,9 @@ import {
 const API =
 "https://nirmalani-payroll-production.up.railway.app";
 
-export default function Expenditure() {
+export default function Expenditure({
+  plantation
+}) {
 
   const [data, setData] = useState([]);
 
@@ -228,7 +230,7 @@ const categories = {
 
       const res =
         await axios.get(
-          `${API}/expenditure`
+          `${API}/expenditure?plantation=${plantation}`
         );
 
       setData(res.data);

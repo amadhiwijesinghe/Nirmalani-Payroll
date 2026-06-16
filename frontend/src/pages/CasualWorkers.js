@@ -20,7 +20,8 @@ import {
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function CasualWorkers() {
+export default function CasualWorkers({plantation
+  }) {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
@@ -46,7 +47,7 @@ export default function CasualWorkers() {
   }, []);
 
   const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/casual-workers`);
+    const res = await axios.get(`${API}/casual-workers?plantation=${plantation}`);
     setWorkers(res.data);
   };
 

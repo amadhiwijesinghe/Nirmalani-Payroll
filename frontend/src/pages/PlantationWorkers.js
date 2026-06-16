@@ -20,7 +20,10 @@ import {
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function PlantationWorkers({ setPage }) {
+export default function PlantationWorkers({
+  setPage,
+  plantation
+}) {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
@@ -65,13 +68,13 @@ export default function PlantationWorkers({ setPage }) {
 }, [workerId, month]);
 
   const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/plantation-workers`);
+    const res = await axios.get(`${API}/plantation-workers?plantation=${plantation}`);
     setWorkers(res.data);
   };
 
 const fetchData = async () => {
   try {
-    const res = await axios.get(`${API}/plantation-data`);
+    const res = await axios.get(`${API}/plantation-data?plantation=${plantation}`);
     console.log("NEW DATA:", res.data);
     setData(res.data);
   } catch (err) {
@@ -83,7 +86,7 @@ const fetchData = async () => {
 
   try {
     const res = await axios.get(
-      `${API}/plantation-attendance-days`,
+      `${API}/plantation-attendance-days?plantation=${plantation}`,
       {
         params: {
           worker_id: worker,

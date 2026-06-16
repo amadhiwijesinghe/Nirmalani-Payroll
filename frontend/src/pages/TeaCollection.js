@@ -22,7 +22,9 @@ import {
 const API =
   "https://nirmalani-payroll-production.up.railway.app";
 
-export default function TeaCollection() {
+export default function TeaCollection({
+  plantation
+}) {
 
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
@@ -50,7 +52,7 @@ export default function TeaCollection() {
   const fetchWorkers = async () => {
 
     const res = await axios.get(
-      `${API}/plantation-workers`
+      `${API}/plantation-workers?plantation=${plantation}`
     );
 
     setWorkers(res.data);
@@ -60,7 +62,7 @@ export default function TeaCollection() {
   const fetchData = async () => {
 
     const res = await axios.get(
-      `${API}/tea-collection`
+      `${API}/tea-collection?plantation=${plantation}`
     );
 
     setData(res.data);

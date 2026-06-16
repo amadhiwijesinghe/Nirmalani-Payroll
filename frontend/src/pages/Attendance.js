@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-function Attendance() {
+function Attendance({plantation}) {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [date, setDate] = useState("");
@@ -26,7 +26,7 @@ function Attendance() {
   const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
-    axios.get(`${API}/employees`)
+    axios.get(`${API}/employees?plantation=${plantation}`)
       .then(res => setEmployees(res.data));
 
     fetchAttendance();

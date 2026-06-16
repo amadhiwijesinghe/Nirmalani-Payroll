@@ -26,7 +26,9 @@ const API =
   process.env.REACT_APP_API_URL ||
   "https://nirmalani-payroll-production.up.railway.app";
 
-export default function FinancialDashboard() {
+export default function FinancialDashboard({
+  plantation
+}) {
 
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
@@ -75,25 +77,25 @@ export default function FinancialDashboard() {
       ] = await Promise.all([
 
         axios.get(
-          `${API}/dashboard/total-income`
+          `${API}/dashboard/total-income?plantation=${plantation}`
         ),
 
         axios.get(
-          `${API}/dashboard/total-expenditure`
+          `${API}/dashboard/total-expenditure?plantation=${plantation}`
         ),
 
         axios.get(
-          `${API}/dashboard/monthly-profit-loss`
+          `${API}/dashboard/monthly-profit-loss?plantation=${plantation}`
         ),
 
         axios.get(
-          `${API}/dashboard/all-worker-salary-report/${selectedMonth}`
+          `${API}/dashboard/all-worker-salary-report/${selectedMonth}?plantation=${plantation}`
         ),
 
         axios.get(
-  `${API}/dashboard/plantation-total-required/${selectedMonth}`),
-        axios.get(`${API}/dashboard/casual-summary/${selectedMonth}`),
-        axios.get(`${API}/dashboard/rubber-summary/${selectedMonth}`)
+  `${API}/dashboard/plantation-total-required/${selectedMonth}?plantation=${plantation}`),
+        axios.get(`${API}/dashboard/casual-summary/${selectedMonth}?plantation=${plantation}`),
+        axios.get(`${API}/dashboard/rubber-summary/${selectedMonth}?plantation=${plantation}`)
 
       ]);
 

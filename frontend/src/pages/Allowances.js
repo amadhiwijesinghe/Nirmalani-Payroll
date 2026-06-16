@@ -17,7 +17,7 @@ import {
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-function Allowance() {
+function Allowance({ plantation }) {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [month, setMonth] = useState("");
@@ -27,7 +27,7 @@ function Allowance() {
   const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
-    axios.get(`${API}/employees`)
+    axios.get(`${API}/employees?plntation=${plantation}`)
       .then(res => setEmployees(res.data));
 
     fetchAllowance();

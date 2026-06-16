@@ -15,16 +15,16 @@ import {
 } from "@mui/material";
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-function Payroll() {
+function Payroll({plantation}) {
   const [data, setData] = useState([]);
   const [month, setMonth] = useState("");
 
   const fetchPayroll = async () => {
     if (month) {
-      const res = await axios.get(`${API}/payroll/${month}`)
+      const res = await axios.get(`${API}/payroll/${month}?plantation=${plantation}`)
       setData(res.data);
     } else {
-      const res = await axios.get(`${API}/payroll`)
+      const res = await axios.get(`${API}/payroll?plantation=${plantation}`)
       setData(res.data);
     }
   };

@@ -20,7 +20,9 @@ import {
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
-export default function RubberTappers() {
+export default function RubberTappers({
+  plantation
+}) {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
@@ -52,13 +54,13 @@ export default function RubberTappers() {
   }, []);
 
   const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/rubber-tappers`);
+    const res = await axios.get(`${API}/rubber-tappers?plantation=${plantation}`);
     setWorkers(res.data);
   };
 
 const fetchData = async () => {
   try {
-    const res = await axios.get(`${API}/rubber-tappers-data`);
+    const res = await axios.get(`${API}/rubber-tappers-data?plantation=${plantation}`);
     console.log("NEW DATA:", res.data); 
     setData(res.data);
   } catch (err) {
