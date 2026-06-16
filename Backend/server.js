@@ -2335,7 +2335,8 @@ app.get(
             category,
             SUM(amount) amount
           FROM expenditure
-          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND transaction_type = 'Expense'
           GROUP BY category
           `,
           [month]
