@@ -675,10 +675,7 @@ const downloadFinancialReport = async () => {
       totalIncome - totalExpense;
 
     const closingBalance =
-      openingBalance +
-      totalIncome +
-      moneyReceived -
-      totalExpense;
+      Number(cashflow.closing || 0);
 
     let y =
       doc.lastAutoTable.finalY + 15;
@@ -705,12 +702,6 @@ const downloadFinancialReport = async () => {
       `Total Expenditure : Rs.${totalExpense.toFixed(2)}`,
       14,
       y + 30
-    );
-
-    doc.text(
-      `Net Profit : Rs.${netProfit.toFixed(2)}`,
-      14,
-      y + 40
     );
 
     doc.text(
