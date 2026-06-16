@@ -106,7 +106,8 @@ const fetchData = async () => {
 
     await axios.post(`${API}/plantation-workers`, {
       name,
-      epf_no: epf
+      epf_no: epf,
+      plantation
     });
 
     alert("✅ Worker Added Successfully!");

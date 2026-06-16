@@ -292,21 +292,31 @@ app.get("/payroll/:month?", (req, res) => {
 // ================= PLANTATION WORKERS =================
 // 🌿 Plantation Workers
 app.get('/plantation-workers', (req, res) => {
+
   const plantation = req.query.plantation;
 
   db.query(
-    "SELECT * FROM plantation_workers WHERE plantation=?",
-    [plantation]
-  )
+    "SELECT * FROM plantation_workers WHERE plantation = ?",
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
 });
 
 app.post('/plantation-workers', (req, res) => {
 
-  const { name, epf_no } = req.body;
+  const { name, epf_no, plantation } = req.body;
 
   db.query(
-    "INSERT INTO plantation_workers (name, epf_no) VALUES (?, ?)",
-    [name, epf_no],
+    "INSERT INTO plantation_workers (name, epf_no, plantation) VALUES (?, ?, ?)",
+    [name, epf_no, plantation],
     (err, result) => {
 
       if (err) {
