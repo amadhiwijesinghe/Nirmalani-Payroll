@@ -29,13 +29,23 @@ export default function Employees({ plantation }) {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [plantation]);
 
   const fetchEmployees = () => {
-    axios.get(`${API}/employees?plantation=${plantation}`)
+
+    console.log("PLANTATION:", plantation);
+
+    axios
+      .get(`${API}/employees?plantation=${plantation}`)
       .then(res => {
+
+        console.log("EMPLOYEES:", res.data);
+
         setEmployees(res.data);
         setFiltered(res.data);
+      })
+      .catch(err => {
+        console.log(err);
       });
   };
 

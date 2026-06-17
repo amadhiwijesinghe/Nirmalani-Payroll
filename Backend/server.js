@@ -125,7 +125,7 @@ app.get("/employees", async (req, res) => {
         `
         SELECT *
         FROM employees
-        WHERE plantation = ?
+        WHERE LOWER(plantation) = LOWER(?)
         `,
         [plantation]
       );
