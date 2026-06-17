@@ -60,7 +60,8 @@ export default function Employees({ plantation }) {
       name,
       memberid: numericId,
       NIC,
-      basic_salary: salary
+      basic_salary: salary,
+      plantation
     };
 
     if (editId) {

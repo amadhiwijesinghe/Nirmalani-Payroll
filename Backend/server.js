@@ -116,14 +116,29 @@ app.post("/login", (req, res) => {
 
 app.get("/employees", async (req, res) => {
 
-  const plantation = req.query.plantation;
+  try {
 
-  const [rows] = await db.query(
-    "SELECT * FROM employees WHERE plantation = ?",
-    [plantation]
-  );
+    const plantation = req.query.plantation;
 
-  res.json(rows);
+    const [rows] =
+      await db.promise().query(
+        `
+        SELECT *
+        FROM employees
+        WHERE plantation = ?
+        `,
+        [plantation]
+      );
+
+    res.json(rows);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json(err);
+
+  }
 });
 
 app.post("/employees", (req, res) => {
