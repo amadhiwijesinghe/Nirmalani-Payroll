@@ -1379,6 +1379,70 @@ app.delete("/tea-collection/:id", (req, res) => {
   );
 });
 
+// TEA DISTRIBUTION
+app.post("/tea-distribution", (req,res)=>{
+
+  const {
+    distribution_date,
+    company,
+    kg,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO tea_distribution
+    (
+      distribution_date,
+      company,
+      kg,
+      plantation
+    )
+    VALUES (?,?,?,?)
+    `,
+    [
+      distribution_date,
+      company,
+      kg,
+      plantation
+    ],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+
+});
+
+app.get("/tea-distribution",(req,res)=>{
+
+  const plantation =
+    req.query.plantation;
+
+  db.query(
+    `
+    SELECT *
+    FROM tea_distribution
+    WHERE plantation = ?
+    ORDER BY distribution_date DESC
+    `,
+    [plantation],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+
+});
+
 // ================= RUBBER DISPATCH =================
 
 // ADD DISPATCH

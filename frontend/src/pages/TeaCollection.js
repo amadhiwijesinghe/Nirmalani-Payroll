@@ -40,13 +40,18 @@ export default function TeaCollection({
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
+  const [distributionData, setDistributionData] = useState([]);
+  const [distributionDate, setDistributionDate] = useState("");
+  const [company, setCompany] = useState("");
+  const [distributionKg, setDistributionKg] = useState("");
 
   useEffect(() => {
 
     fetchWorkers();
     fetchData();
+    fetchDistribution();
 
-  }, []);
+  }, [plantation]);
 
   // FETCH WORKERS
   const fetchWorkers = async () => {
@@ -66,6 +71,24 @@ export default function TeaCollection({
     );
 
     setData(res.data);
+  };
+
+  //FETCH DISTRIBUTION
+  const fetchDistribution = async () => {
+
+    try {
+
+      const res = await axios.get(
+        `${API}/tea-distribution?plantation=${plantation}`
+      );
+
+      setDistributionData(res.data);
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
   };
 
   // SAVE TEA COLLECTION
@@ -159,6 +182,39 @@ export default function TeaCollection({
     }
     };
 
+// TOTAL KG
+  const totalKg = data
+    .filter(
+      row =>
+        !filterMonth ||
+        row.date.substring(0, 7) === filterMonth
+    )
+    .reduce(
+      (acc, row) => acc + Number(row.kg),
+      0
+    );
+// Tea Distribution Summary
+    const sawKg = distributionData
+      .filter(row => row.company === "SAW")
+      .reduce(
+        (sum, row) =>
+          sum + Number(row.kg || 0),
+        0
+      );
+
+    const nildiyaKg = distributionData
+      .filter(row => row.company === "Nildiya")
+      .reduce(
+        (sum, row) =>
+          sum + Number(row.kg || 0),
+        0
+      );
+
+    const totalDistributed =
+      sawKg + nildiyaKg;
+
+    const remainingStock =
+      totalKg - totalDistributed;
         // PRINT MONTLY AND WEEKLY REPORTS
     const printMonthlyReport = () => {
 
@@ -183,6 +239,22 @@ export default function TeaCollection({
         </tr>
         `;
     }).join("");
+
+    const monthlyDistribution =
+      distributionData.filter(
+        row =>
+          !filterMonth ||
+          row.distribution_date?.substring(0,7) === filterMonth
+      );
+
+    const distributionRows =
+      monthlyDistribution.map(row => `
+        <tr>
+          <td>${row.distribution_date}</td>
+          <td>${row.company}</td>
+          <td>${row.kg}</td>
+        </tr>
+      `).join("");
 
     const html = `
         <html>
@@ -277,9 +349,67 @@ export default function TeaCollection({
                 </td>
                 </tr>
 
+                <tr>
+                  <td colspan="3">
+                    <b>SAW Distribution</b>
+                  </td>
+                  <td>
+                    <b>${sawKg.toFixed(2)}</b>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td colspan="3">
+                    <b>Nildiya Distribution</b>
+                  </td>
+                  <td>
+                    <b>${nildiyaKg.toFixed(2)}</b>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td colspan="3">
+                    <b>Total Distributed</b>
+                  </td>
+                  <td>
+                    <b>${totalDistributed.toFixed(2)}</b>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td colspan="3">
+                    <b>Remaining Stock</b>
+                  </td>
+                  <td>
+                    <b>${remainingStock.toFixed(2)}</b>
+                  </td>
+                </tr>
+
             </tbody>
 
             </table>
+
+            <h3>Tea Distribution Details</h3>
+
+              <table>
+
+                <thead>
+
+                  <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>KG</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  ${distributionRows}
+
+                </tbody>
+
+              </table>
 
             <script>
             window.print();
@@ -343,6 +473,27 @@ export default function TeaCollection({
       </tr>
     `;
   }).join("");
+
+  const weeklyDistribution =
+    distributionData.filter(row => {
+
+      const d =
+        new Date(row.distribution_date);
+
+      return (
+        d >= new Date(weekStart) &&
+        d <= new Date(weekEnd)
+      );
+    });
+
+  const distributionRows =
+    weeklyDistribution.map(row => `
+      <tr>
+        <td>${row.distribution_date}</td>
+        <td>${row.company}</td>
+        <td>${row.kg}</td>
+      </tr>
+    `).join("");
 
   const html = `
     <html>
@@ -428,11 +579,67 @@ export default function TeaCollection({
               </td>
 
             </tr>
+            <tr>
+              <td colspan="3">
+                <b>SAW Distribution</b>
+              </td>
+              <td>
+                <b>${sawKg.toFixed(2)}</b>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="3">
+                <b>Nildiya Distribution</b>
+              </td>
+              <td>
+                <b>${nildiyaKg.toFixed(2)}</b>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="3">
+                <b>Total Distributed</b>
+              </td>
+              <td>
+                <b>${totalDistributed.toFixed(2)}</b>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="3">
+                <b>Remaining Stock</b>
+              </td>
+              <td>
+                <b>${remainingStock.toFixed(2)}</b>
+              </td>
+            </tr>
 
           </tbody>
 
         </table>
 
+        <h3>Tea Distribution Details</h3>
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Date</th>
+                <th>Company</th>
+                <th>KG</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              ${distributionRows}
+
+            </tbody>
+
+          </table>
         <script>
           window.print();
         </script>
@@ -449,17 +656,6 @@ export default function TeaCollection({
   win.document.close();
 };
 
-  // TOTAL KG
-  const totalKg = data
-    .filter(
-      row =>
-        !filterMonth ||
-        row.date.substring(0, 7) === filterMonth
-    )
-    .reduce(
-      (acc, row) => acc + Number(row.kg),
-      0
-    );
 
   return (
 
@@ -637,6 +833,172 @@ export default function TeaCollection({
         </Grid>
 
       </Paper>
+
+      {plantation === "ingurupaththala" && (
+        <>
+
+      <Paper sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography variant="h5"
+        sx={{ mb: 2, fontWeight: "bold"}}>
+          Tea Distribution
+        </Typography>
+
+        <Grid container spacing={2}>
+
+          <Grid item xs={4}>
+            <TextField
+              type="date"
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4}>
+            <Select sx={{width: 200}}>
+              <MenuItem value="SAW">
+                SAW
+              </MenuItem>
+
+              <MenuItem value="Nildiya">
+                Nildiya
+              </MenuItem>
+            </Select>
+          </Grid>
+
+          <Grid item xs={4}>
+            <TextField
+              label="KG"
+              type="number"
+              fullWidth
+            />
+          </Grid>
+
+        </Grid>
+
+      </Paper>
+
+      <Paper
+        sx={{
+          p: 3,
+          mt: 2,
+          mb: 2,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography
+          variant="h6"
+          sx={{
+            color: "#fff",
+            mb: 2,
+            fontWeight: "bold"
+          }}
+        >
+          Tea Distribution Summary
+        </Typography>
+
+        <Table>
+
+          <TableHead>
+
+            <TableRow>
+
+              <TableCell sx={{ color:"#aaa" }}>
+                Company
+              </TableCell>
+
+              <TableCell sx={{ color:"#aaa" }}>
+                KG
+              </TableCell>
+
+            </TableRow>
+
+          </TableHead>
+
+          <TableBody>
+
+            <TableRow>
+
+              <TableCell sx={{ color:"#fff" }}>
+                SAW
+              </TableCell>
+
+              <TableCell sx={{ color:"#22c55e" }}>
+                {sawKg.toFixed(2)}
+              </TableCell>
+
+            </TableRow>
+
+            <TableRow>
+
+              <TableCell sx={{ color:"#fff" }}>
+                Nildiya
+              </TableCell>
+
+              <TableCell sx={{ color:"#22c55e" }}>
+                {nildiyaKg.toFixed(2)}
+              </TableCell>
+
+            </TableRow>
+
+            <TableRow>
+
+              <TableCell
+                sx={{
+                  color:"#fff",
+                  fontWeight:"bold"
+                }}
+              >
+                Total Distributed
+              </TableCell>
+
+              <TableCell
+                sx={{
+                  color:"#0ea5e9",
+                  fontWeight:"bold"
+                }}
+              >
+                {totalDistributed.toFixed(2)}
+              </TableCell>
+
+            </TableRow>
+
+            <TableRow>
+
+              <TableCell
+                sx={{
+                  color:"#fff",
+                  fontWeight:"bold"
+                }}
+              >
+                Remaining Stock
+              </TableCell>
+
+              <TableCell
+                sx={{
+                  color:"#facc15",
+                  fontWeight:"bold"
+                }}
+              >
+                {remainingStock.toFixed(2)}
+              </TableCell>
+
+            </TableRow>
+
+          </TableBody>
+
+        </Table>
+
+      </Paper>
+      </>
+    )}
 
       {/* TABLE */}
       <Paper
