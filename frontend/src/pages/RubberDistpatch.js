@@ -580,7 +580,7 @@ const saveCollection = async () => {
         sx={{
           color: "#fff",
           fontWeight: 800,
-          mb: 3
+          mb: 3,
         }}
       >
         🛻 Rubber Dispatch to DPL
@@ -751,7 +751,7 @@ const saveCollection = async () => {
               mb:2
             }}
           >
-            💰 Ottapalu Collection
+            🧶 Ottapalu Collection
           </Typography>
 
           <Grid container spacing={2}>
@@ -783,12 +783,118 @@ const saveCollection = async () => {
               <Button
                 fullWidth
                 onClick={saveOttapalu}
+                sx={{
+                height: "100%",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                fontWeight: "bold"
+              }}
               >
                 Save Ottapalu
               </Button>
             </Grid>
 
           </Grid>
+
+        </Paper>
+
+      )}
+
+      {plantation === "ingurupaththala" && (
+
+        <Paper
+          sx={{
+            p: 2,
+            mt: 3,
+            mb: 2,
+            borderRadius: 5,
+            background:
+              "rgba(255,255,255,0.05)"
+          }}
+        >
+
+          <Typography
+            variant="h6"
+            sx={{
+              color:"#fff",
+              mb:2,
+              fontWeight:"bold"
+            }}
+          >
+            Ottapalu Collection Summary
+          </Typography>
+
+          <Table>
+
+            <TableHead>
+
+              <TableRow>
+
+                <TableCell sx={{ color:"#aaa" }}>
+                  Date
+                </TableCell>
+
+                <TableCell sx={{ color:"#aaa" }}>
+                  Quantity (KG)
+                </TableCell>
+
+              </TableRow>
+
+            </TableHead>
+
+            <TableBody>
+
+              {ottapaluData.map((row) => (
+
+                <TableRow key={row.id}>
+
+                  <TableCell sx={{ color:"#fff" }}>
+                    {new Date(row.collection_date)
+                      .toISOString()
+                      .split("T")[0]}
+                  </TableCell>
+
+                  <TableCell sx={{ color:"#facc15" }}>
+                    {row.quantity}
+                  </TableCell>
+
+                </TableRow>
+
+              ))}
+
+              <TableRow>
+
+                <TableCell
+                  sx={{
+                    color:"#fff",
+                    fontWeight:"bold"
+                  }}
+                >
+                  Total Ottapalu
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    color:"#22c55e",
+                    fontWeight:"bold"
+                  }}
+                >
+                  {ottapaluData
+                    .reduce(
+                      (sum,row) =>
+                        sum + Number(row.quantity || 0),
+                      0
+                    )
+                    .toFixed(2)
+                  } KG
+                </TableCell>
+
+              </TableRow>
+
+            </TableBody>
+
+          </Table>
 
         </Paper>
 
