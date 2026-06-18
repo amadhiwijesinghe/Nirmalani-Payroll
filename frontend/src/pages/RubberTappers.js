@@ -47,11 +47,23 @@ export default function RubberTappers({
 
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
+  const [dispatchData, setDispatchData] = useState([]);
+  const [collectionData, setCollectionData] = useState([]);
+  const [ottapaluData, setOttapaluData] = useState([]);
+
   useEffect(() => {
+
     fetchWorkers();
     fetchData();
-    
-  }, []);
+
+    fetchDispatchData();
+    fetchCollectionData();
+
+    if (plantation === "ingurupaththala") {
+      fetchOttapaluData();
+    }
+
+  }, [plantation]);
 
   const fetchWorkers = async () => {
     const res = await axios.get(`${API}/rubber-tappers?plantation=${plantation}`);
@@ -66,6 +78,27 @@ const fetchData = async () => {
   } catch (err) {
     console.error(err);
   }
+};
+
+const fetchDispatchData = async () => {
+  const res = await axios.get(
+    `${API}/rubber-dispatch?plantation=${plantation}`
+  );
+  setDispatchData(res.data);
+};
+
+const fetchCollectionData = async () => {
+  const res = await axios.get(
+    `${API}/rubber-collection?plantation=${plantation}`
+  );
+  setCollectionData(res.data);
+};
+
+const fetchOttapaluData = async () => {
+  const res = await axios.get(
+    `${API}/ottapalu?plantation=${plantation}`
+  );
+  setOttapaluData(res.data);
 };
 
 const addWorker = async () => {
@@ -458,6 +491,66 @@ const printWeeklyReport = () => {
     `;
   }).join("");
 
+  const weeklyCollection =
+    collectionData.filter(row => {
+
+      const d = new Date(row.date);
+
+      return (
+        d >= new Date(weekStart) &&
+        d <= new Date(weekEnd)
+      );
+
+    });
+
+  const weeklyDispatch =
+    dispatchData.filter(row => {
+
+      const d = new Date(row.date);
+
+      return (
+        d >= new Date(weekStart) &&
+        d <= new Date(weekEnd)
+      );
+
+    });
+
+  const totalCollected =
+    weeklyCollection.reduce(
+      (sum,row) =>
+        sum + Number(row.liters || 0),
+      0
+    );
+  const totalSent =
+    weeklyDispatch.reduce(
+      (sum,row) =>
+        sum + Number(row.liters_sent || 0),
+      0
+    );
+
+  const balance =
+    totalCollected - totalSent;
+
+ const weeklyOttapalu =
+  ottapaluData.filter(row => {
+
+    const d =
+      new Date(row.collection_date);
+
+    return (
+      d >= new Date(weekStart) &&
+      d <= new Date(weekEnd)
+    );
+
+  });
+
+  const totalOttapalu =
+    weeklyOttapalu.reduce(
+      (sum,row) =>
+        sum + Number(row.quantity || 0),
+      0
+    );
+
   const html = `
     <html>
 
@@ -529,6 +622,62 @@ const printWeeklyReport = () => {
           ${totalEarnings.toFixed(2)}
         </h3>
 
+        <hr>
+
+        <h2>Rubber Dispatch Summary</h2>
+
+        <p>
+          Total Collected:
+          ${totalCollected.toFixed(2)} L
+        </p>
+
+        <p>
+          Total Sent to DPL:
+          ${totalSent.toFixed(2)} L
+        </p>
+
+        <p>
+          Remaining Stock:
+          ${balance.toFixed(2)} L
+        </p>
+
+        ${
+        plantation === "ingurupaththala"
+        ? `
+        <hr>
+
+        <h2>Ottapalu Collection</h2>
+
+        <table>
+
+        <thead>
+        <tr>
+          <th>Date</th>
+          <th>Quantity</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${weeklyOttapalu.map(row => `
+        <tr>
+          <td>${row.collection_date}</td>
+          <td>${row.quantity}</td>
+        </tr>
+        `).join("")}
+
+        </tbody>
+
+        </table>
+
+        <h3>
+        Total Ottapalu:
+        ${totalOttapalu.toFixed(2)} KG
+        </h3>
+        `
+        : ""
+        }
+
         <script>
           window.print();
         </script>
@@ -590,6 +739,48 @@ const printMonthlyReport = () => {
     `;
   }).join("");
 
+  const monthlyCollection =
+    collectionData.filter(
+      row =>
+        row.date?.substring(0,7) === filterMonth
+    );
+
+  const totalCollected =
+    monthlyCollection.reduce(
+      (sum,row) =>
+        sum + Number(row.liters || 0),
+      0
+    );
+
+  const monthlyDispatch =
+    dispatchData.filter(
+      row =>
+        row.date?.substring(0,7) === filterMonth
+    );
+
+  const totalSent =
+    monthlyDispatch.reduce(
+      (sum,row) =>
+        sum + Number(row.liters_sent || 0),
+      0
+    );  
+
+  const balance =
+    totalCollected - totalSent;
+
+  const monthlyOttapalu =
+    ottapaluData.filter(
+      row =>
+        row.collection_date?.substring(0,7)
+        === filterMonth
+    );
+
+  const totalOttapalu =
+    monthlyOttapalu.reduce(
+      (sum,row) =>
+        sum + Number(row.quantity || 0),
+      0
+    );
   const html = `
     <html>
 
@@ -670,6 +861,64 @@ const printMonthlyReport = () => {
           Total Earnings:
           ${totalEarnings.toFixed(2)}
         </h3>
+
+        <hr>
+
+        <h2>Rubber Dispatch Summary</h2>
+
+        <p>
+          Total Collected:
+          ${totalCollected.toFixed(2)} L
+        </p>
+
+        <p>
+          Total Sent to DPL:
+          ${totalSent.toFixed(2)} L
+        </p>
+
+        <p>
+          Remaining Stock:
+          ${balance.toFixed(2)} L
+        </p>
+
+        ${
+        plantation === "ingurupaththala"
+        ? `
+        <hr>
+
+        <h2>Ottapalu Collection</h2>
+
+        <table>
+
+        <thead>
+        <tr>
+          <th>Date</th>
+          <th>Quantity</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${monthlyOttapalu.map(row => `
+        <tr>
+          <td>${new Date(row.collection_date)
+            .toISOString()
+            .split("T")[0]}</td>
+          <td>${row.quantity}</td>
+        </tr>
+        `).join("")}
+
+        </tbody>
+
+        </table>
+
+        <h3>
+        Total Ottapalu:
+        ${totalOttapalu.toFixed(2)} KG
+        </h3>
+        `
+        : ""
+        }
 
         <script>
           window.print();

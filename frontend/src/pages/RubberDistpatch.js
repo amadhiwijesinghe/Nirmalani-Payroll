@@ -240,295 +240,295 @@ const totalCollected = collectionData
     }
   };
 
-  // PRINT MONTHLY AND WEEKLY REPORTS
-  const printMonthlyReport = () => {
-
-    const rows = data.filter(
-      row =>
-        !filterMonth ||
-        row.date.substring(0, 7)
-          === filterMonth
-    );
-
-    const tableRows = rows.map(row => `
-      <tr>
-        <td>
-          ${new Date(row.date)
-            .toISOString()
-            .split("T")[0]}
-        </td>
-
-        <td>
-          ${row.liters_sent}
-        </td>
-      </tr>
-    `).join("");
-
-    const html = `
-      <html>
-
-        <head>
-
-          <title>
-            Nirmalani Plantation Rubber Dispatch Report
-          </title>
+//   // PRINT MONTHLY AND WEEKLY REPORTS
+//   const printMonthlyReport = () => {
+
+//     const rows = data.filter(
+//       row =>
+//         !filterMonth ||
+//         row.date.substring(0, 7)
+//           === filterMonth
+//     );
+
+//     const tableRows = rows.map(row => `
+//       <tr>
+//         <td>
+//           ${new Date(row.date)
+//             .toISOString()
+//             .split("T")[0]}
+//         </td>
+
+//         <td>
+//           ${row.liters_sent}
+//         </td>
+//       </tr>
+//     `).join("");
+
+//     const html = `
+//       <html>
+
+//         <head>
+
+//           <title>
+//             Nirmalani Plantation Rubber Dispatch Report
+//           </title>
 
-          <style>
+//           <style>
 
-            body {
-              font-family: Arial;
-              padding: 20px;
-            }
+//             body {
+//               font-family: Arial;
+//               padding: 20px;
+//             }
 
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-            }
+//             table {
+//               width: 100%;
+//               border-collapse: collapse;
+//               margin-top: 20px;
+//             }
 
-            th, td {
-              border: 1px solid black;
-              padding: 10px;
-              text-align: center;
-            }
+//             th, td {
+//               border: 1px solid black;
+//               padding: 10px;
+//               text-align: center;
+//             }
 
-          </style>
+//           </style>
 
-        </head>
+//         </head>
 
-        <body>
+//         <body>
 
-          <h2>
-            Nirmalani Plantation
-          </h2>
+//           <h2>
+//             Nirmalani Plantation
+//           </h2>
 
-          <h3>
-            Rubber Dispatch Report
-          </h3>
+//           <h3>
+//             Rubber Dispatch Report
+//           </h3>
 
-        <h3>
-          Month:
-          ${
-            filterMonth
-          }
-          ${
-            new Date(filterMonth + "-01")
-              .toLocaleString(
-                "default",
-                {
-                  month:"long"
-                }
-              )
-          }
-        </h3>
+//         <h3>
+//           Month:
+//           ${
+//             filterMonth
+//           }
+//           ${
+//             new Date(filterMonth + "-01")
+//               .toLocaleString(
+//                 "default",
+//                 {
+//                   month:"long"
+//                 }
+//               )
+//           }
+//         </h3>
 
-          <table>
+//           <table>
 
-            <thead>
+//             <thead>
 
-              <tr>
-                <th>Date</th>
-                <th>Liters Sent</th>
-              </tr>
+//               <tr>
+//                 <th>Date</th>
+//                 <th>Liters Sent</th>
+//               </tr>
 
-            </thead>
+//             </thead>
 
-            <tbody>
+//             <tbody>
 
-              ${tableRows}
+//               ${tableRows}
 
-              <tr>
-                <td>
-                  <b>Total Sent</b>
-                </td>
+//               <tr>
+//                 <td>
+//                   <b>Total Sent</b>
+//                 </td>
 
-                <td>
-                  <b>${totalSent.toFixed(2)}</b>
-                </td>
-              </tr>
+//                 <td>
+//                   <b>${totalSent.toFixed(2)}</b>
+//                 </td>
+//               </tr>
 
-              <tr>
-                <td>
-                  <b>Remaining Stock</b>
-                </td>
+//               <tr>
+//                 <td>
+//                   <b>Remaining Stock</b>
+//                 </td>
 
-                <td>
-                  <b>${balance.toFixed(2)}</b>
-                </td>
-              </tr>
+//                 <td>
+//                   <b>${balance.toFixed(2)}</b>
+//                 </td>
+//               </tr>
 
-            </tbody>
+//             </tbody>
 
-          </table>
+//           </table>
 
-          <script>
-            window.print();
-          </script>
+//           <script>
+//             window.print();
+//           </script>
 
-        </body>
+//         </body>
 
-      </html>
-    `;
+//       </html>
+//     `;
 
-    const win = window.open("", "_blank");
+//     const win = window.open("", "_blank");
 
-    win.document.write(html);
+//     win.document.write(html);
 
-    win.document.close();
-  };
+//     win.document.close();
+//   };
 
-  const printWeeklyReport = () => {
+//   const printWeeklyReport = () => {
 
-  if (!weekStart || !weekEnd) {
+//   if (!weekStart || !weekEnd) {
 
-    alert("Select week range");
+//     alert("Select week range");
 
-    return;
-  }
+//     return;
+//   }
 
-  const rows = data.filter((row) => {
+//   const rows = data.filter((row) => {
 
-    const current =
-      new Date(row.date);
+//     const current =
+//       new Date(row.date);
 
-    return (
-      current >= new Date(weekStart) &&
-      current <= new Date(weekEnd)
-    );
-  });
+//     return (
+//       current >= new Date(weekStart) &&
+//       current <= new Date(weekEnd)
+//     );
+//   });
 
-  if (rows.length === 0) {
+//   if (rows.length === 0) {
 
-    alert("No records found");
+//     alert("No records found");
 
-    return;
-  }
+//     return;
+//   }
 
-  let total = 0;
+//   let total = 0;
 
-  const tableRows = rows.map((row) => {
+//   const tableRows = rows.map((row) => {
 
-    total += Number(row.liters_sent);
+//     total += Number(row.liters_sent);
 
-    return `
-      <tr>
+//     return `
+//       <tr>
 
-        <td>
-          ${new Date(row.date)
-            .toISOString()
-            .split("T")[0]}
-        </td>
+//         <td>
+//           ${new Date(row.date)
+//             .toISOString()
+//             .split("T")[0]}
+//         </td>
 
-        <td>
-          ${row.liters_sent}
-        </td>
+//         <td>
+//           ${row.liters_sent}
+//         </td>
 
-      </tr>
-    `;
-  }).join("");
+//       </tr>
+//     `;
+//   }).join("");
 
-  const html = `
-    <html>
+//   const html = `
+//     <html>
 
-      <head>
+//       <head>
 
-        <title>
-          Nirmalani Plantation Weekly Dispatch Report
-        </title>
+//         <title>
+//           Nirmalani Plantation Weekly Dispatch Report
+//         </title>
 
-        <style>
+//         <style>
 
-          body{
-            font-family: Arial;
-            padding:20px;
-          }
+//           body{
+//             font-family: Arial;
+//             padding:20px;
+//           }
 
-          h2{
-            text-align:center;
-          }
+//           h2{
+//             text-align:center;
+//           }
 
-          table{
-            width:100%;
-            border-collapse: collapse;
-            margin-top:20px;
-          }
+//           table{
+//             width:100%;
+//             border-collapse: collapse;
+//             margin-top:20px;
+//           }
 
-          th,td{
-            border:1px solid black;
-            padding:10px;
-            text-align:center;
-          }
+//           th,td{
+//             border:1px solid black;
+//             padding:10px;
+//             text-align:center;
+//           }
 
-          th{
-            background:#eee;
-          }
+//           th{
+//             background:#eee;
+//           }
 
-        </style>
+//         </style>
 
-      </head>
+//       </head>
 
-      <body>
+//       <body>
 
-        <h2>
-          Nirmalani Plantation
-        </h2>
+//         <h2>
+//           Nirmalani Plantation
+//         </h2>
 
-        <h3>
-          Weekly Rubber Dispatch Report
-        </h3>
+//         <h3>
+//           Weekly Rubber Dispatch Report
+//         </h3>
 
-        <p>
-          From: ${weekStart}
-          <br/>
-          To: ${weekEnd}
-        </p>
+//         <p>
+//           From: ${weekStart}
+//           <br/>
+//           To: ${weekEnd}
+//         </p>
 
-        <table>
+//         <table>
 
-          <thead>
+//           <thead>
 
-            <tr>
-              <th>Date</th>
-              <th>Liters Sent</th>
-            </tr>
+//             <tr>
+//               <th>Date</th>
+//               <th>Liters Sent</th>
+//             </tr>
 
-          </thead>
+//           </thead>
 
-          <tbody>
+//           <tbody>
 
-            ${tableRows}
+//             ${tableRows}
 
-            <tr>
+//             <tr>
 
-              <td>
-                <b>Total Sent</b>
-              </td>
+//               <td>
+//                 <b>Total Sent</b>
+//               </td>
 
-              <td>
-                <b>${total.toFixed(2)}</b>
-              </td>
+//               <td>
+//                 <b>${total.toFixed(2)}</b>
+//               </td>
 
-            </tr>
+//             </tr>
 
-          </tbody>
+//           </tbody>
 
-        </table>
+//         </table>
 
-        <script>
-          window.print();
-        </script>
+//         <script>
+//           window.print();
+//         </script>
 
-      </body>
+//       </body>
 
-    </html>
-  `;
+//     </html>
+//   `;
 
-  const win = window.open("", "_blank");
+//   const win = window.open("", "_blank");
 
-  win.document.write(html);
+//   win.document.write(html);
 
-  win.document.close();
-};
+//   win.document.close();
+// };
 
   // SAVE COLLECTION
 const saveCollection = async () => {
@@ -836,7 +836,7 @@ const saveCollection = async () => {
                 </TableCell>
 
                 <TableCell sx={{ color:"#aaa" }}>
-                  Quantity (KG)
+                  Quantity (g)
                 </TableCell>
 
               </TableRow>
@@ -887,7 +887,7 @@ const saveCollection = async () => {
                       0
                     )
                     .toFixed(2)
-                  } KG
+                  } g
                 </TableCell>
 
               </TableRow>
@@ -1015,7 +1015,7 @@ const saveCollection = async () => {
             }}
           />
 
-      <Button
+      {/* <Button
         onClick={printWeeklyReport}
         sx={{
           ml: 2,
@@ -1039,7 +1039,7 @@ const saveCollection = async () => {
         }}
       >
         Monthly Report
-      </Button>
+      </Button> */}
 
       </Box>
 
