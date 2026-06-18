@@ -529,11 +529,17 @@ export default function TeaCollection({
                         0);
 
                     const salesAmount =
-                    salesData
-                        .filter(r => r.sale_date === date)
-                        .reduce((sum,r) =>
-                        sum + Number(r.sale_amount || 0),
-                        0);
+                        salesData
+                            .filter(r => r.sale_date === date)
+                            .reduce(
+                            (sum,r) =>
+                                sum +
+                                (
+                                Number(r.price || 0) *
+                                Number(r.quantity_sold || 0)
+                                ),
+                            0
+                            );
 
                     let runningBalance = 0;
 
@@ -568,7 +574,7 @@ export default function TeaCollection({
 
                     return (
 
-                    <TableRow key={date}>
+                    <TableRow key={date?.split("T")[0]}>
 
                         <TableCell sx={{ color:"#fff" }}>
                         {date}
