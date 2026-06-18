@@ -137,6 +137,40 @@ export default function CinnamonCollection({
     }
   };
 
+  // SAVE KOTA URA
+    const saveKotaUra = async () => {
+
+        if (!kotaDate || !kotaQty) {
+            alert("Fill all fields");
+            return;
+        }
+
+        try {
+
+            await axios.post(
+            `${API}/cinnamon-kota-ura`,
+            {
+                date: kotaDate,
+                quantity: kotaQty,
+                plantation
+            }
+            );
+
+            alert("✅ කෝට උර Saved");
+
+            setKotaDate("");
+            setKotaQty("");
+
+            fetchKotaUra();
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Error saving");
+        }
+    };
+
   // DELETE
   const deleteCollection = async (id) => {
 
@@ -769,7 +803,7 @@ export default function CinnamonCollection({
                     label="Quantity"
                     type="number"
                     fullWidth
-                    value={depositQtyQty}
+                    value={depositQty}
                     onChange={(e)=>
                     setKotaQty(e.target.value)
                     }
