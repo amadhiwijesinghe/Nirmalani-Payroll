@@ -171,6 +171,40 @@ export default function CinnamonCollection({
         }
     };
 
+    // SAVE DEPOSIT
+    const saveDeposit = async () => {
+
+    if (!depositDate || !depositQty) {
+        alert("Fill all fields");
+        return;
+    }
+
+    try {
+
+        await axios.post(
+        `${API}/cinnamon-deposit`,
+        {
+            date: depositDate,
+            quantity: depositQty,
+            plantation
+        }
+        );
+
+        alert("✅ Deposit Saved");
+
+        setDepositDate("");
+        setDepositQty("");
+
+        fetchDeposit();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Error saving");
+    }
+    };
+
   // DELETE
   const deleteCollection = async (id) => {
 
