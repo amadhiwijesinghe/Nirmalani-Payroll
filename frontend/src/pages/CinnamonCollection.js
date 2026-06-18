@@ -311,6 +311,29 @@ export default function CinnamonCollection({
         `;
     }).join("");
 
+    const workerCount =
+        new Set(
+            rows.map(row => row.worker_id)
+        ).size;
+
+    const monthlyKota =
+        kotaData.filter(
+            row =>
+            row.date.substring(0,7) === filterMonth
+        );
+
+        const kotaCount =
+        monthlyKota.length;
+
+    const monthlyDeposit =
+        depositData.filter(
+            row =>
+            row.date.substring(0,7) === filterMonth
+        );
+
+        const depositCount =
+        monthlyDeposit.length;
+
     const html = `
         <html>
 
@@ -358,7 +381,7 @@ export default function CinnamonCollection({
             </h2>
 
             <h3>
-            Tea Collection Report
+            Cinnamon Collection Report
             </h3>
 
           <h3>
@@ -407,6 +430,30 @@ export default function CinnamonCollection({
             </tbody>
 
             </table>
+
+            <hr>
+
+            <h2>Summary</h2>
+
+            <p>
+            රැස් කරගත් මුළු කුරුඳු ප්‍රමාණය:
+            <b>${total.toFixed(2)} KG</b>
+            </p>
+
+            <p>
+            වැඩ කල සේවකයන් ගණන:
+            <b>${workerCount}</b>
+            </p>
+
+            <p>
+            මුළු කෝට උර:
+            <b>${kotaCount}</b>
+            </p>
+
+            <p>
+            මුළු තැන්පත් කිරීම්:
+            <b>${depositCount}</b>
+            </p>
 
             <script>
             window.print();
@@ -471,6 +518,43 @@ export default function CinnamonCollection({
     `;
   }).join("");
 
+  const workerCount =
+    new Set(
+        rows.map(row => row.worker_id)
+    ).size;
+
+  const weeklyKota =
+    kotaData.filter(row => {
+
+        const d =
+        new Date(row.date);
+
+        return (
+        d >= new Date(weekStart) &&
+        d <= new Date(weekEnd)
+        );
+
+    });
+
+  const kotaCount =
+    weeklyKota.length;
+
+  const weeklyDeposit =
+    depositData.filter(row => {
+
+        const d =
+        new Date(row.date);
+
+        return (
+        d >= new Date(weekStart) &&
+        d <= new Date(weekEnd)
+        );
+
+    });
+
+  const depositCount =
+    weeklyDeposit.length;
+
   const html = `
     <html>
 
@@ -518,7 +602,7 @@ export default function CinnamonCollection({
         </h2>
 
         <h3>
-          Weekly Tea Collection Report
+          Weekly Cinnamon Collection Report
         </h3>
 
         <p>
@@ -559,6 +643,30 @@ export default function CinnamonCollection({
           </tbody>
 
         </table>
+
+        <hr>
+
+        <h2>Summary</h2>
+
+        <p>
+        රැස් කරගත් මුළු කුරුඳු ප්‍රමාණය:
+        <b>${total.toFixed(2)} KG</b>
+        </p>
+
+        <p>
+        වැඩ කල සේවකයන් ගණන:
+        <b>${workerCount}</b>
+        </p>
+
+        <p>
+        මුළු කෝට උර:
+        <b>${kotaCount}</b>
+        </p>
+
+        <p>
+        මුළු තැන්පත් කිරීම්:
+        <b>${depositCount}</b>
+        </p>
 
         <script>
           window.print();
@@ -839,7 +947,7 @@ export default function CinnamonCollection({
                     fullWidth
                     value={depositQty}
                     onChange={(e)=>
-                    setKotaQty(e.target.value)
+                    setDepositQty(e.target.value)
                     }
                 />
                 </Grid>
