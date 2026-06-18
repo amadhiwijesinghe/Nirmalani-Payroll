@@ -41,13 +41,18 @@ export default function RubberDispatch({
   const [collectedLiters, setCollectedLiters] = useState("");
   const [collectionDate, setCollectionDate] = useState("");
 
+  const [ottapaluQty, setOttapaluQty] = useState("");
+  const [ottapaluDate, setOttapaluDate] = useState("");
+  const [ottapaluData, setOttapaluData] = useState([]);
+
   useEffect(() => {
 
     fetchDispatch();
     fetchRubber();
     fetchCollection();
+    fetchOttapalu();
 
-  }, []);
+  }, [plantation]);
 
   // FETCH COLLECTION
     const fetchCollection = async () => {
@@ -77,6 +82,16 @@ export default function RubberDispatch({
     );
 
     setRubberData(res.data);
+  };
+
+  // FETCH OTTAPALU
+  const fetchOttapalu = async () => {
+
+    const res = await axios.get(
+      `${API}/ottapalu?plantation=${plantation}`
+    );
+
+    setOttapaluData(res.data);
   };
 
   // SAVE
@@ -190,6 +205,40 @@ const totalCollected = collectionData
   // BALANCE
   const balance =
     totalCollected - totalSent;
+
+  //SAVE OTTAPALU
+  const saveOttapalu = async () => {
+
+    if (!ottapaluQty || !ottapaluDate) {
+
+      alert("Fill all fields");
+
+      return;
+    }
+
+    try {
+
+      await axios.post(
+        `${API}/ottapalu`,
+        {
+          quantity: ottapaluQty,
+          collection_date: ottapaluDate,
+          plantation
+        }
+      );
+
+      alert("✅ Ottapalu Saved");
+
+      setOttapaluQty("");
+      setOttapaluDate("");
+
+      fetchOttapalu();
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
 
   // PRINT MONTHLY AND WEEKLY REPORTS
   const printMonthlyReport = () => {
@@ -677,6 +726,68 @@ const saveCollection = async () => {
               }}
             >
               Save Dispatch
+            </Button>
+
+          </Grid>
+
+        </Grid>
+
+      </Paper>
+
+      <Paper
+        sx={{
+          p:3,
+          mb:4,
+          borderRadius:5,
+          background:"rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography
+          sx={{
+            color:"#fff",
+            mb:2
+          }}
+        >
+          💰 Ottapalu Collection
+        </Typography>
+
+        <Grid container spacing={2}>
+
+          <Grid item xs={12} md={4}>
+
+            <TextField
+              label="Quantity"
+              type="number"
+              fullWidth
+              value={ottapaluQty}
+              onChange={(e)=>
+                setOttapaluQty(e.target.value)
+              }
+            />
+
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+
+            <TextField
+              type="date"
+              fullWidth
+              value={ottapaluDate}
+              onChange={(e)=>
+                setOttapaluDate(e.target.value)
+              }
+            />
+
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+
+            <Button
+              fullWidth
+              onClick={saveOttapalu}
+            >
+              Save Ottapalu
             </Button>
 
           </Grid>
