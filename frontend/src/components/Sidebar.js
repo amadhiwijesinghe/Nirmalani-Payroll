@@ -85,14 +85,17 @@ export default function Sidebar({ setPage, currentPage, plantation }) {
           color: "#fff",
           paddingTop: 5,
           paddingBottom: 5,
-
           fontSize: {
             xs: "1rem",
             md: "1.25rem"
           }
         }}
       >
-        ⚡ Nirmalani Plantation Payroll System ⚡
+        ⚡ {
+          plantation === "ingurupaththala"
+            ? "Ingurupaththala Plantation Payroll System"
+            : "Nirmalani Plantation Payroll System"
+        } ⚡
       </Typography>
 
     </Box>

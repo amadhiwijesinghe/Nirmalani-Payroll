@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   Box,
   Paper,
@@ -40,6 +41,11 @@ export default function PaddyCollection({
  const [freeDate, setFreeDate] = useState("");
  const [freeQty, setFreeQty] = useState("");
  const [freeNote, setFreeNote] = useState("");
+
+ const [filterMonth, setFilterMonth] = useState("");
+ const [weekStart, setWeekStart] = useState("");
+ const [weekEnd, setWeekEnd] = useState("");
+
 
  const totalCollected =
   collectionData.reduce(
@@ -206,6 +212,315 @@ export default function PaddyCollection({
     ])
     ].sort();
   
+    const monthlyCollected =
+  collectionData
+    .filter(row =>
+      filterMonth
+        ? row.collection_date
+            ?.split("T")[0]
+            .startsWith(filterMonth)
+        : true
+    )
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity),
+      0
+    );
+
+const monthlySold =
+  salesData
+    .filter(row =>
+      filterMonth
+        ? row.sale_date
+            ?.split("T")[0]
+            .startsWith(filterMonth)
+        : true
+    )
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity_sold),
+      0
+    );
+
+const monthlyFree =
+  freeData
+    .filter(row =>
+      filterMonth
+        ? row.free_date
+            ?.split("T")[0]
+            .startsWith(filterMonth)
+        : true
+    )
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity),
+      0
+    );
+
+    // WEEKLY 
+    const weeklyCollected =
+  collectionData
+    .filter(row => {
+
+      const d =
+        row.collection_date
+          ?.split("T")[0];
+
+      return (
+        weekStart &&
+        weekEnd &&
+        d >= weekStart &&
+        d <= weekEnd
+      );
+
+    })
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity),
+      0
+    );
+
+const weeklySold =
+  salesData
+    .filter(row => {
+
+      const d =
+        row.sale_date
+          ?.split("T")[0];
+
+      return (
+        weekStart &&
+        weekEnd &&
+        d >= weekStart &&
+        d <= weekEnd
+      );
+
+    })
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity_sold),
+      0
+    );
+
+const weeklyFree =
+  freeData
+    .filter(row => {
+
+      const d =
+        row.free_date
+          ?.split("T")[0];
+
+      return (
+        weekStart &&
+        weekEnd &&
+        d >= weekStart &&
+        d <= weekEnd
+      );
+
+    })
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.quantity),
+      0
+    );
+
+    // DOWNLOAD MONTHLY REPORT
+      const downloadMonthlyReport = () => {
+  
+          if (!filterMonth) {
+              alert("Select a month first");
+              return;
+          }
+  
+          const doc = new jsPDF();
+  
+          doc.setFontSize(18);
+          doc.text(
+              "Monthly Coconut Report",
+              14,
+              20
+          );
+  
+          doc.setFontSize(12);
+  
+          doc.text(
+              `Month: ${filterMonth}`,
+              14,
+              30
+          );
+  
+          autoTable(doc, {
+              startY: 40,
+              head: [[
+              "Date",
+              "Collected",
+              "Sales Amount",
+              "Free Giving",
+              "Remaining"
+              ]],
+  
+              body: summaryDates
+              .filter(date =>
+                  date?.split("T")[0]
+                  .startsWith(filterMonth)
+              )
+              .map(date => {
+  
+                  const collected =
+                  collectionData
+                      .filter(r =>
+                      r.collection_date?.split("T")[0] ===
+                      date?.split("T")[0]
+                      )
+                      .reduce(
+                      (s,r)=>s+Number(r.quantity),
+                      0
+                      );
+  
+                  const free =
+                  freeData
+                      .filter(r =>
+                      r.free_date?.split("T")[0] ===
+                      date?.split("T")[0]
+                      )
+                      .reduce(
+                      (s,r)=>s+Number(r.quantity),
+                      0
+                      );
+  
+                  const salesAmount =
+                  salesData
+                      .filter(r =>
+                      r.sale_date?.split("T")[0] ===
+                      date?.split("T")[0]
+                      )
+                      .reduce(
+                      (s,r)=>
+                          s +
+                          (
+                          Number(r.price) *
+                          Number(r.quantity_sold)
+                          ),
+                      0
+                      );
+  
+                  return [
+                  date?.split("T")[0],
+                  collected,
+                  salesAmount,
+                  free,
+                  ""
+                  ];
+  
+              })
+          });
+  
+          doc.save(
+              `Monthly_Coconut_Report_${filterMonth}.pdf`
+          );
+          };
+  
+    // DOWNLOAD WEEKLY REPORT
+    const downloadWeeklyReport = () => {
+  
+      if (!weekStart || !weekEnd) {
+          alert("Select week range");
+          return;
+      }
+  
+      const doc = new jsPDF();
+  
+      doc.setFontSize(18);
+      doc.text(
+          "Weekly Coconut Report",
+          14,
+          20
+      );
+  
+      doc.text(
+          `${weekStart} to ${weekEnd}`,
+          14,
+          30
+      );
+  
+      autoTable(doc, {
+          startY: 40,
+  
+          head: [[
+          "Date",
+          "Collected",
+          "Sales Amount",
+          "Free Giving",
+          "Remaining"
+          ]],
+  
+          body: summaryDates
+          .filter(date => {
+  
+              const d =
+              date?.split("T")[0];
+  
+              return (
+              d >= weekStart &&
+              d <= weekEnd
+              );
+  
+          })
+          .map(date => {
+  
+              const collected =
+              collectionData
+                  .filter(r =>
+                  r.collection_date?.split("T")[0] ===
+                  date?.split("T")[0]
+                  )
+                  .reduce(
+                  (s,r)=>s+Number(r.quantity),
+                  0
+                  );
+  
+              const free =
+              freeData
+                  .filter(r =>
+                  r.free_date?.split("T")[0] ===
+                  date?.split("T")[0]
+                  )
+                  .reduce(
+                  (s,r)=>s+Number(r.quantity),
+                  0
+                  );
+  
+              const salesAmount =
+              salesData
+                  .filter(r =>
+                  r.sale_date?.split("T")[0] ===
+                  date?.split("T")[0]
+                  )
+                  .reduce(
+                  (s,r)=>
+                      s +
+                      (
+                      Number(r.price) *
+                      Number(r.quantity_sold)
+                      ),
+                  0
+                  );
+  
+              return [
+              date?.split("T")[0],
+              collected,
+              salesAmount,
+              free,
+              ""
+              ];
+  
+          })
+      });
+  
+      doc.save(
+          `Weekly_Coconut_Report.pdf`
+      );
+      };
 
   return (
 
@@ -265,7 +580,7 @@ export default function PaddyCollection({
 
             <Grid item xs={4}>
             <TextField
-                label="Number of Coconuts"
+                label="Amount"
                 fullWidth
                 value={collectionQty}
                 onChange={(e)=>
@@ -452,6 +767,99 @@ export default function PaddyCollection({
         </Grid>
 
         </Paper>
+
+        <Paper
+            sx={{
+                p:3,
+                mb:3,
+                borderRadius:5,
+                background:"rgba(255,255,255,0.05)"
+            }}
+            >
+
+            <Grid container spacing={2}>
+
+                <Grid item xs={4}>
+                <TextField
+                    type="month"
+                    fullWidth
+                    label="Filter By Month"
+                    InputLabelProps={{ shrink:true }}
+                    value={filterMonth}
+                    onChange={(e)=>
+                    setFilterMonth(e.target.value)
+                    }
+                />
+                </Grid>
+
+                <Grid item xs={3}>
+                <TextField
+                    type="date"
+                    fullWidth
+                    label="Week Start"
+                    InputLabelProps={{ shrink:true }}
+                    value={weekStart}
+                    onChange={(e)=>
+                    setWeekStart(e.target.value)
+                    }
+                />
+                </Grid>
+
+                <Grid item xs={3}>
+                <TextField
+                    type="date"
+                    fullWidth
+                    label="Week End"
+                    InputLabelProps={{ shrink:true }}
+                    value={weekEnd}
+                    onChange={(e)=>
+                    setWeekEnd(e.target.value)
+                    }
+                />
+                </Grid>
+
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+
+                <Grid item>
+                    <Button
+                    sx={{
+                        height: "56px",
+                        background:
+                            "linear-gradient(135deg,#22c55e,#4ade80)",
+                        color: "#000",
+                        borderRadius: 3,
+                        fontWeight: "bold"
+                        }}
+                    variant="contained"
+                    color="success"
+                    onClick={downloadMonthlyReport}
+                    >
+                    Monthly Report
+                    </Button>
+                </Grid>
+
+                <Grid item>
+                    <Button
+                    sx={{
+                        height: "56px",
+                        background:
+                            "linear-gradient(135deg,#22c55e,#4ade80)",
+                        color: "#000",
+                        borderRadius: 3,
+                        fontWeight: "bold"
+                        }}
+                    variant="contained"
+                    color="primary"
+                    onClick={downloadWeeklyReport}
+                    >
+                    Weekly Report
+                    </Button>
+                </Grid>
+
+                </Grid>
+            </Grid>
+
+            </Paper>
 
         <Paper
             sx={{
