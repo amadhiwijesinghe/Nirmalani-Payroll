@@ -22,6 +22,7 @@ import Expenditure from "./pages/Expenditure";
 import FinancialDashboard from "./pages/FinancialDashboard";
 import IngurupaththalaDashboard from "./pages/IngurupaththalaDashboard";
 import CinnamonCollection from './pages/CinnamonCollection';
+import CoconutCollection from './pages/CoconutCollection';
 
 
 function App() {
@@ -55,7 +56,7 @@ function App() {
       <Box sx={{ display: 'flex' }}>
 
         {/* SIDEBAR */}
-        <Sidebar setPage={setPage} currentPage={page} />
+        <Sidebar setPage={setPage} currentPage={page} plantation={plantation}/>
 
         {/* MAIN AREA */}
        <Box
@@ -268,6 +269,24 @@ function App() {
               <CinnamonCollection plantation={plantation} />
               </motion.div>
             )}
+
+            {page === "coconutcollection" && (
+                <motion.div
+                  key="ingurupaththala"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+              <CoconutCollection plantation={plantation} />
+              </motion.div>
+            )}
+
+
+
+
+
+
 
             </AnimatePresence>
 

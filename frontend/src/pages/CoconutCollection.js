@@ -1,0 +1,385 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from "@mui/material";
+
+const API =
+  "https://nirmalani-payroll-production.up.railway.app";
+
+export default function TeaCollection({
+  plantation
+}) {
+  
+ const [collectionData, setCollectionData] = useState([]);
+ const [salesData, setSalesData] = useState([]);
+ const [freeData, setFreeData] = useState([]);
+
+ const [collectionDate, setCollectionDate] = useState("");
+ const [collectionQty, setCollectionQty] = useState("");
+
+ const [salesDate, setSalesDate] = useState("");
+ const [salesPrice, setSalesPrice] = useState("");
+ const [salesQty, setSalesQty] = useState("");
+
+ const [freeDate, setFreeDate] = useState("");
+ const [freeQty, setFreeQty] = useState("");
+ const [freeNote, setFreeNote] = useState("");
+
+ const totalCollected =
+  collectionData.reduce(
+    (sum,row)=>
+      sum + Number(row.quantity),
+    0
+  );
+
+ const totalSold =
+  salesData.reduce(
+    (sum,row)=>
+      sum + Number(row.quantity_sold),
+    0
+  );
+
+ const totalFree =
+  freeData.reduce(
+    (sum,row)=>
+      sum + Number(row.quantity),
+    0
+  );
+
+ const remaining =
+  totalCollected -
+  totalSold -
+  totalFree;
+
+
+ useEffect(() => {
+
+  fetchData();
+  fetchSales();
+  fetchFreeGiving();
+
+}, [plantation]);
+
+
+  // FETCH DATA
+  const fetchData = async () => {
+
+    const res =
+        await axios.get(
+        `${API}/coconut-collection?plantation=${plantation}`
+        );
+
+    setCollectionData(res.data);
+    };
+
+  const fetchSales = async () => {
+
+    const res = await axios.get(
+        `${API}/coconut-sales?plantation=${plantation}`
+    );
+
+    setSalesData(res.data);
+    };
+
+    const fetchFreeGiving = async () => {
+
+    const res = await axios.get(
+        `${API}/coconut-free-giving?plantation=${plantation}`
+    );
+
+    setFreeData(res.data);
+    };
+
+
+  // SAVE COCONUT COLLECTION
+  const saveCollection = async () => {
+
+    await axios.post(
+        `${API}/coconut-collection`,
+        {
+            collection_date: collectionDate,
+            quantity: collectionQty,
+            plantation
+        }
+        );
+
+      alert("✅ Coconut Collection Saved");
+
+      fetchData();
+
+      setCollectionDate("");
+      setCollectionQty("");
+
+  };
+
+  const saveSales = async () => {
+
+    const saleAmount =
+        Number(salesPrice || 0) *
+        Number(salesQty || 0);
+
+    await axios.post(
+        `${API}/coconut-sales`,
+        {
+        sale_date: salesDate,
+        price: salesPrice,
+        quantity_sold: salesQty,
+        sale_amount: saleAmount,
+        plantation
+        }
+    );
+
+    alert("✅ Coconut Sale Saved");
+
+    setSalesDate("");
+    setSalesPrice("");
+    setSalesQty("");
+
+    fetchSales();
+    };
+
+  // DELETE
+  const deleteCollection = async (id) => {
+
+    if (!window.confirm("Delete entry?")) {
+      return;
+    }
+
+    try {
+
+      await axios.delete(
+        `${API}/coconut-collection/${id}`
+      );
+
+      alert("Deleted");
+
+      fetchData();
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+
+  return (
+
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #0f172a, #1e293b)"
+      }}
+    >
+
+      {/* HEADER */}
+      <Typography
+        variant="h4"
+        sx={{
+          color: "#fff",
+          fontWeight: 800,
+          mb: 3
+        }}
+      >
+        🥥 Coconut Collection
+      </Typography>
+
+      {/* FORM */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+        <Typography
+        variant="h6"
+        sx={{
+          color: "#fff",
+          fontWeight: 800,
+          mb: 3
+        }}
+      >
+        🌴 පොල් කැඩීම
+      </Typography>
+
+        <Grid container spacing={2}>
+            
+            <Grid item xs={4}>
+            <TextField
+                type="date"
+                fullWidth
+                value={collectionDate}
+                onChange={(e)=>
+                setCollectionDate(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={4}>
+            <TextField
+                label="Number of Coconuts"
+                fullWidth
+                value={collectionQty}
+                onChange={(e)=>
+                setCollectionQty(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={4}>
+            <Button sx={{
+                height: "100%",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"}}
+                variant="contained"
+                onClick={saveCollection}
+            >
+                Save
+            </Button>
+            </Grid>
+        </Grid>
+
+      </Paper>
+
+      <Paper
+        sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 5,
+            background: "rgba(255,255,255,0.05)"
+        }}
+        >
+
+        <Typography
+            variant="h6"
+            sx={{
+            color:"#fff",
+            mb:2,
+            fontWeight:"bold"
+            }}
+        >
+            💰 පොල් විකිණීම්
+        </Typography>
+
+        <Grid container spacing={2} alignItems="stretch">
+
+            <Grid item xs={3}>
+            <TextField
+                type="date"
+                fullWidth
+                value={salesDate}
+                onChange={(e)=>
+                setSalesDate(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={3}>
+            <TextField
+                label="Price Per Coconut"
+                fullWidth
+                value={salesPrice}
+                onChange={(e)=>
+                setSalesPrice(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={2}>
+            <TextField
+                label="Number of Coconuts Sold"
+                fullWidth
+                value={salesQty}
+                onChange={(e)=>
+                setSalesQty(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={2}>
+            <TextField
+                label="Coconut Sale"
+                fullWidth
+                disabled
+                value={
+                Number(salesPrice || 0) *
+                Number(salesQty || 0)
+                }
+            />
+            </Grid>
+
+        </Grid>
+
+        <Grid item xs={2}>
+            <Button
+                sx={{
+                    height: "56px",
+                    background:
+                    "linear-gradient(135deg,#22c55e,#4ade80)",
+                    color: "#000",
+                    borderRadius: 3,
+                    fontWeight: "bold"}}
+                variant="contained"
+                onClick={saveSales}
+            >
+                Save
+            </Button>
+        </Grid>
+
+        </Paper>
+
+      <Paper
+        sx={{
+            p:3,
+            mt:3,
+            borderRadius:5,
+            background:"rgba(255,255,255,0.05)"
+        }}
+        >
+
+        <Typography
+            variant="h6"
+            sx={{
+            color:"#fff"
+            }}
+        >
+            Remaining Coconuts
+        </Typography>
+
+        <Typography
+            variant="h3"
+            sx={{
+            color:"#22c55e",
+            fontWeight:"bold"
+            }}
+        >
+            {remaining}
+        </Typography>
+
+        </Paper>
+
+    </Box>
+  );
+}

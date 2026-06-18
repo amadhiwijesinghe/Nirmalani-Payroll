@@ -24,11 +24,13 @@ import YardIcon from '@mui/icons-material/Yard';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import ParkIcon from '@mui/icons-material/Park'; 
+import ParkIcon from '@mui/icons-material/Park';
+import GroupWorkIcon from '@mui/icons-material/GroupWork'; 
+import GrassIcon from '@mui/icons-material/Grass';
 
 const drawerWidth = 240;
 
-export default function Sidebar({ setPage, currentPage }) {
+export default function Sidebar({ setPage, currentPage, plantation }) {
 
   const isMobile = useMediaQuery("(max-width:900px)");
 
@@ -47,6 +49,20 @@ export default function Sidebar({ setPage, currentPage }) {
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
     { label: "Cinnamon Collection", value:"cinnamoncollection", icon: <ParkIcon />},
+      ...(plantation === "ingurupaththala"
+    ? [
+        {
+          label: "Coconut Collection",
+          value: "coconutcollection",
+          icon: <GroupWorkIcon />
+        },
+        {
+          label: "Paddy Collection",
+          value: "paddycollection",
+          icon: <GrassIcon />
+        }
+      ]
+    : []),
     { label: "DPL Dispatch", value:"rubberdispatch", icon: <LocalShippingIcon />},
     { label: "Income", value: "income", icon: <TrendingUpIcon />},
     { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />},
