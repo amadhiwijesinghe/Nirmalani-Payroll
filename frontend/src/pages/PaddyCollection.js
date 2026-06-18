@@ -404,13 +404,29 @@ const weeklyFree =
                       0
                       );
   
-                  return [
-                  date?.split("T")[0],
-                  collected,
-                  salesAmount,
-                  free,
-                  ""
-                  ];
+                  const soldQty =
+                    salesData
+                        .filter(r =>
+                        r.sale_date?.split("T")[0] ===
+                        date?.split("T")[0]
+                        )
+                        .reduce(
+                        (s,r) => s + Number(r.quantity_sold),
+                        0
+                        );
+
+                    const remaining =
+                    collected -
+                    soldQty -
+                    free;
+
+                    return [
+                    date?.split("T")[0],
+                    collected,
+                    salesAmount,
+                    free,
+                    remaining
+                    ];
   
               })
           });
@@ -506,13 +522,29 @@ const weeklyFree =
                   0
                   );
   
-              return [
-              date?.split("T")[0],
-              collected,
-              salesAmount,
-              free,
-              ""
-              ];
+              const soldQty =
+                salesData
+                    .filter(r =>
+                    r.sale_date?.split("T")[0] ===
+                    date?.split("T")[0]
+                    )
+                    .reduce(
+                    (s,r) => s + Number(r.quantity_sold),
+                    0
+                    );
+
+                const remaining =
+                collected -
+                soldQty -
+                free;
+
+                return [
+                date?.split("T")[0],
+                collected,
+                salesAmount,
+                free,
+                remaining
+                ];
   
           })
       });
