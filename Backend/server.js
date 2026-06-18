@@ -1614,6 +1614,75 @@ app.get("/rubber-collection", (req, res) => {
   });
 });
 
+// ADD OTTAPALU
+app.post("/ottapalu", (req, res) => {
+
+  const {
+    quantity,
+    collection_date,
+    plantation
+  } = req.body;
+
+  const sql = `
+    INSERT INTO ottapalu_collection
+    (
+      quantity,
+      collection_date,
+      plantation
+    )
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      quantity,
+      collection_date,
+      plantation
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Ottapalu Saved"
+      });
+    }
+  );
+});
+
+// GET OTTAPALU
+app.get("/ottapalu", (req, res) => {
+
+  const plantation =
+    req.query.plantation;
+
+  const sql = `
+    SELECT *
+    FROM ottapalu_collection
+    WHERE plantation = ?
+    ORDER BY collection_date DESC
+  `;
+
+  db.query(
+    sql,
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
 
 
 // ================= CASUAL WORKERS =========

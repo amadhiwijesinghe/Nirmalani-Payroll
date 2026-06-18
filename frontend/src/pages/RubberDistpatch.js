@@ -734,67 +734,65 @@ const saveCollection = async () => {
 
       </Paper>
 
-      <Paper
-        sx={{
-          p:3,
-          mb:4,
-          borderRadius:5,
-          background:"rgba(255,255,255,0.05)"
-        }}
-      >
+      {plantation === "ingurupaththala" && (
 
-        <Typography
+        <Paper
           sx={{
-            color:"#fff",
-            mb:2
+            p:3,
+            mb:4,
+            borderRadius:5,
+            background:"rgba(255,255,255,0.05)"
           }}
         >
-          💰 Ottapalu Collection
-        </Typography>
 
-        <Grid container spacing={2}>
+          <Typography
+            sx={{
+              color:"#fff",
+              mb:2
+            }}
+          >
+            💰 Ottapalu Collection
+          </Typography>
 
-          <Grid item xs={12} md={4}>
+          <Grid container spacing={2}>
 
-            <TextField
-              label="Quantity"
-              type="number"
-              fullWidth
-              value={ottapaluQty}
-              onChange={(e)=>
-                setOttapaluQty(e.target.value)
-              }
-            />
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Quantity"
+                type="number"
+                fullWidth
+                value={ottapaluQty}
+                onChange={(e)=>
+                  setOttapaluQty(e.target.value)
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <TextField
+                type="date"
+                fullWidth
+                value={ottapaluDate}
+                onChange={(e)=>
+                  setOttapaluDate(e.target.value)
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Button
+                fullWidth
+                onClick={saveOttapalu}
+              >
+                Save Ottapalu
+              </Button>
+            </Grid>
 
           </Grid>
 
-          <Grid item xs={12} md={4}>
+        </Paper>
 
-            <TextField
-              type="date"
-              fullWidth
-              value={ottapaluDate}
-              onChange={(e)=>
-                setOttapaluDate(e.target.value)
-              }
-            />
-
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-
-            <Button
-              fullWidth
-              onClick={saveOttapalu}
-            >
-              Save Ottapalu
-            </Button>
-
-          </Grid>
-
-        </Grid>
-
-      </Paper>
+      )}
 
       
       {/* SUMMARY */}
