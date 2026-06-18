@@ -2164,6 +2164,222 @@ app.get("/coconut-free-giving",(req,res)=>{
 
 });
 
+// ================ PADDY =======================
+
+// SAVE PADDY
+app.post("/paddy-collection", (req,res)=>{
+
+  const {
+    collection_date,
+    quantity,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO paddy_collection
+    (
+      collection_date,
+      quantity,
+      plantation
+    )
+    VALUES (?, ?, ?)
+    `,
+    [
+      collection_date,
+      quantity,
+      plantation
+    ],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+
+    }
+  );
+
+});
+
+// GET PADDY
+
+app.get("/paddy-collection",(req,res)=>{
+
+  db.query(
+    `
+    SELECT *
+    FROM paddy_collection
+    WHERE plantation=?
+    ORDER BY collection_date DESC
+    `,
+    [req.query.plantation],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
+// DELETE PADDY
+app.delete("/paddy-collection/:id", (req,res)=>{
+
+  db.query(
+    `
+    DELETE FROM paddy_collection
+    WHERE id=?
+    `,
+    [req.params.id],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success:true
+      });
+
+    }
+  );
+
+});
+
+// SALES
+app.post("/paddy-sales", (req,res)=>{
+
+  const {
+    sale_date,
+    quantity_sold,
+    price,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO paddy_sales
+    (
+      sale_date,
+      quantity_sold,
+      price,
+      plantation
+    )
+    VALUES (?,?,?,?)
+    `,
+    [
+      sale_date,
+      quantity_sold,
+      price,
+      plantation
+    ],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json({ success:true });
+
+    }
+  );
+
+});
+
+app.get("/paddy-sales",(req,res)=>{
+
+  db.query(
+    `
+    SELECT *
+    FROM paddy_sales
+    WHERE plantation=?
+    ORDER BY sale_date DESC
+    `,
+    [req.query.plantation],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
+// FREE GIVING 
+app.post("/paddy-free-giving",(req,res)=>{
+
+  const {
+    free_date,
+    quantity,
+    note,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO paddy_free_giving
+    (
+      free_date,
+      quantity,
+      note,
+      plantation
+    )
+    VALUES (?,?,?,?)
+    `,
+    [
+      free_date,
+      quantity,
+      note,
+      plantation
+    ],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json({ success:true });
+
+    }
+  );
+
+});
+
+app.get("/paddy-free-giving",(req,res)=>{
+
+  db.query(
+    `
+    SELECT *
+    FROM paddy_free_giving
+    WHERE plantation=?
+    ORDER BY free_date DESC
+    `,
+    [req.query.plantation],
+    (err,result)=>{
+
+      if(err){
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
 // ================= CASUAL WORKERS =========
 app.get("/casual-workers-data", (req, res) => {
 

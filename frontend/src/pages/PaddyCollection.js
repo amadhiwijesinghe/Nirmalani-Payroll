@@ -22,7 +22,7 @@ import {
 const API =
   "https://nirmalani-payroll-production.up.railway.app";
 
-export default function CoconutCollection({
+export default function PaddyCollection({
   plantation
 }) {
   
@@ -82,7 +82,7 @@ export default function CoconutCollection({
 
     const res =
         await axios.get(
-        `${API}/coconut-collection?plantation=${plantation}`
+        `${API}/paddy-collection?plantation=${plantation}`
         );
 
     setCollectionData(res.data);
@@ -91,7 +91,7 @@ export default function CoconutCollection({
   const fetchSales = async () => {
 
     const res = await axios.get(
-        `${API}/coconut-sales?plantation=${plantation}`
+        `${API}/paddy-sales?plantation=${plantation}`
     );
 
     setSalesData(res.data);
@@ -100,7 +100,7 @@ export default function CoconutCollection({
     const fetchFreeGiving = async () => {
 
     const res = await axios.get(
-        `${API}/coconut-free-giving?plantation=${plantation}`
+        `${API}/paddy-free-giving?plantation=${plantation}`
     );
 
     setFreeData(res.data);
@@ -111,7 +111,7 @@ export default function CoconutCollection({
   const saveCollection = async () => {
 
     await axios.post(
-        `${API}/coconut-collection`,
+        `${API}/paddy-collection`,
         {
             collection_date: collectionDate,
             quantity: collectionQty,
@@ -119,7 +119,7 @@ export default function CoconutCollection({
         }
         );
 
-      alert("✅ Coconut Collection Saved");
+      alert("✅ Paddy Collection Saved");
 
       fetchData();
 
@@ -135,7 +135,7 @@ export default function CoconutCollection({
         Number(salesQty || 0);
 
     await axios.post(
-        `${API}/coconut-sales`,
+        `${API}/paddy-sales`,
         {
         sale_date: salesDate,
         price: salesPrice,
@@ -145,7 +145,7 @@ export default function CoconutCollection({
         }
     );
 
-    alert("✅ Coconut Sale Saved");
+    alert("✅ Paddy Sale Saved");
 
     setSalesDate("");
     setSalesPrice("");
@@ -157,7 +157,7 @@ export default function CoconutCollection({
     const saveFreeGiving = async () => {
 
         await axios.post(
-            `${API}/coconut-free-giving`,
+            `${API}/paddy-free-giving`,
             {
             free_date: freeDate,
             quantity: freeQty,
@@ -227,7 +227,7 @@ export default function CoconutCollection({
           mb: 3
         }}
       >
-        🥥 Coconut Collection
+        🌾 Paddy Collection
       </Typography>
 
       {/* FORM */}
@@ -247,7 +247,7 @@ export default function CoconutCollection({
           mb: 3
         }}
       >
-        🌴 පොල් කැඩීම
+        🌾 ගොයම් කැපීම
       </Typography>
 
         <Grid container spacing={2}>
@@ -309,7 +309,7 @@ export default function CoconutCollection({
             fontWeight:"bold"
             }}
         >
-            💰 පොල් විකිණීම්
+            💰 ගොයම් විකිණීම්
         </Typography>
 
         <Grid container spacing={2} alignItems="stretch">
@@ -327,7 +327,7 @@ export default function CoconutCollection({
 
             <Grid item xs={3}>
             <TextField
-                label="Price Per Coconut"
+                label="Price"
                 fullWidth
                 value={salesPrice}
                 onChange={(e)=>
@@ -338,7 +338,7 @@ export default function CoconutCollection({
 
             <Grid item xs={2}>
             <TextField
-                label="Number of Coconuts Sold"
+                label="Amount"
                 fullWidth
                 value={salesQty}
                 onChange={(e)=>
@@ -349,7 +349,7 @@ export default function CoconutCollection({
 
             <Grid item xs={2}>
             <TextField
-                label="Coconut Sale"
+                label="Paddy Sale"
                 fullWidth
                 disabled
                 value={
@@ -412,7 +412,7 @@ export default function CoconutCollection({
 
             <Grid item xs={3}>
             <TextField
-                label="Number of Coconuts"
+                label="Amount"
                 fullWidth
                 value={freeQty}
                 onChange={(e)=>
@@ -470,7 +470,7 @@ export default function CoconutCollection({
                 fontWeight: "bold"
                 }}
             >
-                📊 Coconut Summary
+                📊 Paddy Summary
             </Typography>
 
             <Table>
@@ -484,11 +484,11 @@ export default function CoconutCollection({
                     </TableCell>
 
                     <TableCell sx={{ color:"#aaa" }}>
-                    Number of Coconuts
+                    Amount
                     </TableCell>
 
                     <TableCell sx={{ color:"#aaa" }}>
-                    Coconut Sales
+                    Paddy Sales
                     </TableCell>
 
                     <TableCell sx={{ color:"#aaa" }}>

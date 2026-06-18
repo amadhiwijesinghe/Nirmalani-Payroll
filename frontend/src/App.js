@@ -23,7 +23,7 @@ import FinancialDashboard from "./pages/FinancialDashboard";
 import IngurupaththalaDashboard from "./pages/IngurupaththalaDashboard";
 import CinnamonCollection from './pages/CinnamonCollection';
 import CoconutCollection from './pages/CoconutCollection';
-
+import PaddyCollection from './pages/PaddyCollection';
 
 function App() {
   const [page, setPage] = useState("employees");
@@ -282,12 +282,17 @@ function App() {
               </motion.div>
             )}
 
-
-
-
-
-
-
+            {page === "paddycollection" && (
+                <motion.div
+                  key="ingurupaththala"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+              <PaddyCollection plantation={plantation} />
+              </motion.div>
+            )}
             </AnimatePresence>
 
           </Box>
