@@ -154,6 +154,27 @@ export default function TeaCollection({
     fetchSales();
     };
 
+    const saveFreeGiving = async () => {
+
+        await axios.post(
+            `${API}/coconut-free-giving`,
+            {
+            free_date: freeDate,
+            quantity: freeQty,
+            note: freeNote,
+            plantation
+            }
+        );
+
+        alert("✅ Free Giving Saved");
+
+        setFreeDate("");
+        setFreeQty("");
+        setFreeNote("");
+
+        fetchFreeGiving();
+        };
+
   // DELETE
   const deleteCollection = async (id) => {
 
@@ -177,6 +198,14 @@ export default function TeaCollection({
     }
   };
 
+  const summaryDates = [
+    ...new Set([
+        ...collectionData.map(r => r.collection_date),
+        ...salesData.map(r => r.sale_date),
+        ...freeData.map(r => r.free_date)
+    ])
+    ].sort();
+  
 
   return (
 
@@ -330,8 +359,6 @@ export default function TeaCollection({
             />
             </Grid>
 
-        </Grid>
-
         <Grid item xs={2}>
             <Button
                 sx={{
@@ -347,39 +374,238 @@ export default function TeaCollection({
                 Save
             </Button>
         </Grid>
+      </Grid>
+    </Paper>
 
-        </Paper>
-
-      <Paper
+    <Paper
         sx={{
-            p:3,
-            mt:3,
-            borderRadius:5,
-            background:"rgba(255,255,255,0.05)"
+            p: 3,
+            mb: 4,
+            borderRadius: 5,
+            background: "rgba(255,255,255,0.05)"
         }}
         >
 
         <Typography
             variant="h6"
             sx={{
-            color:"#fff"
-            }}
-        >
-            Remaining Coconuts
-        </Typography>
-
-        <Typography
-            variant="h3"
-            sx={{
-            color:"#22c55e",
+            color:"#fff",
+            mb:2,
             fontWeight:"bold"
             }}
         >
-            {remaining}
+            🎁 නොමිලේ බෙදාදීම
         </Typography>
+
+        <Grid container spacing={2} alignItems="stretch">
+
+            <Grid item xs={3}>
+            <TextField
+                type="date"
+                fullWidth
+                value={freeDate}
+                onChange={(e)=>
+                setFreeDate(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={3}>
+            <TextField
+                label="Number of Coconuts"
+                fullWidth
+                value={freeQty}
+                onChange={(e)=>
+                setFreeQty(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={4}>
+            <TextField
+                label="Note"
+                fullWidth
+                value={freeNote}
+                onChange={(e)=>
+                setFreeNote(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={2}>
+            <Button
+                sx={{
+                height: "56px",
+                background:
+                    "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"
+                }}
+                variant="contained"
+                onClick={saveFreeGiving}
+            >
+                Save
+            </Button>
+            </Grid>
+
+        </Grid>
 
         </Paper>
 
+        <Paper
+            sx={{
+                p: 3,
+                mt: 3,
+                borderRadius: 5,
+                background: "rgba(255,255,255,0.05)"
+            }}
+            >
+
+            <Typography
+                variant="h6"
+                sx={{
+                color: "#fff",
+                mb: 2,
+                fontWeight: "bold"
+                }}
+            >
+                📊 Coconut Summary
+            </Typography>
+
+            <Table>
+
+                <TableHead>
+
+                <TableRow>
+
+                    <TableCell sx={{ color:"#aaa" }}>
+                    Date
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#aaa" }}>
+                    Number of Coconuts
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#aaa" }}>
+                    Coconut Sales
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#aaa" }}>
+                    Free Giving
+                    </TableCell>
+
+                    <TableCell sx={{ color:"#aaa" }}>
+                    Remaining
+                    </TableCell>
+
+                </TableRow>
+
+                </TableHead>
+
+                <TableBody>
+
+                {summaryDates.map((date, index) => {
+
+                    const collected =
+                    collectionData
+                        .filter(r => r.collection_date === date)
+                        .reduce((sum,r) =>
+                        sum + Number(r.quantity),
+                        0);
+
+                    const sold =
+                    salesData
+                        .filter(r => r.sale_date === date)
+                        .reduce((sum,r) =>
+                        sum + Number(r.quantity_sold),
+                        0);
+
+                    const free =
+                    freeData
+                        .filter(r => r.free_date === date)
+                        .reduce((sum,r) =>
+                        sum + Number(r.quantity),
+                        0);
+
+                    const salesAmount =
+                    salesData
+                        .filter(r => r.sale_date === date)
+                        .reduce((sum,r) =>
+                        sum + Number(r.sale_amount || 0),
+                        0);
+
+                    let runningBalance = 0;
+
+                    summaryDates
+                    .slice(0, index + 1)
+                    .forEach(d => {
+
+                        const c =
+                        collectionData
+                            .filter(r => r.collection_date === d)
+                            .reduce((s,r)=>
+                            s + Number(r.quantity),
+                            0);
+
+                        const s =
+                        salesData
+                            .filter(r => r.sale_date === d)
+                            .reduce((s,r)=>
+                            s + Number(r.quantity_sold),
+                            0);
+
+                        const f =
+                        freeData
+                            .filter(r => r.free_date === d)
+                            .reduce((s,r)=>
+                            s + Number(r.quantity),
+                            0);
+
+                        runningBalance += c - s - f;
+
+                    });
+
+                    return (
+
+                    <TableRow key={date}>
+
+                        <TableCell sx={{ color:"#fff" }}>
+                        {date}
+                        </TableCell>
+
+                        <TableCell sx={{ color:"#22c55e" }}>
+                        {collected}
+                        </TableCell>
+
+                        <TableCell sx={{ color:"#0ea5e9" }}>
+                        Rs. {salesAmount.toLocaleString()}
+                        </TableCell>
+
+                        <TableCell sx={{ color:"#f59e0b" }}>
+                        {free}
+                        </TableCell>
+
+                        <TableCell
+                        sx={{
+                            color:"#fff",
+                            fontWeight:"bold"
+                        }}
+                        >
+                        {runningBalance}
+                        </TableCell>
+
+                    </TableRow>
+
+                    );
+
+                })}
+
+                </TableBody>
+
+            </Table>
+
+            </Paper>
     </Box>
   );
 }
