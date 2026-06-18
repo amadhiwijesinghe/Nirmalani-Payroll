@@ -24,6 +24,7 @@ import YardIcon from '@mui/icons-material/Yard';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import ParkIcon from '@mui/icons-material/Park'; 
 
 const drawerWidth = 240;
 
@@ -45,6 +46,7 @@ export default function Sidebar({ setPage, currentPage }) {
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
+    { label: "Cinnamon Collection", value:"cinnamoncollection", icon: <ParkIcon />},
     { label: "DPL Dispatch", value:"rubberdispatch", icon: <LocalShippingIcon />},
     { label: "Income", value: "income", icon: <TrendingUpIcon />},
     { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />},

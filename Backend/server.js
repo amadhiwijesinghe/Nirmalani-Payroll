@@ -1443,6 +1443,271 @@ app.get("/tea-distribution",(req,res)=>{
 
 });
 
+// ================ CINAMMON =====================
+
+// ADD CINNAMON COLLECTION
+app.post("/cinnamon-collection", (req, res) => {
+
+  const {
+    worker_id,
+    date,
+    kg
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO cinnamon_collection
+    (
+      worker_id,
+      date,
+      kg
+    )
+    VALUES (?, ?, ?)
+    `,
+    [
+      worker_id,
+      date,
+      kg
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Cinnamon Collection Saved"
+      });
+    }
+  );
+});
+
+// GET CINNAMON COLLECTION
+app.get("/cinnamon-collection", (req, res) => {
+
+  const plantation =
+    req.query.plantation;
+
+  db.query(
+    `
+    SELECT
+      cc.id,
+      cc.worker_id,
+      cc.date,
+      cc.kg,
+      pw.name,
+      pw.epf_no
+
+    FROM cinnamon_collection cc
+
+    JOIN plantation_workers pw
+      ON pw.id = cc.worker_id
+
+    WHERE pw.plantation = ?
+
+    ORDER BY cc.date DESC
+    `,
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
+// UPDATE CINNAMON COLLECTION
+app.put("/cinnamon-collection/:id", (req, res) => {
+
+  const { kg } = req.body;
+
+  db.query(
+    `
+    UPDATE cinnamon_collection
+    SET kg = ?
+    WHERE id = ?
+    `,
+    [
+      kg,
+      req.params.id
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Updated"
+      });
+    }
+  );
+});
+
+// DELETE CINNAMON COLLECTION
+app.delete("/cinnamon-collection/:id", (req, res) => {
+
+  db.query(
+    `
+    DELETE FROM cinnamon_collection
+    WHERE id = ?
+    `,
+    [req.params.id],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Deleted"
+      });
+    }
+  );
+});
+
+// කෝට උර
+// ADD KOTA URA
+app.post("/cinnamon-kota-ura", (req, res) => {
+
+  const {
+    date,
+    quantity,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO cinnamon_kota_ura
+    (
+      date,
+      quantity,
+      plantation
+    )
+    VALUES (?, ?, ?)
+    `,
+    [
+      date,
+      quantity,
+      plantation
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "කෝට උර Saved"
+      });
+    }
+  );
+});
+
+// GET KOTA URA
+app.get("/cinnamon-kota-ura", (req, res) => {
+
+  const plantation =
+    req.query.plantation;
+
+  db.query(
+    `
+    SELECT *
+    FROM cinnamon_kota_ura
+    WHERE plantation = ?
+    ORDER BY date DESC
+    `,
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
+// තැන්පත් කිරීම
+// ADD DEPOSIT
+app.post("/cinnamon-deposit", (req, res) => {
+
+  const {
+    date,
+    quantity,
+    plantation
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO cinnamon_deposit
+    (
+      date,
+      quantity,
+      plantation
+    )
+    VALUES (?, ?, ?)
+    `,
+    [
+      date,
+      quantity,
+      plantation
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Deposit Saved"
+      });
+    }
+  );
+});
+
+// GET DEPOSIT
+app.get("/cinnamon-deposit", (req, res) => {
+
+  const plantation =
+    req.query.plantation;
+
+  db.query(
+    `
+    SELECT *
+    FROM cinnamon_deposit
+    WHERE plantation = ?
+    ORDER BY date DESC
+    `,
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+});
+
 // ================= RUBBER DISPATCH =================
 
 // ADD DISPATCH
@@ -1682,6 +1947,7 @@ app.get("/ottapalu", (req, res) => {
     }
   );
 });
+
 
 
 

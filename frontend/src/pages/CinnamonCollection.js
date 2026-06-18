@@ -1,0 +1,1094 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from "@mui/material";
+
+const API =
+  "https://nirmalani-payroll-production.up.railway.app";
+
+export default function CinnamonCollection({
+  plantation
+}) {
+
+  const [workers, setWorkers] = useState([]);
+  const [data, setData] = useState([]);
+
+  const [workerId, setWorkerId] = useState("");
+  const [selectedEpf, setSelectedEpf] = useState("");
+
+  const [date, setDate] = useState("");
+  const [kg, setKg] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editKg, setEditKg] = useState("");
+
+  const [filterMonth, setFilterMonth] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
+
+  const [kotaDate, setKotaDate] = useState("");
+  const [kotaQty, setKotaQty] = useState("");
+
+  const [depositDate, setDepositDate] = useState("");
+  const [depositQty, setDepositQty] = useState("");
+
+  const [kotaData, setKotaData] = useState([]);
+  const [depositData, setDepositData] = useState([]);
+
+  useEffect(() => {
+
+    fetchWorkers();
+    fetchData();
+
+    fetchKotaUra();
+    fetchDeposit();
+
+    }, [plantation]);
+
+  // FETCH WORKERS
+  const fetchWorkers = async () => {
+
+    const res = await axios.get(
+      `${API}/plantation-workers?plantation=${plantation}`
+    );
+
+    setWorkers(res.data);
+  };
+
+  // FETCH DATA
+  const fetchData = async () => {
+
+    const res = await axios.get(
+      `${API}/cinnamon-collection?plantation=${plantation}`
+    );
+
+    setData(res.data);
+  };
+
+  //FETCH KOTA URA
+  const fetchKotaUra = async () => {
+
+    const res = await axios.get(
+        `${API}/cinnamon-kota-ura?plantation=${plantation}`
+    );
+
+    setKotaData(res.data);
+  };
+
+  // FETCH CINNAMON DEPOSIT
+  const fetchDeposit = async () => {
+
+    const res = await axios.get(
+        `${API}/cinnamon-deposit?plantation=${plantation}`
+    );
+
+    setDepositData(res.data);
+    };
+
+
+  // SAVE CINNAMON COLLECTION
+  const saveCinnamonCollection = async () => {
+
+    if (!workerId || !date || !kg) {
+
+      alert("Fill all fields");
+
+      return;
+    }
+
+    try {
+
+      await axios.post(
+        `${API}/cinnamon-collection`,
+        {
+          worker_id: workerId,
+          date,
+          kg
+        }
+      );
+
+      alert("✅ Cinnamon Collection Saved");
+
+      setDate("");
+      setKg("");
+
+      fetchData();
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert("Error saving");
+    }
+  };
+
+  // DELETE
+  const deleteCollection = async (id) => {
+
+    if (!window.confirm("Delete entry?")) {
+      return;
+    }
+
+    try {
+
+      await axios.delete(
+        `${API}/cinnamon-collection/${id}`
+      );
+
+      alert("Deleted");
+
+      fetchData();
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  // UPDATE KG
+    const updateKg = async (id) => {
+
+    if (!editKg) {
+        alert("Enter KG");
+        return;
+    }
+
+    try {
+
+        await axios.put(
+        `${API}/cinnamon-collection/${id}`,
+        {
+            kg: editKg
+        }
+        );
+
+        alert("✅ Updated");
+
+        setEditingId(null);
+        setEditKg("");
+
+        fetchData();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Update failed");
+    }
+    };
+
+// TOTAL KG
+  const totalKg = data
+    .filter(
+      row =>
+        !filterMonth ||
+        row.date.substring(0, 7) === filterMonth
+    )
+    .reduce(
+      (acc, row) => acc + Number(row.kg),
+      0
+    );
+
+  const totalKota =
+    kotaData.reduce(
+        (sum,row)=>
+        sum + Number(row.quantity || 0),
+        0
+    );
+
+    const totalDeposit =
+    depositData.reduce(
+        (sum,row)=>
+        sum + Number(row.quantity || 0),
+        0
+    );
+
+        // PRINT MONTLY AND WEEKLY REPORTS
+    const printMonthlyReport = () => {
+
+    const rows = data.filter(
+        row =>
+        !filterMonth ||
+        row.date.substring(0, 7) === filterMonth
+    );
+
+    let total = 0;
+
+    const tableRows = rows.map(row => {
+
+        total += Number(row.kg);
+
+        return `
+        <tr>
+            <td>${row.name}</td>
+            <td>${row.epf_no}</td>
+            <td>${row.date.split("T")[0]}</td>
+            <td>${row.kg}</td>
+        </tr>
+        `;
+    }).join("");
+
+    const html = `
+        <html>
+
+        <head>
+
+            <title>
+            Tea Collection Report
+            </title>
+
+            <style>
+
+            body {
+                font-family: Arial;
+                padding: 20px;
+            }
+
+            h2 {
+                text-align: center;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th, td {
+                border: 1px solid black;
+                padding: 10px;
+                text-align: center;
+            }
+
+            th {
+                background: #eee;
+            }
+
+            </style>
+
+        </head>
+
+        <body>
+
+            <h2>
+            Nirmalani Plantation
+            </h2>
+
+            <h3>
+            Tea Collection Report
+            </h3>
+
+          <h3>
+            Month:
+            ${
+              filterMonth
+            }
+            ${
+              new Date(filterMonth + "-01")
+                .toLocaleString(
+                  "default",
+                  {
+                    month:"long"
+                  }
+                )
+            }
+          </h3>
+
+            <table>
+
+            <thead>
+
+                <tr>
+                <th>Name</th>
+                <th>EPF</th>
+                <th>Date</th>
+                <th>KG</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                ${tableRows}
+
+                <tr>
+                <td colspan="3">
+                    <b>TOTAL KG</b>
+                </td>
+
+                <td>
+                    <b>${total.toFixed(2)}</b>
+                </td>
+                </tr>
+
+            </tbody>
+
+            </table>
+
+            <script>
+            window.print();
+            </script>
+
+        </body>
+
+        </html>
+    `;
+
+    const win = window.open("", "_blank");
+
+    win.document.write(html);
+
+    win.document.close();
+    };
+
+    const printWeeklyReport = () => {
+
+  if (!weekStart || !weekEnd) {
+
+    alert("Select week range");
+
+    return;
+  }
+
+  const rows = data.filter((row) => {
+
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
+
+  if (rows.length === 0) {
+
+    alert("No records found");
+
+    return;
+  }
+
+  let total = 0;
+
+  const tableRows = rows.map((row) => {
+
+    total += Number(row.kg);
+
+    return `
+      <tr>
+        <td>${row.name}</td>
+        <td>${row.epf_no}</td>
+        <td>
+          ${new Date(row.date)
+            .toISOString()
+            .split("T")[0]}
+        </td>
+        <td>${row.kg}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <html>
+
+      <head>
+
+        <title>
+          Weekly Tea Report
+        </title>
+
+        <style>
+
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          h2{
+            text-align:center;
+          }
+
+          table{
+            width:100%;
+            border-collapse: collapse;
+            margin-top:20px;
+          }
+
+          th,td{
+            border:1px solid black;
+            padding:10px;
+            text-align:center;
+          }
+
+          th{
+            background:#eee;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h2>
+          Nirmalani Plantation
+        </h2>
+
+        <h3>
+          Weekly Tea Collection Report
+        </h3>
+
+        <p>
+          From: ${weekStart}
+          <br/>
+          To: ${weekEnd}
+        </p>
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Name</th>
+              <th>EPF No</th>
+              <th>Date</th>
+              <th>KG Plucked</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${tableRows}
+
+            <tr>
+
+              <td colspan="3">
+                <b>Total KG</b>
+              </td>
+
+              <td>
+                <b>${total.toFixed(2)}</b>
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+        <script>
+          window.print();
+        </script>
+
+      </body>
+
+    </html>
+  `;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(html);
+
+  win.document.close();
+};
+
+
+  return (
+
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #0f172a, #1e293b)"
+      }}
+    >
+
+      {/* HEADER */}
+      <Typography
+        variant="h4"
+        sx={{
+          color: "#fff",
+          fontWeight: 800,
+          mb: 3
+        }}
+      >
+        🌿 Cinnamon Collection
+      </Typography>
+
+      {/* FORM */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Grid container spacing={2}>
+
+          {/* WORKER */}
+          <Grid item xs={12} md={3}>
+
+            <FormControl fullWidth>
+
+              <InputLabel
+                sx={{ color: "#aaa" }}
+              >
+                Worker
+              </InputLabel>
+
+              <Select
+                value={workerId}
+                onChange={(e) => {
+
+                  const id = e.target.value;
+
+                  setWorkerId(id);
+
+                  const selected =
+                    workers.find(
+                      w => w.id === id
+                    );
+
+                  setSelectedEpf(
+                    selected?.epf_no || ""
+                  );
+                }}
+                sx={{
+                  color: "#fff",
+                  width: 250
+                }}
+              >
+
+                <MenuItem value="">
+                  Select Worker
+                </MenuItem>
+
+                {workers.map((w) => (
+
+                  <MenuItem
+                    key={w.id}
+                    value={w.id}
+                  >
+                    {w.name}
+                  </MenuItem>
+                ))}
+
+              </Select>
+
+            </FormControl>
+
+          </Grid>
+
+          {/* EPF */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              label="EPF"
+              fullWidth
+              value={selectedEpf}
+              InputProps={{
+                readOnly: true
+              }}
+              sx={{
+                input: {
+                  color: "#fff"
+                },
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
+
+          </Grid>
+
+          {/* DATE */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              type="date"
+              fullWidth
+              value={date}
+              onChange={(e) =>
+                setDate(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                }
+              }}
+            />
+
+          </Grid>
+
+          {/* KG */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              label="KG"
+              type="number"
+              fullWidth
+              value={kg}
+              onChange={(e) =>
+                setKg(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                },
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
+
+          </Grid>
+
+          {/* BUTTON */}
+          <Grid item xs={12} md={3}>
+
+            <Button
+              fullWidth
+              onClick={saveCinnamonCollection}
+              sx={{
+                height: "100%",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"
+              }}
+            >
+              Save
+            </Button>
+
+          </Grid>
+
+        </Grid>
+
+      </Paper>
+
+      <Paper sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography variant="h6" sx={{mb:2}}>
+            කෝට උර
+        </Typography>
+
+        <Grid container spacing={2}>
+
+            <Grid item xs={4}>
+            <TextField
+                type="date"
+                fullWidth
+                value={kotaDate}
+                onChange={(e)=>
+                setKotaDate(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={4}>
+            <TextField
+                label="Quantity"
+                type="number"
+                fullWidth
+                value={kotaQty}
+                onChange={(e)=>
+                setKotaQty(e.target.value)
+                }
+            />
+            </Grid>
+
+            <Grid item xs={4}>
+            <Button onClick={saveKotaUra} sx={{
+                height: "100%",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"
+            }}>
+                Save
+            </Button>
+            </Grid>
+
+        </Grid>
+
+        </Paper>
+
+        <Paper sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}>
+
+            <Typography variant="h6" sx={{mb: 2}}>
+                තැන්පත් කිරීම
+            </Typography>
+
+            <Grid container spacing={2}>
+
+                <Grid item xs={4}>
+                <TextField
+                    type="date"
+                    fullWidth
+                    value={depositDate}
+                    onChange={(e)=>
+                    setDepositDate(e.target.value)
+                    }
+                />
+                </Grid>
+
+                <Grid item xs={4}>
+                <TextField
+                    label="Quantity"
+                    type="number"
+                    fullWidth
+                    value={depositQtyQty}
+                    onChange={(e)=>
+                    setKotaQty(e.target.value)
+                    }
+                />
+                </Grid>
+
+                <Grid item xs={4}>
+                <Button onClick={saveDeposit} sx={{
+                height: "100%",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"
+                }}>
+                    Save
+                </Button>
+                </Grid>
+
+            </Grid>
+
+            </Paper>
+
+      {/* TABLE */}
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        {/* FILTER */}
+        <Box sx={{ mb: 2 }}>
+
+          <TextField
+            type="month"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+            InputLabelProps={{
+              shrink: true
+            }}
+            helperText="Filter By Month"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekStart}
+            onChange={(e) =>
+              setWeekStart(e.target.value)
+            }
+            helperText="Week Start"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+          <TextField
+            type="date"
+            value={weekEnd}
+            onChange={(e) =>
+              setWeekEnd(e.target.value)
+            }
+            helperText="Week End"
+            sx={{
+              ml: 2,
+              width: 180,
+
+              input: {
+                color: "#fff"
+              },
+
+              '& .MuiFormHelperText-root': {
+                color: '#aaa'
+              },
+
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)'
+              }
+            }}
+          />
+
+        </Box>
+
+        <Button
+          onClick={printWeeklyReport}
+          sx={{
+            ml: 2,
+            background: "#0ea5e9",
+            color: "#fff",
+            height: "56px",
+            fontWeight: "bold"
+          }}
+        >
+          Weekly Report
+        </Button>
+
+        <Button
+          onClick={printMonthlyReport}
+          sx={{
+            ml: 2,
+            background: "#22c55e",
+            color: "#000",
+            height: "56px",
+            fontWeight: "bold"
+          }}
+        >
+          Monthly Report
+        </Button>
+
+        <Table>
+
+          <TableHead>
+
+            <TableRow>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Name
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                EPF
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Date
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                KG
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Actions
+              </TableCell>
+
+            </TableRow>
+
+          </TableHead>
+
+          <TableBody>
+
+            {data
+              .filter(
+                row =>
+                  !filterMonth ||
+                  row.date.substring(0, 7)
+                    === filterMonth
+              )
+              .map((row) => (
+
+                <TableRow key={row.id}>
+
+                  <TableCell
+                    sx={{ color: "#fff" }}
+                  >
+                    {row.name}
+                  </TableCell>
+
+                  <TableCell
+                    sx={{ color: "#fff" }}
+                  >
+                    {row.epf_no}
+                  </TableCell>
+
+                  <TableCell
+                    sx={{ color: "#fff" }}
+                  >
+                    {new Date(row.date)
+                        .toISOString()
+                        .split("T")[0]}
+                  </TableCell>
+
+                  <TableCell
+                    sx={{ color: "#22c55e" }}
+                    >
+
+                    {editingId === row.id ? (
+
+                        <Box
+                        sx={{
+                            display: "flex",
+                            gap: 1
+                        }}
+                        >
+
+                        <TextField
+                            size="small"
+                            type="number"
+                            value={editKg}
+                            onChange={(e) =>
+                            setEditKg(e.target.value)
+                            }
+                            sx={{
+                            width: 100,
+                            input: {
+                                color: "#fff"
+                            }
+                            }}
+                        />
+
+                        <Button
+                            onClick={() =>
+                            updateKg(row.id)
+                            }
+                            sx={{
+                            background: "#22c55e",
+                            color: "#000"
+                            }}
+                        >
+                            Save
+                        </Button>
+
+                        </Box>
+
+                    ) : (
+
+                        row.kg
+
+                    )}
+
+                    </TableCell>
+
+                  <TableCell>
+
+                    {/* EDIT */}
+                    <Button
+                        onClick={() => {
+
+                        setEditingId(row.id);
+
+                        setEditKg(row.kg);
+                        }}
+                        sx={{
+                        background: "#facc15",
+                        color: "#000",
+                        mr: 1
+                        }}
+                    >
+                        Edit
+                    </Button>
+
+                    {/* DELETE */}
+                    <Button
+                        onClick={() =>
+                        deleteCollection(row.id)
+                        }
+                        sx={{
+                        background: "#ef4444",
+                        color: "#fff"
+                        }}
+                    >
+                        Delete
+                    </Button>
+
+                    </TableCell>
+
+                </TableRow>
+              ))}
+
+            {/* TOTAL */}
+            <TableRow>
+
+              <TableCell
+                colSpan={3}
+                sx={{
+                  color: "#fff",
+                  fontWeight: "bold"
+                }}
+              >
+                TOTAL KG
+              </TableCell>
+
+              <TableCell
+                sx={{
+                  color: "#22c55e",
+                  fontWeight: "bold"
+                }}
+              >
+                {totalKg.toFixed(2)}
+              </TableCell>
+
+            </TableRow>
+
+          </TableBody>
+
+        </Table>
+
+      </Paper>
+
+    </Box>
+  );
+}

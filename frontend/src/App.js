@@ -21,6 +21,7 @@ import Income from "./pages/Income";
 import Expenditure from "./pages/Expenditure";
 import FinancialDashboard from "./pages/FinancialDashboard";
 import IngurupaththalaDashboard from "./pages/IngurupaththalaDashboard";
+import CinnamonCollection from './pages/CinnamonCollection';
 
 
 function App() {
@@ -255,6 +256,18 @@ function App() {
                   <IngurupaththalaDashboard />
                 </motion.div>
               )}
+
+              {page === "cinnamoncollection" && (
+                <motion.div
+                  key="ingurupaththala"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+              <CinnamonCollection plantation={plantation} />
+              </motion.div>
+            )}
 
             </AnimatePresence>
 
