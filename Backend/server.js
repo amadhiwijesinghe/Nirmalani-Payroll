@@ -76,6 +76,24 @@ console.log("ENV CHECK:", {
   port: process.env.MYSQLPORT
 });
 
+app.get("/check-file", (req, res) => {
+
+  const fs = require("fs");
+
+  const filePath =
+    path.join(
+      __dirname,
+      "uploads",
+      "expenditure",
+      "Sanuji Agro Bill - 15.jpeg"
+    );
+
+  res.json({
+    exists: fs.existsSync(filePath),
+    path: filePath
+  });
+
+});
 // ================= DATABASE =================
 
 const db = mysql.createPool({

@@ -127,6 +127,45 @@ export default function TeaCollection({
     }
   };
 
+  const saveDistribution = async () => {
+
+    if (
+      !distributionDate ||
+      !company ||
+      !distributionKg
+    ) {
+      alert("Fill all fields");
+      return;
+    }
+
+    try {
+
+      await axios.post(
+        `${API}/tea-distribution`,
+        {
+          distribution_date: distributionDate,
+          company,
+          kg: distributionKg,
+          plantation
+        }
+      );
+
+      alert("✅ Distribution Saved");
+
+      setDistributionDate("");
+      setCompany("");
+      setDistributionKg("");
+
+      fetchDistribution();
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert("Error saving distribution");
+    }
+  };
+
   // DELETE
   const deleteCollection = async (id) => {
 
@@ -877,6 +916,22 @@ export default function TeaCollection({
               type="number"
               fullWidth
             />
+          </Grid>
+
+          <Grid item xs={3}>
+            <Button
+              fullWidth
+              onClick={saveDistribution}
+              sx={{
+                height: "56px",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                fontWeight: "bold"
+              }}
+            >
+              Save
+            </Button>
           </Grid>
 
         </Grid>
