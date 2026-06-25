@@ -43,6 +43,12 @@ async function uploadToS3(file, folder = "expenditure") {
   return key;
 }
 
+function getS3Url(key) {
+
+  return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+}
+
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -2850,7 +2856,21 @@ app.get("/expenditure", (req,res)=>{
         return res.status(500).json(err);
       }
 
-      res.json(result);
+      const updatedResults = result.map(row => ({
+
+      ...row,
+
+      photos: row.photos
+        ? JSON.parse(row.photos).map(photo => ({
+            key: photo,
+            url: getS3Url(photo)
+          }))
+        : []
+
+    }));
+
+    res.json(updatedResults);
+
     }
   );
 });
@@ -2865,10 +2885,15 @@ app.post(
 
       if (req.files) {
 
+        console.log("Files received:", req.files);
+
         for (const file of req.files) {
 
-          const key =
-            await uploadToS3(file);
+          console.log("Uploading file:", file.originalname);
+
+          const key = await uploadToS3(file);
+
+          console.log("Uploaded successfully. S3 key:", key);
 
           photos.push(key);
 
@@ -2969,7 +2994,7 @@ app.delete("/expenditure/:id", (req,res)=>{
 app.put(
   "/expenditure/:id",
   upload.array("photos", 10),
-  (req, res) => {
+  async (req, res) => {
 
     const {
       bank_account,
@@ -3001,11 +3026,14 @@ app.put(
           );
         }
 
-        const newPhotos = req.files
-          ? req.files.map(
-              file => file.filename
-            )
-          : [];
+        const newPhotos = [];
+
+          if (req.files) {
+            for (const file of req.files) {
+              const key = await uploadToS3(file);
+              newPhotos.push(key);
+            }
+          }
 
         const allPhotos = [
           ...existingPhotos,

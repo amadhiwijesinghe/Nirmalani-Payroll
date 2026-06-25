@@ -1381,25 +1381,25 @@ const nationsSummary = getSummary(nationsData);
                     {row.note || "-"}
                 </TableCell>
 
-                  <TableCell>
-                    {(() => {
-                      const photos = JSON.parse(
-                        row.photos || "[]"
-                      );
+                <TableCell>
 
-                      return photos.map((file) => (
-                        <div key={file}>
-                         <a
-                            href={`${API}/uploads/expenditure/${file}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {file}
-                          </a>
-                        </div>
-                      ));
-                    })()}
-                  </TableCell>
+                  {row.photos?.map((photo) => (
+
+                    <div key={photo.key}>
+
+                      <a
+                        href={photo.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        📎 View Receipt
+                      </a>
+
+                    </div>
+
+                  ))}
+
+                </TableCell>
 
                 <TableCell>
 
