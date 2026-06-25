@@ -7,8 +7,41 @@ const multer = require("multer");
 const mysqldump = require("mysqldump");
 const fs = require("fs");
 const path = require("path");
+
+const {
+  S3Client,
+  PutObjectCommand
+} = require("@aws-sdk/client-s3");
+
 const PDFDocument = require("pdfkit");
 const app = express();
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+async function uploadToS3(file, folder = "expenditure") {
+
+  const fileName =
+    `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`;
+
+  const key = `${folder}/${fileName}`;
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype
+    })
+  );
+
+  return key;
+}
 
 app.use(cors({
   origin: [
@@ -33,27 +66,8 @@ if (!fs.existsSync(uploadDir)) {
 
 console.log("Upload Directory:", uploadDir);
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-
-filename: (req, file, cb) => {
-
-  console.log(
-    "UPLOADED FILE:",
-    file.originalname
-  );
-
-  cb(
-    null,
-    file.originalname
-  );
-}
-});
-
 const upload = multer({
-  storage
+  storage: multer.memoryStorage()
 });
 
 app.use(
@@ -2845,11 +2859,22 @@ app.get("/expenditure", (req,res)=>{
 app.post(
   "/expenditure",
   upload.array("photos", 10),
-  (req,res)=>{
+  async (req,res)=>{
 
-    const photos = req.files
-      ? req.files.map(f => f.filename)
-      : [];
+    const photos = [];
+
+      if (req.files) {
+
+        for (const file of req.files) {
+
+          const key =
+            await uploadToS3(file);
+
+          photos.push(key);
+
+        }
+
+      }
 
   const {
     bank_account,
