@@ -18,6 +18,7 @@ const app = express();
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
+
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -121,7 +122,7 @@ const db = mysql.createPool({
   user: process.env.MYSQLUSER || "root",
   password: process.env.MYSQLPASSWORD || "root123",
   database: process.env.MYSQLDATABASE || "railway",
-  port: process.env.MYSQLPOST || 3306,
+  port: process.env.MYSQLPORT || 3306,
 
   ssl: {
     rejectUnauthorized: false
@@ -2882,6 +2883,7 @@ app.post(
   async (req,res)=>{
 
     const photos = [];
+    console.log("Files:", req.files);
 
       if (req.files) {
 
@@ -2892,6 +2894,8 @@ app.post(
           console.log("Uploading file:", file.originalname);
 
           const key = await uploadToS3(file);
+
+          console.log("Returned key:", key);
 
           console.log("Uploaded successfully. S3 key:", key);
 
