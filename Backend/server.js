@@ -3009,7 +3009,7 @@ app.put(
     db.query(
       "SELECT photos FROM expenditure WHERE id=?",
       [req.params.id],
-      (err, result) => {
+      async (err, result) => {
 
         if (err) {
           return res.status(500).json(err);
