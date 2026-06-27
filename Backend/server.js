@@ -2881,10 +2881,31 @@ app.get("/expenditure", async (req, res) => {
 
           photos: row.photos
             ? await Promise.all(
-                JSON.parse(row.photos).map(async (photo) => ({
-                  key: photo,
-                  url: await getSignedS3Url(photo)
-                }))
+
+                JSON.parse(row.photos)
+
+                  .filter(photo => photo) // removes null
+
+                  .map(async (photo) => {
+
+                    // Old local uploads
+                    if (!photo.startsWith("expenditure/")) {
+
+                      return {
+                        key: photo,
+                        url: null
+                      };
+
+                    }
+
+                    // New S3 uploads
+                    return {
+                      key: photo,
+                      url: await getSignedS3Url(photo)
+                    };
+
+                  })
+
               )
             : []
         };
