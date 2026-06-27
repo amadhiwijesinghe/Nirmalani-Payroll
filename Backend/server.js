@@ -10,8 +10,13 @@ const path = require("path");
 
 const {
   S3Client,
-  PutObjectCommand
+  PutObjectCommand,
+  GetObjectCommand
 } = require("@aws-sdk/client-s3");
+
+const {
+  getSignedUrl
+} = require("@aws-sdk/s3-request-presigner");
 
 const PDFDocument = require("pdfkit");
 const app = express();
@@ -44,10 +49,22 @@ async function uploadToS3(file, folder = "expenditure") {
   return key;
 }
 
-function getS3Url(key) {
+async function getSignedS3Url(key) {
 
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: key,
+  });
 
+  const url = await getSignedUrl(
+    s3,
+    command,
+    {
+      expiresIn: 3600, // 1 hour
+    }
+  );
+
+  return url;
 }
 
 app.use(cors({
@@ -2846,7 +2863,7 @@ app.put("/income/:id", (req,res)=>{
 
 // ================ EXPENDITURE ============
 // GET EXPENDITURE
-app.get("/expenditure", (req,res)=>{
+app.get("/expenditure", async(req,res)=>{
 
   db.query(
     "SELECT * FROM expenditure ORDER BY date DESC, id DESC",
@@ -2857,18 +2874,29 @@ app.get("/expenditure", (req,res)=>{
         return res.status(500).json(err);
       }
 
-      const updatedResults = result.map(row => ({
+    const updatedResults = await Promise.all(
 
-      ...row,
+      result.map(async (row) => ({
 
-      photos: row.photos
-        ? JSON.parse(row.photos).map(photo => ({
-            key: photo,
-            url: getS3Url(photo)
-          }))
-        : []
+        ...row,
 
-    }));
+        photos: row.photos
+          ? await Promise.all(
+
+              JSON.parse(row.photos).map(async (photo) => ({
+
+                key: photo,
+
+                url: await getSignedS3Url(photo)
+
+              }))
+
+            )
+          : []
+
+      }))
+
+    );
 
     res.json(updatedResults);
 
