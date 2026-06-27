@@ -2862,44 +2862,43 @@ app.put("/income/:id", (req,res)=>{
 });
 
 // ================ EXPENDITURE ============
-// GET EXPENDITURE
 app.get("/expenditure", async (req, res) => {
-
   try {
 
     const [result] = await db.promise().query(
       "SELECT * FROM expenditure ORDER BY date DESC, id DESC"
     );
 
+    console.log("Rows found:", result.length);
+
     const updatedResults = await Promise.all(
+      result.map(async (row) => {
+        console.log("Processing ID:", row.id);
+        console.log("Photos:", row.photos);
 
-      result.map(async (row) => ({
+        return {
+          ...row,
 
-        ...row,
-
-        photos: row.photos
-          ? await Promise.all(
-              JSON.parse(row.photos).map(async (photo) => ({
-                key: photo,
-                url: await getSignedS3Url(photo)
-              }))
-            )
-          : []
-
-      }))
-
+          photos: row.photos
+            ? await Promise.all(
+                JSON.parse(row.photos).map(async (photo) => ({
+                  key: photo,
+                  url: await getSignedS3Url(photo)
+                }))
+              )
+            : []
+        };
+      })
     );
 
     res.json(updatedResults);
 
   } catch (err) {
-
-    console.log(err);
-
-    res.status(500).json(err);
-
+    console.error("EXPENDITURE ERROR:", err);
+    res.status(500).json({
+      error: err.message
+    });
   }
-
 });
 
 // ADD EXPENDITURE
