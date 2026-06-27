@@ -2863,16 +2863,13 @@ app.put("/income/:id", (req,res)=>{
 
 // ================ EXPENDITURE ============
 // GET EXPENDITURE
-app.get("/expenditure", async(req,res)=>{
+app.get("/expenditure", async (req, res) => {
 
-  db.query(
-    "SELECT * FROM expenditure ORDER BY date DESC, id DESC",
-    (err,result)=>{
+  try {
 
-      if(err){
-
-        return res.status(500).json(err);
-      }
+    const [result] = await db.promise().query(
+      "SELECT * FROM expenditure ORDER BY date DESC, id DESC"
+    );
 
     const updatedResults = await Promise.all(
 
@@ -2882,15 +2879,10 @@ app.get("/expenditure", async(req,res)=>{
 
         photos: row.photos
           ? await Promise.all(
-
               JSON.parse(row.photos).map(async (photo) => ({
-
                 key: photo,
-
                 url: await getSignedS3Url(photo)
-
               }))
-
             )
           : []
 
@@ -2900,8 +2892,14 @@ app.get("/expenditure", async(req,res)=>{
 
     res.json(updatedResults);
 
-    }
-  );
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json(err);
+
+  }
+
 });
 
 // ADD EXPENDITURE
