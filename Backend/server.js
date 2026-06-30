@@ -896,6 +896,7 @@ app.get(
   (req, res) => {
 
     const month = req.params.month;
+    const plantation = req.query.plantation;
 
     const sql = `
       SELECT
@@ -911,13 +912,16 @@ app.get(
         ON pa.worker_id = pw.id
         AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
 
-      WHERE pda.status='present'
+      WHERE
+      pda.status='present'
+      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
+      AND pw.plantation = ?
       AND DATE_FORMAT(pda.date,'%Y-%m') = ?
 
       GROUP BY pw.id
     `;
 
-    db.query(sql,[month],(err,result)=>{
+    db.query(sql,[month, plantation],(err,result)=>{
 
       if(err){
         return res.status(500).json(err);
@@ -1170,20 +1174,25 @@ app.get(
     const month =
       req.params.month;
 
+    const plantation = req.query.plantation;
+
     const sql = `
-      SELECT
-        SUM(total_earning)
-          AS total
-      FROM rubber_tappers_attendance
-      WHERE DATE_FORMAT(
-        date,
-        '%Y-%m'
-      ) = ?
-    `;
+    SELECT
+    SUM(rta.total_earning) AS total
+
+    FROM rubber_tappers_attendance rta
+
+    JOIN rubber_tappers rt
+    ON rt.id = rta.worker_id
+
+    WHERE
+    DATE_FORMAT(rta.date,'%Y-%m') = ?
+    AND rt.plantation = ?
+        `;
 
     db.query(
       sql,
-      [month],
+      [month, plantation],
       (err, result) => {
 
         if (err) {
@@ -2859,6 +2868,7 @@ app.get(
       ) AS total
       FROM casual_worker_attendance
       WHERE month = ?
+      AND casual_workers.plantation = ?
       `,
       [req.params.month],
       (err,result)=>{
