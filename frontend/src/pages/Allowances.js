@@ -27,19 +27,25 @@ function Allowance({ plantation }) {
   const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
-    axios.get(`${API}/employees?plntation=${plantation}`)
-      .then(res => setEmployees(res.data));
 
-    fetchAllowance();
-  }, []);
+      axios
+        .get(`${API}/employees?plantation=${plantation}`)
+        .then(res => setEmployees(res.data));
+
+      fetchAllowance();
+
+  }, [plantation]);
 
   useEffect(() => {
-    fetchAllowance();
-  }, [filterMonth]);
+      fetchAllowance();
+  }, [filterMonth, plantation]);
 
   const fetchAllowance = async () => {
-    let url = `${API}/allowance-summary`;
-    if (filterMonth) url += `?month=${filterMonth}`;
+    let url =
+    `${API}/allowance-summary?plantation=${plantation}`;
+
+    if (filterMonth)
+        url += `&month=${filterMonth}`;
 
     const res = await axios.get(url);
     setData(res.data);
@@ -62,7 +68,8 @@ function Allowance({ plantation }) {
     axios.post(`${API}/allowance`, {
       memberid: selectedEmployee.memberid,
       month,
-      amount
+      amount,
+      plantation
     }).then(() => {
       alert("Saved successfully ✅");
       setAmount("");

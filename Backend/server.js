@@ -267,39 +267,73 @@ app.get("/attendance", (req, res) => {
 // ================= ALLOWANCE =================
 
 app.post("/allowance", (req, res) => {
-  const { memberid, month, amount } = req.body;
+
+  const {
+    memberid,
+    month,
+    amount,
+    plantation
+  } = req.body;
 
   db.query(
-    "INSERT INTO allowances (memberid, month, amount) VALUES (?, ?, ?)",
-    [memberid, month, amount],
+    `INSERT INTO allowances
+    (memberid, month, amount, plantation)
+    VALUES (?, ?, ?, ?)`,
+    [
+      memberid,
+      month,
+      amount,
+      plantation
+    ],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+
+      if (err) {
+        return res.status(500).json(err);
+      }
+
       res.send("Allowance Saved");
+
     }
   );
+
 });
 
 app.get("/allowance-summary", (req, res) => {
-  const month = req.query.month;
+
+  const {
+    month,
+    plantation
+  } = req.query;
 
   let query = `
-    SELECT a.memberid, e.name, a.month, a.amount
+    SELECT
+      a.memberid,
+      e.name,
+      a.month,
+      a.amount
     FROM allowances a
-    JOIN employees e ON a.memberid = e.memberid
+    JOIN employees e
+      ON a.memberid = e.memberid
+    WHERE a.plantation = ?
   `;
 
+  const params = [plantation];
+
   if (month) {
-    query += " WHERE a.month = ?";
-    db.query(query, [month], (err, result) => {
-      if (err) return res.status(500).json(err);
-      res.json(result);
-    });
-  } else {
-    db.query(query, (err, result) => {
-      if (err) return res.status(500).json(err);
-      res.json(result);
-    });
+    query += " AND a.month = ?";
+    params.push(month);
   }
+
+  db.query(query, params, (err, result) => {
+
+    if (err) {
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+
+  });
+
 });
 
 // ================= PAYROLL (FIXED) =================
@@ -2978,7 +3012,8 @@ app.post(
       note,
       date,
       transaction_type,
-      photos
+      photos,
+      plantation
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
   `;
@@ -3125,6 +3160,7 @@ app.put(
             date,
             transaction_type,
             JSON.stringify(allPhotos),
+            plantation,
             req.params.id
           ],
           (err) => {
