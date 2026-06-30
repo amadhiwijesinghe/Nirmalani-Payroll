@@ -897,7 +897,7 @@ app.get(
 //ADD
 
 app.get('/rubber-tappers', (req, res) => {
-  db.query("SELECT * FROM rubber_tappers", (err, result) => {
+  db.query("SELECT * FROM rubber_tappers WHWRE plantation=?", (err, result) => {
     if (err) return res.status(500).send(err);
     res.json(result);
   });
@@ -1418,11 +1418,13 @@ app.get("/tea-collection", (req, res) => {
 
     FROM tea_collection tc
 
+    WHERE pw.plantation = ?
+
     JOIN plantation_workers pw
       ON pw.id = tc.worker_id
-
+    
     ORDER BY tc.date DESC
-  `;
+  ` [req.query.plantation];
 
   db.query(sql, (err, result) => {
 
@@ -2814,7 +2816,7 @@ app.get(
 app.get("/income", (req,res)=>{
 
   db.query(
-    "SELECT * FROM income ORDER BY date DESC",
+    "SELECT * FROM income WHERE plantation=? ORDER BY date DESC",
     (err,result)=>{
 
       if(err){
@@ -3347,7 +3349,7 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
         SUM(amount) AS expense
       FROM expenditure
       WHERE transaction_type = 'Expense'
-      AND plantation
+      AND plantation = ?
       GROUP BY month
 
     ) e
@@ -3357,12 +3359,15 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
     ORDER BY months.month DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(
+    sql,
+    [plantation, plantation, plantation, plantation],
+    (err, result) => {
 
-    if (err) return res.status(500).json(err);
+      if (err) return res.status(500).json(err);
 
-    res.json(result);
-  });
+      res.json(result);
+    });
 
 });
 
@@ -3388,7 +3393,7 @@ app.get(
           AND plantation=?
           GROUP BY category
           `,
-          [month]
+          [month, plantation]
         );
 
       const [expenseRows] =
@@ -3400,10 +3405,10 @@ app.get(
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m') = ?
           AND transaction_type = 'Expense'
-          AND plantation
+          AND plantation = ?
           GROUP BY category
           `,
-          [month]
+          [month, plantation]
         );
 
       res.json({
@@ -3425,16 +3430,21 @@ app.get(
 
     try {
 
+      const plantation = req.query.plantation;
+
       const [rows] =
-        await db.promise().query(`
+        await db.promise().query(
+          `
           SELECT
             DATE_FORMAT(date,'%Y-%m') AS month,
             transaction_type,
             amount
           FROM expenditure
-          WHERE plantation=?
+          WHERE plantation = ?
           ORDER BY date ASC
-        `);
+          `,
+          [plantation]
+        );
 
       const monthly = {};
 
@@ -3634,6 +3644,7 @@ app.get(
 // ALL WORKER REPORT
 app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
+  const plantation = req.query.plantation;
   const month = req.params.month;
 
   try {
@@ -3681,7 +3692,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
         DATE_FORMAT(pda.date,'%Y-%m')
     `;
 
-    const plantation = await new Promise((resolve, reject) => {
+    const PlantationWorkers = await new Promise((resolve, reject) => {
 
       db.query(
         plantationSql,
@@ -3694,7 +3705,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
     });
 
-    plantation.forEach(row => {
+    PlantationWorkers.forEach(row => {
 
       report.push({
         type: "Plantation",
@@ -3711,6 +3722,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
     // ================= CASUAL =================
 
+  
     const casualSql = `
       SELECT
         cw.name,
@@ -3739,7 +3751,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       db.query(
         casualSql,
-        [month],
+        [month, plantation],
         (err, result) => {
           if (err) reject(err);
           else resolve(result);
@@ -3796,7 +3808,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       db.query(
         rubberSql,
-        [month],
+        [month, plantation],
         (err, result) => {
           if (err) reject(err);
           else resolve(result);
