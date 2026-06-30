@@ -2487,6 +2487,8 @@ app.get("/paddy-free-giving",(req,res)=>{
 // ================= CASUAL WORKERS =========
 app.get("/casual-workers-data", (req, res) => {
 
+  const plantation = req.query.plantation;
+
   const sql = `
     SELECT
 
@@ -2509,7 +2511,9 @@ app.get("/casual-workers-data", (req, res) => {
     FROM casual_worker_attendance cwa
 
     JOIN casual_workers cw
-    ON cw.id = cwa.worker_id
+    ON cw.id=cwa.worker_id
+
+    WHERE cw.plantation = ?
 
     GROUP BY
       cw.id,
@@ -2519,7 +2523,7 @@ app.get("/casual-workers-data", (req, res) => {
       cwa.month DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(sql, [plantation], (err, result) => {
 
     if (err) {
 
@@ -2545,13 +2549,19 @@ app.get(
 
     const sql = `
       SELECT
-        id,
-        date,
-        daily_rate
-      FROM casual_worker_attendance
-      WHERE worker_id = ?
-      AND month = ?
-      ORDER BY date ASC
+      id,
+      date,
+      daily_rate
+
+      FROM casual_worker_attendance cwa
+
+      JOIN casual_workers cw
+      ON cw.id=cwa.worker_id
+
+      WHERE
+      cwa.worker_id=?
+      AND cwa.month=?
+      AND cw.plantation=?
     `;
 
     db.query(
@@ -2573,20 +2583,29 @@ app.get(
 );
 
 // GET CASUAL WORKERS
-app.get("/casual-workers", (req, res) => {
+app.get("/casual-workers", (req,res)=>{
 
-  db.query(
-    "SELECT * FROM casual_workers ORDER BY id DESC",
-    (err, result) => {
+    const plantation = req.query.plantation;
 
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
+    db.query(
+        `
+        SELECT *
+        FROM casual_workers
+        WHERE plantation = ?
+        ORDER BY id DESC
+        `,
+        [plantation],
+        (err,result)=>{
 
-      res.json(result);
-    }
-  );
+            if(err){
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+
+        }
+    );
+
 });
 
 // ADD CASUAL WORKERS
@@ -2596,8 +2615,8 @@ app.post("/casual-workers", (req, res) => {
 
   db.query(
     `
-    INSERT INTO casual_workers (name)
-    VALUES (?)
+    INSERT INTO casual_workers (name, plantation)
+    VALUES (?,?)
     `,
     [name],
     (err, result) => {

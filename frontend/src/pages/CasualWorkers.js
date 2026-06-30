@@ -41,10 +41,11 @@ export default function CasualWorkers({plantation
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetchWorkers();
-    fetchData();
-    
-  }, []);
+
+      fetchWorkers();
+      fetchData();
+
+  }, [plantation]);
 
   const fetchWorkers = async () => {
     const res = await axios.get(`${API}/casual-workers?plantation=${plantation}`);
@@ -53,7 +54,7 @@ export default function CasualWorkers({plantation
 
 const fetchData = async () => {
   try {
-    const res = await axios.get(`${API}/casual-workers-data`);
+    const res = await axios.get(`${API}/casual-workers-data?plantation=${plantation}`);
     console.log("NEW DATA:", res.data); 
     setData(res.data);
   } catch (err) {
@@ -70,7 +71,8 @@ const addWorker = async () => {
   try {
 
     await axios.post(`${API}/casual-workers`, {
-      name
+      name,
+      plantation
     });
 
     setName("");
@@ -92,13 +94,14 @@ const viewAttendance = async (workerId, month) => {
   try {
 
     const res = await axios.get(
-      `${API}/casual-workers-attendance-dates`,
-      {
-        params: {
-          worker_id: workerId,
-          month: month
+    `${API}/casual-workers-attendance-dates`,
+    {
+        params:{
+            worker_id:workerId,
+            month,
+            plantation
         }
-      }
+    }
     );
 
     setAttendanceDates(res.data);
