@@ -3221,61 +3221,71 @@ app.put(
 
 app.get("/dashboard/total-income/:month", (req,res)=>{
 
-  const month = req.params.month;
+    const month = req.params.month;
+    const plantation = req.query.plantation;
 
-  db.query(
-    `
-    SELECT
-      COALESCE(
-        SUM(amount),
-        0
-      ) AS total
-    FROM income
-    WHERE DATE_FORMAT(date,'%Y-%m') = ?
-    `,
-    [month],
-    (err,result)=>{
+    const sql = `
+        SELECT SUM(amount) AS total
+        FROM income
+        WHERE DATE_FORMAT(date,'%Y-%m') = ?
+        AND plantation = ?
+    `;
 
-      if(err){
-        return res.status(500).json(err);
-      }
+    db.query(
+        sql,
+        [month, plantation],
+        (err,result)=>{
 
-      res.json(result[0]);
-    }
-  );
+            if(err){
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                total: result[0].total || 0
+            });
+
+        }
+    );
+
 });
 
 // Total Expenditure
 
-app.get("/dashboard/total-expenditure/:month", (req,res)=>{
+app.get("/dashboard/total-expenditure/:month",(req,res)=>{
 
-  const month = req.params.month;
+    const month = req.params.month;
+    const plantation = req.query.plantation;
 
-  db.query(
-    `
-    SELECT
-      COALESCE(
-        SUM(amount),
-        0
-      ) AS total
-    FROM expenditure
-    WHERE DATE_FORMAT(date,'%Y-%m') = ?
-    AND transaction_type = 'Expense'
-    `,
-    [month],
-    (err,result)=>{
+    const sql = `
+        SELECT SUM(amount) AS total
+        FROM expenditure
+        WHERE DATE_FORMAT(date,'%Y-%m') = ?
+        AND plantation = ?
+        AND transaction_type='Expense'
+    `;
 
-      if(err){
-        return res.status(500).json(err);
-      }
+    db.query(
+        sql,
+        [month, plantation],
+        (err,result)=>{
 
-      res.json(result[0]);
-    }
-  );
+            if(err){
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                total: result[0].total || 0
+            });
+
+        }
+    );
+
 });
 
 // Monthly Profit & Loss
 app.get("/dashboard/monthly-profit-loss", (req, res) => {
+
+  const plantation=req.query.plantation;
 
   const sql = `
 
@@ -3299,12 +3309,14 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
       SELECT DATE_FORMAT(date,'%Y-%m')
       AS month
       FROM income
+      WHERE plantation=?
 
       UNION
 
       SELECT DATE_FORMAT(date,'%Y-%m')
       AS month
       FROM expenditure
+      WHERE plantation=?
 
     ) months
 
@@ -3319,6 +3331,7 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
       AS income
 
       FROM income
+      WHERE plantation=?
 
       GROUP BY month
 
@@ -3334,6 +3347,7 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
         SUM(amount) AS expense
       FROM expenditure
       WHERE transaction_type = 'Expense'
+      AND plantation
       GROUP BY month
 
     ) e
@@ -3357,6 +3371,8 @@ app.get(
   "/dashboard/monthly-financial-report/:month",
   async (req, res) => {
 
+    const plantation=req.query.plantation;
+
     try {
 
       const { month } = req.params;
@@ -3369,6 +3385,7 @@ app.get(
             SUM(amount) amount
           FROM income
           WHERE DATE_FORMAT(date,'%Y-%m')=?
+          AND plantation=?
           GROUP BY category
           `,
           [month]
@@ -3383,6 +3400,7 @@ app.get(
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m') = ?
           AND transaction_type = 'Expense'
+          AND plantation
           GROUP BY category
           `,
           [month]
@@ -3414,6 +3432,7 @@ app.get(
             transaction_type,
             amount
           FROM expenditure
+          WHERE plantation=?
           ORDER BY date ASC
         `);
 
@@ -3493,6 +3512,8 @@ app.get(
   "/dashboard/monthly-cashflow/:month",
   async (req,res) => {
 
+    const plantation=req.query.plantation;
+
     try {
 
       const month = req.params.month;
@@ -3509,11 +3530,12 @@ app.get(
               0
             ) AS opening
           FROM expenditure
-          WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          WHERE DATE_FORMAT(date,'%Y-%m')=?
+          AND plantation=?
           AND transaction_type = 'Opening Balance'
           AND bank_account = 'Sampath'
           `,
-          [month]
+          [month, plantation]
         );
 
       const [[sampathReceivedRow]] =
@@ -3526,10 +3548,11 @@ app.get(
             ) AS received
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND plantation=?
           AND transaction_type = 'Received'
           AND bank_account = 'Sampath'
           `,
-          [month]
+          [month, plantation]
         );
 
       const [[sampathExpenseRow]] =
@@ -3542,10 +3565,11 @@ app.get(
             ) AS expense
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m') = ?
+          AND plantation=?
           AND transaction_type = 'Expense'
           AND bank_account = 'Sampath'
           `,
-          [month]
+          [month, plantation]
         );
 
       const [[receivedRow]] =
@@ -3558,10 +3582,11 @@ app.get(
           ) AS received
           FROM expenditure
           WHERE DATE_FORMAT(date,'%Y-%m')=?
+          AND plantation=?
           AND transaction_type='Received'
           AND bank_account='Sampath'
           `,
-          [month]
+          [month, plantation]
         );
 
      const [[expenseRow]] =
@@ -3571,10 +3596,11 @@ app.get(
           COALESCE(SUM(amount),0) AS expense
         FROM expenditure
         WHERE DATE_FORMAT(date,'%Y-%m')=?
+        AND plantation=?
         AND transaction_type='Expense'
         AND bank_account='Sampath'
         `,
-        [month]
+        [month, plantation]
       );
 
       const opening =
@@ -3647,6 +3673,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       WHERE pda.status='present'
       AND DATE_FORMAT(pda.date,'%Y-%m') = ?
+      AND pw.plantation = ?
 
       GROUP BY
         pw.id,
@@ -3658,7 +3685,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
       db.query(
         plantationSql,
-        [month],
+        [month, plantation],
         (err, result) => {
           if (err) reject(err);
           else resolve(result);
@@ -3703,6 +3730,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
         ON cw.id = cwa.worker_id
 
       WHERE cwa.month = ?
+      AND cw.plantation=?
 
       GROUP BY cw.id,cwa.month
     `;
@@ -3757,6 +3785,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
         ON rt.id = rta.worker_id
 
       WHERE DATE_FORMAT(rta.date,'%Y-%m') = ?
+      AND rt.plantation=?
 
       GROUP BY
         rt.id,

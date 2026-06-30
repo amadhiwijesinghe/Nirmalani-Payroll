@@ -97,7 +97,7 @@ export default function FinancialDashboard({
         ),
 
         axios.get(
-          `${API}/dashboard/monthly-cashflow/${selectedMonth}`
+          `${API}/dashboard/monthly-cashflow/${selectedMonth}?plantation=${plantation}`
         ),
 
         axios.get(
@@ -579,12 +579,12 @@ const downloadFinancialReport = async () => {
 
     const res =
       await axios.get(
-        `${API}/dashboard/monthly-financial-report/${month}`
+        `${API}/dashboard/monthly-financial-report/${month}?plantation=${plantation}`
       );
 
       const cashflowRes =
         await axios.get(
-          `${API}/dashboard/monthly-cashflow/${month}`
+          `${API}/dashboard/monthly-cashflow/${month}?plantation=${plantation}`
         );
 
       const cashflow =
