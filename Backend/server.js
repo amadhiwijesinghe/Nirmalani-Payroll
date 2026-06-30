@@ -353,6 +353,7 @@ app.get("/allowance-summary", (req, res) => {
 // ================= PAYROLL (FIXED) =================
 
 app.get("/payroll/:month?", (req, res) => {
+  const plantation = req.query.plantation;
   const month = req.params.month;
 
   let query = `
@@ -364,19 +365,26 @@ app.get("/payroll/:month?", (req, res) => {
       IFNULL(al.total_allowance, 0) AS total_allowance,
       att.month
     FROM employees e
+    WHERE e.plantation = ?
     LEFT JOIN (
       SELECT memberid, month,
       SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
       FROM attendance
+      WHERE plantation = ?
       GROUP BY memberid, month
     ) att ON e.memberid = att.memberid
     LEFT JOIN (
       SELECT memberid, month,
       SUM(amount) AS total_allowance
       FROM allowances
+      WHERE plantation = ?
       GROUP BY memberid, month
     ) al ON e.memberid = al.memberid AND att.month = al.month
-  `;
+  `(
+    query,
+    [plantation, plantation, plantation],
+    handleResult
+);
 
   if (month) {
     query += " WHERE att.month = ?";
