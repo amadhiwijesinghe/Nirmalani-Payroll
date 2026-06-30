@@ -110,7 +110,8 @@ const addWorker = async () => {
   try {
 
     await axios.post(`${API}/rubber-tappers`, {
-      name
+      name,
+      plantation
     });
 
     setName("");

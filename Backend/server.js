@@ -957,7 +957,7 @@ app.get(
 //ADD
 
 app.get('/rubber-tappers', (req, res) => {
-  db.query("SELECT * FROM rubber_tappers WHWRE plantation=?", (err, result) => {
+  db.query("SELECT * FROM rubber_tappers WHERE plantation=?", (err, result) => {
     if (err) return res.status(500).send(err);
     res.json(result);
   });
@@ -1072,13 +1072,13 @@ app.get("/rubber-tappers-data", (req, res) => {
       DATE_FORMAT(rta.date, '%Y-%m') AS month,
       rta.status
     FROM rubber_tappers_attendance rta
-    WHERE plantation = ?
     JOIN rubber_tappers rt
       ON rt.id = rta.worker_id
+    WHERE rt.plantation = ?
     ORDER BY rta.date DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(sql, [req.query.plantation], (err, result) => {
 
     if (err) {
       console.log(err);
