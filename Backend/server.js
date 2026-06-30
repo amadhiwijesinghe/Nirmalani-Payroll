@@ -2817,6 +2817,7 @@ app.get("/income", (req,res)=>{
 
   db.query(
     "SELECT * FROM income WHERE plantation=? ORDER BY date DESC",
+    [plantation],
     (err,result)=>{
 
       if(err){
@@ -2836,7 +2837,8 @@ app.post("/income", (req,res)=>{
     category,
     amount,
     note,
-    date
+    date,
+    plantation
   } = req.body;
 
   const sql = `
@@ -2845,9 +2847,10 @@ app.post("/income", (req,res)=>{
       category,
       amount,
       note,
-      date
+      date,
+      plantation
     )
-    VALUES (?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -2856,7 +2859,8 @@ app.post("/income", (req,res)=>{
       category,
       amount,
       note,
-      date
+      date,
+      plantation
     ],
     (err,result)=>{
 

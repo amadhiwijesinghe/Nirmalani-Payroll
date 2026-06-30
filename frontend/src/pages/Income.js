@@ -97,7 +97,8 @@ export default function Income({
           category: customCategory || category,
           amount,
           note,
-          date
+          date,
+          plantation
         }
       );
 
