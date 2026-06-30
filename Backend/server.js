@@ -1555,7 +1555,8 @@ app.post("/cinnamon-collection", (req, res) => {
   const {
     worker_id,
     date,
-    kg
+    kg,
+    plantation
   } = req.body;
 
   db.query(
@@ -1564,14 +1565,16 @@ app.post("/cinnamon-collection", (req, res) => {
     (
       worker_id,
       date,
-      kg
+      kg,
+      plantation
     )
-    VALUES (?, ?, ?)
+    VALUES (?, ?, ?, ?)
     `,
     [
       worker_id,
       date,
-      kg
+      kg,
+      plantation
     ],
     (err, result) => {
 
