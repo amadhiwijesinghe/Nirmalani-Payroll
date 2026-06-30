@@ -108,7 +108,8 @@ export default function TeaCollection({
         {
           worker_id: workerId,
           date,
-          kg
+          kg,
+          plantation
         }
       );
 

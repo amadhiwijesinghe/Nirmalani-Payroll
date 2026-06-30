@@ -1479,15 +1479,15 @@ app.get("/tea-collection", (req, res) => {
 
     FROM tea_collection tc
 
-    WHERE pw.plantation = ?
-
     JOIN plantation_workers pw
       ON pw.id = tc.worker_id
+
+    WHERE pw.plantation = ?
     
     ORDER BY tc.date DESC
   ` [req.query.plantation];
 
-  db.query(sql, (err, result) => {
+  db.query(sql, [req.query.plantation], (err, result) => {
 
     if (err) {
       console.log(err);
