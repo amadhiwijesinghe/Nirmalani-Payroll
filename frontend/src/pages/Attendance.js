@@ -26,14 +26,17 @@ function Attendance({plantation}) {
   const [filterMonth, setFilterMonth] = useState("");
 
   useEffect(() => {
-    axios.get(`${API}/employees?plantation=${plantation}`)
-      .then(res => setEmployees(res.data));
 
-    fetchAttendance();
-  }, []);
+      axios
+        .get(`${API}/employees?plantation=${plantation}`)
+        .then(res => setEmployees(res.data));
+
+      fetchAttendance();
+
+  }, [plantation]);
 
   const fetchAttendance = () => {
-    axios.get(`${API}/attendance`)
+    axios.get(`${API}/attendance?plantation=${plantation}`)
       .then(res => setAttendanceList(res.data));
   };
 
@@ -52,16 +55,17 @@ const handleSubmit = () => {
 
   if (exists) {
     alert("⚠️ Attendance already marked for this date");
-    return; // 🚨 STOP here
+    return; 
   }
 
   const monthName = new Date(date).toLocaleString('default', { month: 'long' });
 
   axios.post(`${API}/attendance`, {
-    memberid: selectedEmployee.memberid,
-    date,
-    present,
-    month: monthName
+      memberid: selectedEmployee.memberid,
+      date,
+      present,
+      month: monthName,
+      plantation
   }).then(() => {
     resetForm();
     fetchAttendance();

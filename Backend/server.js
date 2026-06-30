@@ -237,31 +237,45 @@ app.delete("/employees/:id", (req, res) => {
 // ================= ATTENDANCE =================
 
 app.post("/attendance", (req, res) => {
-  const { memberid, date, present, month } = req.body;
+  const { memberid, date, present, month, plantation } = req.body;
 
   const sql = `
-    INSERT INTO attendance (memberid, date, present, month)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO attendance (memberid, date, present, month, plantation)
+    VALUES (?, ?, ?, ?,?)
     ON DUPLICATE KEY UPDATE present = VALUES(present)
   `;
 
-  db.query(sql, [memberid, date, present, month], (err, result) => {
+  db.query(sql, [memberid, date, present, month, plantation], (err, result) => {
     if (err) return res.status(500).send(err);
     res.send("Saved");
   });
 });
 
 app.get("/attendance", (req, res) => {
-  const query = `
-    SELECT a.*, e.name
-    FROM attendance a
-    JOIN employees e ON a.memberid = e.memberid
-  `;
 
-  db.query(query, (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json(result);
-  });
+    const plantation = req.query.plantation;
+
+    const sql = `
+        SELECT
+            a.*,
+            e.name
+        FROM attendance a
+        JOIN employees e
+            ON a.memberid = e.memberid
+        WHERE a.plantation = ?
+        ORDER BY a.date DESC
+    `;
+
+    db.query(sql,[plantation],(err,result)=>{
+
+        if(err){
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
+
+    });
+
 });
 
 // ================= ALLOWANCE =================
