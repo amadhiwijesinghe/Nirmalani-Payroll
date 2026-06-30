@@ -2865,8 +2865,14 @@ app.put("/income/:id", (req,res)=>{
 app.get("/expenditure", async (req, res) => {
   try {
 
+    const plantation = req.query.plantation;
+
     const [result] = await db.promise().query(
-      "SELECT * FROM expenditure ORDER BY date DESC, id DESC"
+      `SELECT *
+       FROM expenditure
+       WHERE plantation = ?
+       ORDER BY date DESC, id DESC`,
+      [plantation]
     );
 
     console.log("Rows found:", result.length);
@@ -2951,16 +2957,16 @@ app.post(
 
       }
 
-  const {
-    bank_account,
-    category,
-    sub_category,
-    amount,
-    note,
-    transaction_type,
-    date,
-    
-  } = req.body;
+    const {
+      bank_account,
+      category,
+      sub_category,
+      amount,
+      note,
+      transaction_type,
+      date,
+      plantation
+    } = req.body;
 
   const sql = `
     INSERT INTO expenditure
@@ -2974,7 +2980,7 @@ app.post(
       transaction_type,
       photos
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
   `;
 
   db.query(
@@ -2994,7 +3000,9 @@ app.post(
 
       transaction_type || "Expense",
       
-      JSON.stringify(photos)
+      JSON.stringify(photos),
+      
+      plantation
     ],
     (err,result)=>{
 
@@ -3053,7 +3061,8 @@ app.put(
       amount,
       note,
       transaction_type,
-      date
+      date,
+      plantation
     } = req.body;
 
     db.query(
@@ -3100,7 +3109,8 @@ app.put(
             note=?,
             date=?,
             transaction_type=?,
-            photos=?
+            photos=?,
+            plantation=?
           WHERE id=?
         `;
 

@@ -288,6 +288,7 @@ const categories = {
       formData.append("amount", amount);
       formData.append("note", note);
       formData.append("date", date);
+      formData.append("plantation", plantation);
 
       photo.forEach((file) => {
         formData.append("photos", file);
