@@ -1072,6 +1072,7 @@ app.get("/rubber-tappers-data", (req, res) => {
       DATE_FORMAT(rta.date, '%Y-%m') AS month,
       rta.status
     FROM rubber_tappers_attendance rta
+    WHERE plantation = ?
     JOIN rubber_tappers rt
       ON rt.id = rta.worker_id
     ORDER BY rta.date DESC
@@ -1884,23 +1885,26 @@ app.post("/rubber-dispatch", (req, res) => {
 
   const {
     liters_sent,
-    date
+    date,
+    plantation
   } = req.body;
 
   const sql = `
     INSERT INTO rubber_dispatch
     (
       liters_sent,
-      date
+      date,
+      plantation
     )
-    VALUES (?, ?)
+    VALUES (?, ?, ?)
   `;
 
   db.query(
     sql,
     [
       liters_sent,
-      date
+      date,
+      plantation
     ],
     (err, result) => {
 
@@ -1923,6 +1927,7 @@ app.get("/rubber-dispatch", (req, res) => {
   const sql = `
     SELECT *
     FROM rubber_dispatch
+    WHERE plantation = ?
     ORDER BY date DESC
   `;
 
@@ -1996,23 +2001,26 @@ app.post("/rubber-collection", (req, res) => {
 
   const {
     liters_collected,
-    date
+    date,
+    plantation
   } = req.body;
 
   const sql = `
     INSERT INTO rubber_collection
     (
       liters_collected,
-      date
+      date,
+      plantation
     )
-    VALUES (?, ?)
+    VALUES (?, ?, ?)
   `;
 
   db.query(
     sql,
     [
       liters_collected,
-      date
+      date,
+      plantation
     ],
     (err, result) => {
 
@@ -2034,6 +2042,7 @@ app.get("/rubber-collection", (req, res) => {
   const sql = `
     SELECT *
     FROM rubber_collection
+    WHERE plantation = ?
     ORDER BY date DESC
   `;
 

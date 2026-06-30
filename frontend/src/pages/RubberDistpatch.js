@@ -108,7 +108,8 @@ export default function RubberDispatch({
         `${API}/rubber-dispatch`,
         {
           liters_sent: liters,
-          date
+          date,
+          plantation
         }
       );
 
