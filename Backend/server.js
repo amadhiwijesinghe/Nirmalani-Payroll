@@ -353,65 +353,117 @@ app.get("/allowance-summary", (req, res) => {
 // ================= PAYROLL (FIXED) =================
 
 app.get("/payroll/:month?", (req, res) => {
+
   const plantation = req.query.plantation;
   const month = req.params.month;
 
   let query = `
-    SELECT 
+    SELECT
       e.memberid,
       e.name,
       e.basic_salary,
-      IFNULL(att.days_worked, 0) AS days_worked,
-      IFNULL(al.total_allowance, 0) AS total_allowance,
-      att.month
-    FROM employees e
-    WHERE e.plantation = ?
-    LEFT JOIN (
-      SELECT memberid, month,
-      SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END) AS days_worked
-      FROM attendance
-      WHERE plantation = ?
-      GROUP BY memberid, month
-    ) att ON e.memberid = att.memberid
-    LEFT JOIN (
-      SELECT memberid, month,
-      SUM(amount) AS total_allowance
-      FROM allowances
-      WHERE plantation = ?
-      GROUP BY memberid, month
-    ) al ON e.memberid = al.memberid AND att.month = al.month
-  `(
-    query,
-    [plantation, plantation, plantation],
-    handleResult
-);
 
-  if (month) {
-    query += " WHERE att.month = ?";
-    db.query(query, [month], handleResult);
-  } else {
-    db.query(query, handleResult);
+      IFNULL(att.days_worked,0) AS days_worked,
+      IFNULL(al.total_allowance,0) AS total_allowance,
+
+      att.month
+
+    FROM employees e
+
+    LEFT JOIN (
+
+      SELECT
+        memberid,
+        month,
+        SUM(
+          CASE
+            WHEN present=1 THEN 1
+            ELSE 0
+          END
+        ) AS days_worked
+
+      FROM attendance
+
+      WHERE plantation = ?
+
+      GROUP BY memberid,month
+
+    ) att
+      ON e.memberid = att.memberid
+
+    LEFT JOIN (
+
+      SELECT
+        memberid,
+        month,
+        SUM(amount) AS total_allowance
+
+      FROM allowances
+
+      WHERE plantation = ?
+
+      GROUP BY memberid,month
+
+    ) al
+      ON e.memberid = al.memberid
+      AND att.month = al.month
+
+    WHERE e.plantation = ?
+  `;
+
+  const params = [
+    plantation,
+    plantation,
+    plantation
+  ];
+
+  if(month){
+
+    query += " AND att.month=?";
+
+    params.push(month);
+
   }
 
-  function handleResult(err, result) {
-    if (err) return res.status(500).json(err);
+  db.query(query, params, (err,result)=>{
 
-    const data = result.map(row => {
-      const basic = Number(row.basic_salary) || 0;
-      const allowance = Number(row.total_allowance) || 0;
+    if(err){
+      console.log(err);
+      return res.status(500).json(err);
+    }
 
-      const epf = basic * 0.08;
-      const net = basic + allowance - epf;
+    const data = result.map(row=>{
 
-      return {
+      const basic =
+        Number(row.basic_salary)||0;
+
+      const allowance =
+        Number(row.total_allowance)||0;
+
+      const epf =
+        basic*0.08;
+
+      const net =
+        basic+
+        allowance-
+        epf;
+
+      return{
+
         ...row,
-        epf: epf.toFixed(2),
-        net_salary: net.toFixed(2)
+
+        epf:epf.toFixed(2),
+
+        net_salary:net.toFixed(2)
+
       };
+
     });
 
     res.json(data);
-  }
+
+  });
+
 });
 
 
