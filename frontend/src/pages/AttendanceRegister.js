@@ -39,11 +39,13 @@ export default function AttendanceRegister({ plantation }) {
   const [workers, setWorkers] = useState([]);
   const [attendance, setAttendance] = useState({});
 
-  useEffect(() => {
+    useEffect(() => {
 
-    loadWorkers();
+        loadWorkers();
 
-    }, [plantation]);
+        loadAttendance();
+
+    }, [plantation, month, year]);
 
   // Load Workers
   const loadWorkers = async () => {
@@ -69,6 +71,46 @@ export default function AttendanceRegister({ plantation }) {
 
 };
 
+// Load Attendance
+const loadAttendance = async () => {
+
+    try {
+
+        const res = await axios.get(
+            `${API}/attendance-register`,
+            {
+                params: {
+                    plantation,
+                    month,
+                    year
+                }
+            }
+        );
+
+        const attendanceObject = {};
+
+        res.data.forEach(row => {
+
+            const date = dayjs(row.attendance_date)
+                .format("YYYY-MM-DD");
+
+            const key =
+                `${row.worker_type}-${row.worker_id}-${date}`;
+
+            attendanceObject[key] = row.is_present === 1;
+
+        });
+
+        setAttendance(attendanceObject);
+
+    } catch (err) {
+
+        console.log(err);
+
+    }
+
+};
+
 // Toggle Function
 const toggleAttendance = (worker, day) => {
 
@@ -82,6 +124,52 @@ const toggleAttendance = (worker, day) => {
         ...prev,
         [key]: !prev[key]
     }));
+
+};
+
+// Save Attendance
+const saveAttendance = async () => {
+
+    try {
+
+        const attendanceData = [];
+
+        Object.entries(attendance).forEach(([key, value]) => {
+
+            if (!value) return;
+
+            const parts = key.split("-");
+
+            attendanceData.push({
+
+                worker_type: parts[0],
+
+                worker_id: parseInt(parts[1]),
+
+                attendance_date: `${parts[2]}-${parts[3]}-${parts[4]}`,
+
+                plantation,
+
+                is_present: 1
+
+            });
+
+        });
+
+        await axios.post(
+            `${API}/attendance-register`,
+            attendanceData
+        );
+
+        alert("Attendance Saved Successfully");
+
+    } catch (err) {
+
+        console.log(err);
+
+        alert("Error Saving Attendance");
+
+    }
 
 };
 
@@ -190,10 +278,11 @@ const toggleAttendance = (worker, day) => {
         </Button>
 
         <Button
-          variant="contained"
-          color="success"
+            variant="contained"
+            color="success"
+            onClick={saveAttendance}
         >
-          Save
+            Save
         </Button>
 
         <Button

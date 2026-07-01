@@ -2917,6 +2917,44 @@ app.get("/attendance-register/workers", async (req, res) => {
 
 });
 
+// Save Attendance
+app.get("/attendance-register", async (req, res) => {
+
+    try {
+
+        const { month, year, plantation } = req.query;
+
+        const [rows] = await db.promise().query(
+            `
+            SELECT
+                worker_id,
+                worker_type,
+                attendance_date,
+                is_present
+            FROM attendance_register
+            WHERE plantation = ?
+            AND MONTH(attendance_date) = ?
+            AND YEAR(attendance_date) = ?
+            `,
+            [
+                plantation,
+                month,
+                year
+            ]
+        );
+
+        res.json(rows);
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
 // LOAD MONTHLY ATTENDANCE
 app.get("/attendance-register", async (req, res) => {
 
