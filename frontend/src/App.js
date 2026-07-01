@@ -85,7 +85,7 @@ function App() {
             sx={{
               p: 3,
               height: "calc(100vh - 64px)",
-              overflow: "hidden",
+              overflow: "auto",
               background: "linear-gradient(135deg, #020617, #0f172a)"
             }}
           >
