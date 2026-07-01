@@ -46,7 +46,7 @@ export default function Sidebar({ setPage, currentPage, plantation }) {
     { label: "Employees", value: "employees", icon: <PeopleIcon /> },
     { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
     { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
-    { labe: "Attendance Register", value: "attendanceregister", icon: <EventIcon />},
+    { label: "Attendance Register", value: "attendanceregister", icon: <EventIcon />},
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
