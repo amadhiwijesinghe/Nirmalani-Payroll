@@ -2890,6 +2890,67 @@ app.get(
   }
 );
 
+// ======================= ATTENDANCE REGISTER ======================
+// LOAD ALL WORKERS
+app.get("/attendance-register/workers", async (req, res) => {
+
+    try {
+
+        const plantation = req.query.plantation;
+
+        const [rows] = await db.promise().query(
+            `
+            SELECT
+                id AS worker_id,
+                name,
+                epf_no,
+                'plantation' AS worker_type
+            FROM plantation_workers
+            WHERE plantation = ?
+
+            UNION ALL
+
+            SELECT
+                id,
+                name,
+                NULL,
+                'rubber'
+            FROM rubber_tappers
+            WHERE plantation = ?
+
+            UNION ALL
+
+            SELECT
+                id,
+                name,
+                NULL,
+                'casual'
+            FROM casual_workers
+            WHERE plantation = ?
+
+            ORDER BY
+                worker_type,
+                name
+            `,
+            [
+                plantation,
+                plantation,
+                plantation
+            ]
+        );
+
+        res.json(rows);
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
 // ================= INCOME ================
 // GET INCOME
 app.get("/income", (req,res)=>{
