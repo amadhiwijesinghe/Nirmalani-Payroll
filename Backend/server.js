@@ -2942,6 +2942,56 @@ app.get("/attendance-register", async (req, res) => {
 
 });
 
+// SAVE MONTHLY ATTENDANCE
+app.post("/attendance-register", async (req, res) => {
+
+    try {
+
+        const attendance = req.body;
+
+        for (const row of attendance) {
+
+            await db.promise().query(
+                `
+                INSERT INTO attendance_register
+                (
+                    worker_id,
+                    worker_type,
+                    attendance_date,
+                    plantation,
+                    is_present
+                )
+                VALUES (?, ?, ?, ?, ?)
+
+                ON DUPLICATE KEY UPDATE
+                    is_present = VALUES(is_present)
+                `,
+                [
+                    row.worker_id,
+                    row.worker_type,
+                    row.attendance_date,
+                    row.plantation,
+                    row.is_present
+                ]
+            );
+
+        }
+
+        res.json({
+            success: true,
+            message: "Attendance Saved Successfully"
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
 // ================= INCOME ================
 // GET INCOME
 app.get("/income", (req,res)=>{

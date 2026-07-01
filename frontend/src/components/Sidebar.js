@@ -27,6 +27,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ParkIcon from '@mui/icons-material/Park';
 import GroupWorkIcon from '@mui/icons-material/GroupWork'; 
 import GrassIcon from '@mui/icons-material/Grass';
+import EventIcon from '@mui/icons-material/Event';
 
 const drawerWidth = 240;
 
@@ -45,6 +46,7 @@ export default function Sidebar({ setPage, currentPage, plantation }) {
     { label: "Employees", value: "employees", icon: <PeopleIcon /> },
     { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
     { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
+    { labe: "Attendance Register", value: "attendanceregister", icon: <EventIcon />},
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},

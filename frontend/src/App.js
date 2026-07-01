@@ -24,6 +24,7 @@ import IngurupaththalaDashboard from "./pages/IngurupaththalaDashboard";
 import CinnamonCollection from './pages/CinnamonCollection';
 import CoconutCollection from './pages/CoconutCollection';
 import PaddyCollection from './pages/PaddyCollection';
+import AttendanceRegister from "./pages/AttendanceRegister";
 
 function App() {
   const [page, setPage] = useState("employees");
@@ -147,6 +148,18 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                   <Allowance plantation={plantation} />
+                </motion.div>
+              )}
+
+              {page === "attendanceregister" && (
+                <motion.div
+                  key="attendanceregister"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <AttendanceRegister plantation={plantation} />
                 </motion.div>
               )}
 
