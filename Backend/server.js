@@ -2873,25 +2873,29 @@ app.get("/attendance-register/workers", async (req, res) => {
             UNION ALL
 
             SELECT
-                id,
+                id AS worker_id,
                 name,
-                NULL,
-                'rubber'
+                NULL AS epf_no,
+                'rubber' AS worker_type
             FROM rubber_tappers
             WHERE plantation = ?
 
             UNION ALL
 
             SELECT
-                id,
+                id AS worker_id,
                 name,
-                NULL,
-                'casual'
+                NULL AS epf_no,
+                'casual' AS worker_type
             FROM casual_workers
             WHERE plantation = ?
 
             ORDER BY
-                worker_type,
+                CASE
+                    WHEN epf_no IS NULL THEN 1
+                    ELSE 0
+                END,
+                CAST(epf_no AS UNSIGNED),
                 name
             `,
             [

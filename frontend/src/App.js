@@ -84,7 +84,8 @@ function App() {
           <Box
             sx={{
               p: 3,
-              minHeight: "100vh",
+              height: "calc(100vh - 64px)",
+              overflow: "hidden",
               background: "linear-gradient(135deg, #020617, #0f172a)"
             }}
           >

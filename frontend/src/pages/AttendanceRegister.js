@@ -37,6 +37,7 @@ export default function AttendanceRegister({ plantation }) {
 
   // Temporary empty workers
   const [workers, setWorkers] = useState([]);
+  const [attendance, setAttendance] = useState({});
 
   useEffect(() => {
 
@@ -68,9 +69,33 @@ export default function AttendanceRegister({ plantation }) {
 
 };
 
+// Toggle Function
+const toggleAttendance = (worker, day) => {
+
+    const date = dayjs(`${year}-${month}-${day}`)
+        .format("YYYY-MM-DD");
+
+    const key =
+        `${worker.worker_type}-${worker.worker_id}-${date}`;
+
+    setAttendance(prev => ({
+        ...prev,
+        [key]: !prev[key]
+    }));
+
+};
+
   return (
 
-    <Paper sx={{ p:3 }}>
+    <Paper
+        sx={{
+            p: 3,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden"
+        }}
+    >
 
       <Typography
         variant="h4"
@@ -197,35 +222,54 @@ export default function AttendanceRegister({ plantation }) {
 
       <TableContainer
         sx={{
-            maxHeight: "70vh",
-            border: "1px solid #ddd"
+            flex: 1,
+            overflow: "auto",
+            border: "1px solid #444",
+            borderRadius: 2
         }}
-    >
+      >
 
-        <Table
-            stickyHeader
-            sx={{
-                tableLayout: "fixed"
-            }}
-        >
+        <Table stickyHeader>
 
           <TableHead>
 
             <TableRow>
 
-              <TableCell>EPF</TableCell>
+              <TableCell
+                sx={{
+                    width: 90,
+                    borderRight: "1px solid rgba(255,255,255,0.15)",
+                    fontWeight: "bold"
+                }}
+            >
+                EPF
+            </TableCell>
 
-              <TableCell>Name</TableCell>
+            <TableCell
+                sx={{
+                    minWidth: 250,
+                    borderRight: "2px solid rgba(255,255,255,0.2)",
+                    fontWeight: "bold"
+                }}
+            >
+                Name
+            </TableCell>
 
               {Array.from(
                 {length:daysInMonth},
                 (_,i)=>(
-                  <TableCell
+                <TableCell
                     key={i}
                     align="center"
-                  >
-                    {i+1}
-                  </TableCell>
+                    sx={{
+                        borderLeft: "1px solid rgba(255,255,255,0.08)",
+                        borderRight: "1px solid rgba(255,255,255,0.08)",
+                        fontWeight: "bold",
+                        minWidth: 40
+                    }}
+                >
+                    {i + 1}
+                </TableCell>
                 )
               )}
 
@@ -246,27 +290,59 @@ export default function AttendanceRegister({ plantation }) {
                 }}
             >
 
-            <TableCell sx={{ width: 80 }}>
+            <TableCell sx={{ width: 150 }}>
                 {worker.epf_no || "-"}
             </TableCell>
 
-            <TableCell sx={{ width: 250 }}>
+            <TableCell
+                sx={{
+                    minWidth: 250,
+                    whiteSpace: "nowrap",
+                    fontWeight: 500
+                }}
+            >
                 {worker.name}
             </TableCell>
 
-            {Array.from(
-                {length:daysInMonth},
-                (_,i)=>(
+            {Array.from({ length: daysInMonth }, (_, i) => {
 
-            <TableCell
-                key={i}
-                align="center"
-            >
+                const date = dayjs(
+                    `${year}-${month}-${i + 1}`
+                ).format("YYYY-MM-DD");
 
-            </TableCell>
+                const attendanceKey =
+                    `${worker.worker_type}-${worker.worker_id}-${date}`;
 
-                )
-            )}
+                return (
+
+                <TableCell
+                    key={i}
+                    align="center"
+                    onClick={() => toggleAttendance(worker, i + 1)}
+                >
+                    {attendance[attendanceKey] && (
+                        <Box
+                            sx={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 1,
+                                bgcolor: "#4caf50",
+                                color: "#fff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                margin: "0 auto",
+                                fontWeight: "bold"
+                            }}
+                        >
+                            ✓
+                        </Box>
+                    )}
+                </TableCell>
+
+                );
+
+            })}
 
             </TableRow>
 
