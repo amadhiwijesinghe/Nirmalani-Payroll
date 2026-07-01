@@ -38,6 +38,7 @@ export default function AttendanceRegister({ plantation }) {
   // Temporary empty workers
   const [workers, setWorkers] = useState([]);
   const [attendance, setAttendance] = useState({});
+  const [isEditing, setIsEditing] = useState(true);
 
     useEffect(() => {
 
@@ -62,6 +63,23 @@ export default function AttendanceRegister({ plantation }) {
         );
 
         setWorkers(res.data);
+
+        console.log("Workers Loaded:", res.data.length);
+        console.log(res.data);
+
+        const duplicateKeys = new Set();
+
+        res.data.forEach(worker => {
+
+            const key = `${worker.worker_type}-${worker.worker_id}`;
+
+            if (duplicateKeys.has(key)) {
+                console.log("Duplicate Key:", key, worker);
+            }
+
+            duplicateKeys.add(key);
+
+        });
 
     } catch (err) {
 
@@ -133,10 +151,7 @@ const saveAttendance = async () => {
     try {
 
         const attendanceData = [];
-
         Object.entries(attendance).forEach(([key, value]) => {
-
-            if (!value) return;
 
             const parts = key.split("-");
 
@@ -150,7 +165,7 @@ const saveAttendance = async () => {
 
                 plantation,
 
-                is_present: 1
+                is_present: value ? 1 : 0
 
             });
 
@@ -160,6 +175,8 @@ const saveAttendance = async () => {
             `${API}/attendance-register`,
             attendanceData
         );
+
+        setIsEditing(false);
 
         alert("Attendance Saved Successfully");
 
@@ -270,26 +287,20 @@ const saveAttendance = async () => {
 
         <Button
             variant="contained"
-            onClick={loadWorkers}
-        >
-
-            Load Register
-
-        </Button>
-
-        <Button
-            variant="contained"
             color="success"
             onClick={saveAttendance}
+            disabled={!isEditing}
         >
             Save
         </Button>
 
-        <Button
-          variant="contained"
-          color="warning"
+       <Button
+            variant="contained"
+            color="warning"
+            disabled={isEditing}
+            onClick={() => setIsEditing(true)}
         >
-          Edit
+            Edit
         </Button>
 
         <Button
@@ -371,7 +382,7 @@ const saveAttendance = async () => {
             {workers.map(worker=>(
 
             <TableRow
-                key={`${worker.worker_type}-${worker.worker_id}`}
+                key={`${worker.worker_type}-${worker.worker_id}-${worker.name}`}
                 sx={{
                     "& td": {
                         borderBottom: "1px solid rgba(255,255,255,0.12)"
@@ -407,7 +418,11 @@ const saveAttendance = async () => {
                 <TableCell
                     key={i}
                     align="center"
-                    onClick={() => toggleAttendance(worker, i + 1)}
+                    onClick={
+                        isEditing
+                            ? () => toggleAttendance(worker, i + 1)
+                            : undefined
+                    }
                 >
                     {attendance[attendanceKey] && (
                         <Box
@@ -421,7 +436,11 @@ const saveAttendance = async () => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 margin: "0 auto",
-                                fontWeight: "bold"
+                                fontWeight: "bold",
+                                cursor: isEditing
+                                    ? "pointer"
+                                    : "not-allowed",
+                                opacity: isEditing ? 1 : 0.75,
                             }}
                         >
                             ✓
