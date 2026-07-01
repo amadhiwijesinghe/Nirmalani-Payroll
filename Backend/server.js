@@ -354,115 +354,77 @@ app.get("/allowance-summary", (req, res) => {
 
 app.get("/payroll/:month?", (req, res) => {
 
-  const plantation = req.query.plantation;
-  const month = req.params.month;
+    const plantation = req.query.plantation;
+    const month = req.params.month;
 
-  let query = `
-    SELECT
-      e.memberid,
-      e.name,
-      e.basic_salary,
+    let query = `
+        SELECT
+            e.memberid,
+            e.name,
+            e.basic_salary,
+            COALESCE(a.total_allowance,0) AS total_allowance,
+            ? AS month
 
-      IFNULL(att.days_worked,0) AS days_worked,
-      IFNULL(al.total_allowance,0) AS total_allowance,
+        FROM employees e
 
-      att.month
+        LEFT JOIN
+        (
+            SELECT
+                memberid,
+                SUM(amount) AS total_allowance
+            FROM allowances
+            WHERE plantation = ?
+            AND month = ?
+            GROUP BY memberid
+        ) a
+        ON e.memberid = a.memberid
 
-    FROM employees e
+        WHERE e.plantation = ?
+        ORDER BY e.name
+    `;
 
-    LEFT JOIN (
+    db.query(
+        query,
+        [
+            month || "",
+            plantation,
+            month || "",
+            plantation
+        ],
+        (err, result) => {
 
-      SELECT
-        memberid,
-        month,
-        SUM(
-          CASE
-            WHEN present=1 THEN 1
-            ELSE 0
-          END
-        ) AS days_worked
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
 
-      FROM attendance
+            const data = result.map(emp => {
 
-      WHERE plantation = ?
+                const basic = Number(emp.basic_salary || 0);
 
-      GROUP BY memberid,month
+                const allowance = Number(emp.total_allowance || 0);
 
-    ) att
-      ON e.memberid = att.memberid
+                const epf8 = basic * 0.08;
+                const epf12 = basic * 0.12;
+                const epf20 = epf8 + epf12;
+                const etf = basic * 0.03;
 
-    LEFT JOIN (
+                return {
+                    ...emp,
+                    epf_8: epf8.toFixed(2),
+                    epf_12: epf12.toFixed(2),
+                    epf_20: epf20.toFixed(2),
+                    etf: etf.toFixed(2),
+                    deduction: epf8.toFixed(2),
+                    net_salary: (basic + allowance - epf8).toFixed(2)
+                };
 
-      SELECT
-        memberid,
-        month,
-        SUM(amount) AS total_allowance
+            });
 
-      FROM allowances
+            res.json(data);
 
-      WHERE plantation = ?
-
-      GROUP BY memberid,month
-
-    ) al
-      ON e.memberid = al.memberid
-      AND att.month = al.month
-
-    WHERE e.plantation = ?
-  `;
-
-  const params = [
-    plantation,
-    plantation,
-    plantation
-  ];
-
-  if(month){
-
-    query += " AND att.month=?";
-
-    params.push(month);
-
-  }
-
-  db.query(query, params, (err,result)=>{
-
-    if(err){
-      console.log(err);
-      return res.status(500).json(err);
-    }
-
-    const data = result.map(row=>{
-
-      const basic =
-        Number(row.basic_salary)||0;
-
-      const allowance =
-        Number(row.total_allowance)||0;
-
-      const epf =
-        basic*0.08;
-
-      const net =
-        basic+
-        allowance-
-        epf;
-
-      return{
-
-        ...row,
-
-        epf:epf.toFixed(2),
-
-        net_salary:net.toFixed(2)
-
-      };
-
-    });
-
-    res.json(data);
-
-  });
+        }
+    );
 
 });
 
@@ -2937,6 +2899,35 @@ app.get("/attendance-register/workers", async (req, res) => {
                 plantation,
                 plantation
             ]
+        );
+
+        res.json(rows);
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
+// LOAD MONTHLY ATTENDANCE
+app.get("/attendance-register", async (req, res) => {
+
+    try {
+
+        const { plantation, month } = req.query;
+
+        const [rows] = await db.promise().query(
+            `
+            SELECT *
+            FROM attendance_register
+            WHERE plantation = ?
+            AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+            `,
+            [plantation, month]
         );
 
         res.json(rows);
