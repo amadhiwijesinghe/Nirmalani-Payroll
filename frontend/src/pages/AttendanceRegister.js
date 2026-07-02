@@ -18,6 +18,7 @@ import {
   TableBody,
   TableContainer
 } from "@mui/material";
+import printAttendanceRegister from "../utils/printAttendanceRegister";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
@@ -35,6 +36,8 @@ export default function AttendanceRegister({ plantation }) {
   const today = dayjs();
   const [isEditing, setIsEditing] = useState(true);
   const [isFinalized, setIsFinalized] = useState(false);
+  const [workerType, setWorkerType] = useState("all");
+
   useEffect(()=>{
 
       loadWorkers();
@@ -204,6 +207,47 @@ const loadStatus = async () => {
 
 };
 
+// Finalize Attendance Function
+const finalizeAttendance = async () => {
+
+    const confirmFinalize = window.confirm(
+        `Finalize attendance for ${dayjs(`${year}-${month}-01`).format("MMMM YYYY")}?\n\nAfter finalizing, attendance will become read-only.`
+    );
+
+    if (!confirmFinalize) return;
+
+    try {
+
+        await axios.post(
+            `${API}/attendance-register/finalize`,
+            {
+                plantation,
+                month,
+                year
+            }
+        );
+
+        setIsFinalized(true);
+        setIsEditing(false);
+
+        alert("Attendance Finalized Successfully.");
+
+    } catch (err) {
+
+        console.log(err);
+        alert("Error Finalizing Attendance.");
+
+    }
+
+};
+
+// Filtered Workers
+const filteredWorkers =
+    workerType === "all"
+        ? workers
+        : workers.filter(
+            worker => worker.worker_type === workerType
+        );
 
   return (
     <Paper
@@ -296,11 +340,39 @@ const loadStatus = async () => {
 
         </FormControl>
 
+        <FormControl sx={{ minWidth: 220 }}>
+          <InputLabel>Worker Type</InputLabel>
+
+          <Select
+              value={workerType}
+              label="Worker Type"
+              onChange={(e) => setWorkerType(e.target.value)}
+          >
+              <MenuItem value="all">
+                  All Workers
+              </MenuItem>
+
+              <MenuItem value="plantation">
+                  Plantation Workers
+              </MenuItem>
+
+              <MenuItem value="rubber">
+                  Rubber Tappers
+              </MenuItem>
+
+              <MenuItem value="casual">
+                  Casual Workers
+              </MenuItem>
+
+          </Select>
+
+      </FormControl>
+
         <Button
           variant="contained"
           color="success"
           onClick={saveAttendance}
-          disabled={!isEditing}
+          disabled={!isEditing || isFinalized}
       >
           Save
       </Button>
@@ -308,13 +380,67 @@ const loadStatus = async () => {
       <Button
         variant="contained"
         color="warning"
-        disabled={isEditing}
+        disabled={isEditing || isFinalized}
         onClick={() => setIsEditing(true)}
     >
         Edit
     </Button>
 
+    <Button
+      variant="contained"
+      color="error"
+      onClick={finalizeAttendance}
+      disabled={isFinalized}
+    >
+        Finalize
+    </Button>
+
+    <Button
+      variant="outlined"
+      onClick={() =>
+          printAttendanceRegister({
+              workers: filteredWorkers,
+              attendance,
+              month,
+              year,
+              plantation,
+              workerType,
+              daysInMonth
+          })
+      }
+    >
+        Print
+    </Button>
+
       </Stack>
+
+      <Box
+        sx={{
+            mb: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 2
+        }}
+    >
+
+        <Typography
+            sx={{
+                fontWeight: "bold",
+                color: isFinalized
+                    ? "#ef4444"
+                    : isEditing
+                    ? "#22c55e"
+                    : "#f59e0b"
+            }}
+        >
+            {isFinalized
+                ? "🔒 Finalized"
+                : isEditing
+                ? "🟢 Editing"
+                : "🟡 Saved (Locked)"}
+        </Typography>
+
+    </Box>
 
       <TableContainer
         sx={{
@@ -472,7 +598,7 @@ const loadStatus = async () => {
 
           <TableBody>
 
-            {workers.map((worker) => {
+            {filteredWorkers.map((worker) => {
 
               const totalPresent = Array.from(
                   { length: daysInMonth },
@@ -552,6 +678,7 @@ const loadStatus = async () => {
                         align="center"
                         onClick={() => {
                           if (!isEditing) return;
+                          if (isFinalized) return;
                           if (!isFuture) {
                             toggleAttendance(worker, i + 1);
                           }
