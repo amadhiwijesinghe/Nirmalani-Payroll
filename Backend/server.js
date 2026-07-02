@@ -3043,6 +3043,105 @@ app.post("/attendance-register", async (req, res) => {
 
 });
 
+// ATTENDANCE STATUS
+app.get("/attendance-register/status", async (req, res) => {
+
+    try {
+
+        const {
+            plantation,
+            month,
+            year
+        } = req.query;
+
+        const [rows] = await db.promise().query(
+            `
+            SELECT is_finalized
+            FROM attendance_register_status
+            WHERE plantation=?
+            AND month=?
+            AND year=?
+            `,
+            [
+                plantation,
+                month,
+                year
+            ]
+        );
+
+        if (rows.length === 0) {
+
+            return res.json({
+                is_finalized: 0
+            });
+
+        }
+
+        res.json(rows[0]);
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
+// POST FINALIZED ATTENDANCE
+app.post("/attendance-register/finalize", async (req, res) => {
+
+    try {
+
+        const {
+            plantation,
+            month,
+            year
+        } = req.body;
+
+        await db.promise().query(
+            `
+            INSERT INTO attendance_register_status
+            (
+                plantation,
+                month,
+                year,
+                is_finalized,
+                finalized_at
+            )
+
+            VALUES
+            (
+                ?,?,?,1,NOW()
+            )
+
+            ON DUPLICATE KEY UPDATE
+
+                is_finalized=1,
+                finalized_at=NOW()
+            `,
+            [
+                plantation,
+                month,
+                year
+            ]
+        );
+
+        res.json({
+            success:true
+        });
+
+    } catch(err){
+
+        console.log(err);
+
+        res.status(500).json(err);
+
+    }
+
+});
+
 // ================= INCOME ================
 // GET INCOME
 app.get("/income", (req,res)=>{

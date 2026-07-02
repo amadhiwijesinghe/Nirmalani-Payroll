@@ -33,13 +33,21 @@ export default function AttendanceRegister({ plantation }) {
   const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
 
   const today = dayjs();
-useEffect(() => {
+  const [isEditing, setIsEditing] = useState(true);
+  const [isFinalized, setIsFinalized] = useState(false);
+  useEffect(()=>{
 
-    loadWorkers();
+      loadWorkers();
 
-    loadAttendance();
+      loadAttendance();
 
-}, [plantation, month, year]);
+      loadStatus();
+
+  },[
+      plantation,
+      month,
+      year
+  ]);
 
 // Load Workers
   const loadWorkers = async () => {
@@ -156,6 +164,8 @@ const saveAttendance = async () => {
             attendanceData
         );
 
+        setIsEditing(false);
+
         alert("Attendance Saved Successfully");
 
     } catch (err) {
@@ -163,6 +173,32 @@ const saveAttendance = async () => {
         console.log(err);
 
         alert("Error Saving Attendance");
+
+    }
+
+};
+
+// Load Attendance
+const loadStatus = async () => {
+
+    try{
+
+        const res = await axios.get(
+            `${API}/attendance-register/status`,
+            {
+                params:{
+                    plantation,
+                    month,
+                    year
+                }
+            }
+        );
+
+        setIsFinalized(res.data.is_finalized === 1);
+
+    }catch(err){
+
+        console.log(err);
 
     }
 
@@ -261,12 +297,22 @@ const saveAttendance = async () => {
         </FormControl>
 
         <Button
-            variant="contained"
-            color="success"
-            onClick={saveAttendance}
-        >
-            Save
-        </Button>
+          variant="contained"
+          color="success"
+          onClick={saveAttendance}
+          disabled={!isEditing}
+      >
+          Save
+      </Button>
+
+      <Button
+        variant="contained"
+        color="warning"
+        disabled={isEditing}
+        onClick={() => setIsEditing(true)}
+    >
+        Edit
+    </Button>
 
       </Stack>
 
@@ -278,6 +324,18 @@ const saveAttendance = async () => {
             borderRadius: 1
         }}
     >
+
+      <Typography
+        sx={{
+            mb: 2,
+            fontWeight: "bold",
+            color: isEditing ? "#4caf50" : "#f44336"
+        }}
+    >
+        {isEditing
+            ? "🟢 Editing Enabled"
+            : "🔒 Attendance Locked"}
+    </Typography>
 
         <Table
           stickyHeader
@@ -493,6 +551,7 @@ const saveAttendance = async () => {
                         key={i}
                         align="center"
                         onClick={() => {
+                          if (!isEditing) return;
                           if (!isFuture) {
                             toggleAttendance(worker, i + 1);
                           }
@@ -508,7 +567,11 @@ const saveAttendance = async () => {
                                 : isSaturday
                                 ? "rgba(255,193,7,0.08)"
                                 : "inherit",
-                          cursor: isFuture ? "not-allowed" : "pointer",
+                          cursor: !isEditing
+                            ? "default"
+                            : isFuture
+                            ? "not-allowed"
+                            : "pointer",
                           opacity: isFuture ? 0.5 : 1,
                           border: "1px solid rgba(255,255,255,0.08)",
                           zIndex: 1,
