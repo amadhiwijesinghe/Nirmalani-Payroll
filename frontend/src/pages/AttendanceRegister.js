@@ -255,7 +255,8 @@ const filteredWorkers =
         p: 3,
         display: "flex",
         flexDirection: "column",
-        minHeight: "100%"
+        gap: 3,
+        height: "100%"
       }}
     >
 
@@ -369,6 +370,11 @@ const filteredWorkers =
       </FormControl>
 
         <Button
+        sx={{
+          width:120,
+          height:48,
+          borderRadius:2
+      }}
           variant="contained"
           color="success"
           onClick={saveAttendance}
@@ -378,6 +384,11 @@ const filteredWorkers =
       </Button>
 
       <Button
+        sx={{
+          width:120,
+          height:48,
+          borderRadius:2
+      }}
         variant="contained"
         color="warning"
         disabled={isEditing || isFinalized}
@@ -387,6 +398,11 @@ const filteredWorkers =
     </Button>
 
     <Button
+      sx={{
+        width:120,
+        height:48,
+        borderRadius:2
+    }}
       variant="contained"
       color="error"
       onClick={finalizeAttendance}
@@ -396,6 +412,11 @@ const filteredWorkers =
     </Button>
 
     <Button
+      sx={{
+        width:120,
+        height:48,
+        borderRadius:2
+    }}
       variant="outlined"
       onClick={() =>
           printAttendanceRegister({
@@ -414,12 +435,13 @@ const filteredWorkers =
 
       </Stack>
 
-      <Box
+      <Paper
+        elevation={0}
         sx={{
-            mb: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 2
+            p:2,
+            borderRadius:4,
+            bgcolor:"#1e293b",
+            border:"1px solid rgba(255,255,255,.08)"
         }}
     >
 
@@ -439,8 +461,6 @@ const filteredWorkers =
                 ? "🟢 Editing"
                 : "🟡 Saved (Locked)"}
         </Typography>
-
-    </Box>
 
       <TableContainer
         sx={{
@@ -764,6 +784,7 @@ const filteredWorkers =
         </Table>
 
       </TableContainer>
+      </Paper>
 
     </Paper>
   );
