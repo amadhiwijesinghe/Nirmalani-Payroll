@@ -61,10 +61,14 @@ function App() {
 
         {/* MAIN AREA */}
        <Box
-          sx={{
-            flexGrow: 1
-          }}
-        >
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden"
+        }}
+      >
 
           {/* TOPBAR */}
           {!isMobile && (
@@ -81,14 +85,14 @@ function App() {
           {!isMobile && <Toolbar />}
 
           {/* CONTENT */}
-          <Box
-            sx={{
-              p: 3,
-              height: "calc(100vh - 64px)",
-              overflow: "auto",
-              background: "linear-gradient(135deg, #020617, #0f172a)"
-            }}
-          >
+         <Box
+          sx={{
+            p: 3,
+            flex: 1,
+            overflow: "auto",
+            background: "linear-gradient(135deg, #020617, #0f172a)"
+          }}
+        >
 
             <AnimatePresence mode="wait">
 

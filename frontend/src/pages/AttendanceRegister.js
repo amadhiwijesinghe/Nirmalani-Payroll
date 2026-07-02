@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import {
+  Box,
   Paper,
   Typography,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Button,
   Stack,
   Table,
   TableHead,
@@ -26,14 +28,20 @@ export default function AttendanceRegister({ plantation }) {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(currentYear);
   const [workers, setWorkers] = useState([]);
+  const [attendance, setAttendance] = useState({});
 
   const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
 
-  useEffect(() => {
+  const today = dayjs();
+useEffect(() => {
 
     loadWorkers();
 
-    }, [plantation]);
+    loadAttendance();
+
+}, [plantation, month, year]);
+
+// Load Workers
   const loadWorkers = async () => {
 
     try {
@@ -58,13 +66,116 @@ export default function AttendanceRegister({ plantation }) {
     }
 
 };
+
+// Load Attendance
+const loadAttendance = async () => {
+
+    try {
+
+        const res = await axios.get(
+            `${API}/attendance-register`,
+            {
+                params: {
+                    plantation,
+                    month,
+                    year
+                }
+            }
+        );
+
+        const attendanceObject = {};
+
+        res.data.forEach(row => {
+
+            const date = dayjs(row.attendance_date)
+                .format("YYYY-MM-DD");
+
+            const key =
+                `${row.worker_type}-${row.worker_id}-${date}`;
+
+            attendanceObject[key] =
+                row.is_present === 1;
+
+        });
+
+        setAttendance(attendanceObject);
+
+    } catch (err) {
+
+        console.log(err);
+
+    }
+
+};
+
+// Toggle Attendance 
+const toggleAttendance = (worker, day) => {
+
+    const date = dayjs(
+        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    ).format("YYYY-MM-DD");
+
+    const key = `${worker.worker_type}-${worker.worker_id}-${date}`;
+
+    setAttendance(prev => ({
+        ...prev,
+        [key]: !prev[key]
+    }));
+
+};
+
+// Save Attendance
+const saveAttendance = async () => {
+
+    try {
+
+        const attendanceData = [];
+
+        Object.entries(attendance).forEach(([key, value]) => {
+
+            const parts = key.split("-");
+
+            attendanceData.push({
+
+                worker_type: parts[0],
+
+                worker_id: Number(parts[1]),
+
+                attendance_date: `${parts[2]}-${parts[3]}-${parts[4]}`,
+
+                plantation,
+
+                is_present: value ? 1 : 0
+
+            });
+
+        });
+
+        await axios.post(
+            `${API}/attendance-register`,
+            attendanceData
+        );
+
+        alert("Attendance Saved Successfully");
+
+    } catch (err) {
+
+        console.log(err);
+
+        alert("Error Saving Attendance");
+
+    }
+
+};
+
+
   return (
     <Paper
       sx={{
         p: 3,
-        height: "100%",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        minHeight: "100%"
       }}
     >
 
@@ -76,7 +187,14 @@ export default function AttendanceRegister({ plantation }) {
         Attendance Register
       </Typography>
 
-      <Stack direction="row" spacing={2} mb={3}>
+      <Stack
+        direction="row"
+        spacing={2}
+        mb={2}
+        sx={{
+            flexShrink: 0
+        }}
+    >
 
         <FormControl sx={{ minWidth: 160 }}>
           <InputLabel>Month</InputLabel>
@@ -142,89 +260,314 @@ export default function AttendanceRegister({ plantation }) {
 
         </FormControl>
 
+        <Button
+            variant="contained"
+            color="success"
+            onClick={saveAttendance}
+        >
+            Save
+        </Button>
+
       </Stack>
 
       <TableContainer
         sx={{
-          flex: 1,
-          overflow: "auto",
-          border: "1px solid #ddd"
+            maxHeight: "70vh",
+            overflow: "auto",
+            border: "1px solid #555",
+            borderRadius: 1
         }}
-      >
+    >
 
-        <Table stickyHeader>
+        <Table
+          stickyHeader
+          sx={{
+              tableLayout: "fixed",
+              minWidth: `${360 + (daysInMonth * 60)}px`,
+              borderCollapse: "separate",
+              borderSpacing: 0
+          }}
+      >
 
           <TableHead>
 
             <TableRow>
+              <TableCell
+                sx={{
+                    position: "sticky",
+                    left: 0,
+                    width: 100,
+                    minWidth: 100,
+                    maxWidth: 100,
 
-              <TableCell sx={{ minWidth: 100 }}>
+                    zIndex: 50,
+
+                    backgroundColor: "#1e293b",
+                    color: "#fff",
+
+                    borderRight: "2px solid #555"
+                }}
+            >
                 EPF
-              </TableCell>
+            </TableCell>
 
-              <TableCell sx={{ minWidth: 250 }}>
-                Name
-              </TableCell>
+            <TableCell
+              sx={{
+                  position: "sticky",
 
-              {Array.from(
-                { length: daysInMonth },
-                (_, i) => (
+                  left: 130,
 
-                  <TableCell
-                    key={i}
-                    align="center"
+                  width: 260,
+                  minWidth: 260,
+                  maxWidth: 260,
+
+                  zIndex: 49,
+
+                  backgroundColor: "#1e293b",
+                  color: "#fff",
+
+                  borderRight: "2px solid #555"
+              }}
+          >
+              Name
+          </TableCell>
+
+              {Array.from({ length: daysInMonth }, (_, i) => {
+
+                const isToday =
+                    today.year() === year &&
+                    today.month() + 1 === month &&
+                    today.date() === i + 1;
+
+                const currentDate = dayjs(
+                  `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+              );
+
+              const isSaturday = currentDate.day() === 6;
+              const isSunday = currentDate.day() === 0;
+
+                return (
+
+                    <TableCell
+                      key={i}
+                      align="center"
+                      sx={{
+                          width: 60,
+                          minWidth: 60,
+                          maxWidth: 60,
+                          padding: "4px",
+                          backgroundColor:
+                            isToday
+                                ? "#1976d2"                // Today (Blue)
+                                : isSunday
+                                ? "#7f1d1d"                // Sunday (Dark Red)
+                                : isSaturday
+                                ? "#92400e"                // Saturday (Brown/Gold)
+                                : "#1e293b", 
+                          color: "#fff",
+                          fontWeight: "bold",
+                          border: "1px solid rgba(255,255,255,0.1)"
+                      }}
                   >
-                    {i + 1}
-                  </TableCell>
+                       <Box>
 
-                )
-              )}
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: "block",
+                                fontSize: 10
+                            }}
+                        >
+                            {currentDate.format("ddd")}
+                        </Typography>
+
+                        <Typography
+                            fontWeight="bold"
+                        >
+                            {i + 1}
+                        </Typography>
+
+                    </Box>
+                    </TableCell>
+
+                );
+
+            })}
+
+            <TableCell
+              align="center"
+              sx={{
+                width: 90,
+                minWidth: 90,
+                backgroundColor: "#1e293b",
+                color: "#fff",
+                fontWeight: "bold"
+              }}
+            >
+              Total
+            </TableCell>
 
             </TableRow>
+            
 
           </TableHead>
 
           <TableBody>
 
-            {workers.map((worker) => (
+            {workers.map((worker) => {
+
+              const totalPresent = Array.from(
+                  { length: daysInMonth },
+                  (_, i) => {
+
+                      const date = dayjs(
+                          `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+                      ).format("YYYY-MM-DD");
+
+                      return attendance[
+                          `${worker.worker_type}-${worker.worker_id}-${date}`
+                      ]
+                          ? 1
+                          : 0;
+
+                  }
+              ).reduce((a, b) => a + b, 0);
+
+              return (
 
             <TableRow
                 key={`${worker.worker_type}-${worker.worker_id}`}
             >
 
-            <TableCell>
-
-                {worker.epf_no || "-"}
-
-            </TableCell>
-
             <TableCell
-                sx={{
-                    whiteSpace: "nowrap",
-                    minWidth: 250
-                }}
-            >
+              sx={{
+                position: "sticky",
+                left: 0,
+                width: 100,
+                minWidth: 100,
+                maxWidth: 100,
+                backgroundColor: "#202020",
+                zIndex: 20,
+                borderRight: "2px solid #555"
+            }}
+          >
+              {worker.epf_no || "-"}
+          </TableCell>
 
-                {worker.name}
+          <TableCell
+            sx={{
+              position: "sticky",
+              left: 130,
+              width: 260,
+              minWidth: 260,
+              backgroundColor: "#202020",
+              zIndex: 19,
+              borderRight: "2px solid #555",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              boxShadow: "6px 0 10px rgba(0,0,0,0.35)"
+            }}
+          >
+            {worker.name}
+          </TableCell>
 
-            </TableCell>
+            {Array.from({ length: daysInMonth }, (_, i) => {
 
-            {Array.from(
-                { length: daysInMonth },
-                (_, i) => (
+                const date = dayjs(
+                    `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+                ).format("YYYY-MM-DD");
 
+                const attendanceKey =
+                    `${worker.worker_type}-${worker.worker_id}-${date}`;
+
+                const currentDate = dayjs(date);
+
+                const isSaturday = currentDate.day() === 6;
+                const isSunday = currentDate.day() === 0;
+                const isFuture = currentDate.isAfter(dayjs(), "day");
+
+                return (
+
+                    <TableCell
+                        key={i}
+                        align="center"
+                        onClick={() => {
+                          if (!isFuture) {
+                            toggleAttendance(worker, i + 1);
+                          }
+                        }}
+                        sx={{
+                          width: 60,
+                          minWidth: 60,
+                          maxWidth: 60,
+                          padding: "4px",
+                          backgroundColor:
+                            isSunday
+                                ? "rgba(255,0,0,0.08)"
+                                : isSaturday
+                                ? "rgba(255,193,7,0.08)"
+                                : "inherit",
+                          cursor: isFuture ? "not-allowed" : "pointer",
+                          opacity: isFuture ? 0.5 : 1,
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          zIndex: 1,
+                      }}
+                    >
+
+                        {attendance[attendanceKey] && (
+
+                            <Box
+                              sx={{
+                                  width: 22,
+                                  height: 22,
+
+                                  bgcolor: "#4CAF50",
+
+                                  borderRadius: "6px",
+
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+
+                                  margin: "auto",
+
+                                  color: "#fff",
+
+                                  fontWeight: 700,
+                                  fontSize: 15,
+
+                                  boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
+
+                                  transition: "0.15s"
+                              }}
+                          >
+                                ✓
+                            </Box>
+
+                        )}
+
+                    </TableCell>
+
+                    
+
+                );
+
+            })}
             <TableCell
-                key={i}
-                align="center"
-            >
-
-            </TableCell>
-
-            ))}
+              align="center"
+              sx={{
+                  fontWeight: "bold"
+              }}
+          >
+              {totalPresent}
+          </TableCell>
 
             </TableRow>
 
-            ))}
+              );
+
+})}
 
             </TableBody>
 

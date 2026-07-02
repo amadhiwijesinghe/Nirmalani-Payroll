@@ -2960,16 +2960,25 @@ app.get("/attendance-register", async (req, res) => {
 
     try {
 
-        const { plantation, month } = req.query;
+        const { plantation, month, year } = req.query;
 
         const [rows] = await db.promise().query(
             `
-            SELECT *
+            SELECT
+                worker_id,
+                worker_type,
+                attendance_date,
+                is_present
             FROM attendance_register
             WHERE plantation = ?
-            AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+            AND MONTH(attendance_date)=?
+            AND YEAR(attendance_date)=?
             `,
-            [plantation, month]
+            [
+                plantation,
+                month,
+                year
+            ]
         );
 
         res.json(rows);
