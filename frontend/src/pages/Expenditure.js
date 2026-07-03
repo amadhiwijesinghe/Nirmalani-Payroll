@@ -1316,9 +1316,11 @@ const nationsSummary = getSummary(nationsData);
                 Sub Category
                 </TableCell>
 
-                <TableCell sx={{color:"#aaa"}}>
-                  Amount Received
-                </TableCell>
+                {plantation === "nirmalani" && (
+                  <TableCell sx={{color:"#aaa"}}>
+                      Amount Received
+                  </TableCell>
+              )}
 
                 <TableCell sx={{color:"#aaa"}}>
                   Amount Spent
@@ -1369,22 +1371,27 @@ const nationsSummary = getSummary(nationsData);
                 </TableCell>
 
                 <TableCell sx={{color:"#fff"}}>
-                    {row.category}
+                  {row.category === "Other" && row.custom_category
+                      ? row.custom_category
+                      : row.custom_category || row.category}
                 </TableCell>
 
                 <TableCell sx={{color:"#fff"}}>
                     {row.sub_category || "-"}
                 </TableCell>
 
-                <TableCell sx={{ color:"#38bdf8" }}>
-                  {(
-                      row.transaction_type === "Received" ||
-                      row.transaction_type === "Opening Balance"
-                    )
-                      ? `Rs. ${Number(row.amount).toFixed(2)}`
-                      : "-"
-                  }
-                </TableCell>
+                {plantation === "nirmalani" && (
+                  <TableCell sx={{ color:"#38bdf8" }}>
+                      {
+                          (
+                              row.transaction_type === "Received" ||
+                              row.transaction_type === "Opening Balance"
+                          )
+                          ? `Rs. ${Number(row.amount).toFixed(2)}`
+                          : "-"
+                      }
+                  </TableCell>
+              )}
 
                 <TableCell sx={{ color:"#ef4444" }}>
                   {row.transaction_type === "Expense"
