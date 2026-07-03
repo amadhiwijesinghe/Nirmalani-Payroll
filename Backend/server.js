@@ -1049,24 +1049,33 @@ app.get("/rubber-tappers-data", (req, res) => {
 
   const sql = `
     SELECT
-      rta.id,
-      rta.worker_id,
-      rt.name,
-      rta.liter,
-      rta.brc,
-      rta.kg,
-      rta.rate,
-      rta.allowance,
-      rta.total_earning,
-      rta.date,
-      DATE_FORMAT(rta.date, '%Y-%m') AS month,
-      rta.status
+        rta.id,
+        rta.worker_id,
+
+        rt.name,
+        rt.worker_category,
+        rt.epf_no,
+        rt.epf_enabled,
+
+        rta.liter,
+        rta.brc,
+        rta.kg,
+        rta.rate,
+        rta.allowance,
+        rta.total_earning,
+        rta.date,
+        DATE_FORMAT(rta.date,'%Y-%m') AS month,
+        rta.status
+
     FROM rubber_tappers_attendance rta
+
     JOIN rubber_tappers rt
-      ON rt.id = rta.worker_id
+    ON rt.id = rta.worker_id
+
     WHERE rt.plantation = ?
+
     ORDER BY rta.date DESC
-  `;
+    `;
 
   db.query(sql, [req.query.plantation], (err, result) => {
 
@@ -1926,15 +1935,19 @@ app.get("/rubber-dispatch", (req, res) => {
     ORDER BY date DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(
+    sql,
+    [req.query.plantation],
+    (err, result) => {
 
-    if (err) {
-      console.log(err);
-      return res.status(500).json(err);
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
     }
-
-    res.json(result);
-  });
+);
 });
 
 // DELETE DISPATCH
@@ -2041,15 +2054,19 @@ app.get("/rubber-collection", (req, res) => {
     ORDER BY date DESC
   `;
 
-  db.query(sql, (err, result) => {
+  db.query(
+    sql,
+    [req.query.plantation],
+    (err, result) => {
 
-    if (err) {
-      console.log(err);
-      return res.status(500).json(err);
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
     }
-
-    res.json(result);
-  });
+);
 });
 
 // ADD OTTAPALU
