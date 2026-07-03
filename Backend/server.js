@@ -922,13 +922,25 @@ app.get(
 // ================= RUBBER TAPPERS ============
 //ADD
 
-app.get('/rubber-tappers', (req, res) => {
-  db.query("SELECT * FROM rubber_tappers WHERE plantation=?", (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.json(result);
-  });
-});
+app.get("/rubber-tappers", (req, res) => {
 
+    const { plantation } = req.query;
+
+    db.query(
+        "SELECT * FROM rubber_tappers WHERE plantation = ?",
+        [plantation],
+        (err, result) => {
+
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+        }
+    );
+
+});
 app.post('/rubber-tappers', (req, res) => {
 
   const {
