@@ -3555,34 +3555,32 @@ app.get("/dashboard/total-income/:month", (req,res)=>{
 
 // Total Expenditure
 
-app.get("/dashboard/total-expenditure/:month",(req,res)=>{
+app.get("/dashboard/total-expenditure/:month", (req, res) => {
 
     const month = req.params.month;
     const plantation = req.query.plantation;
 
     const sql = `
-        SELECT SUM(amount) AS total
+        SELECT
+            COALESCE(SUM(amount),0) AS total
         FROM expenditure
         WHERE DATE_FORMAT(date,'%Y-%m') = ?
         AND plantation = ?
-        AND transaction_type='Expense'
+        AND LOWER(transaction_type) = 'expense'
     `;
 
-    db.query(
-        sql,
-        [month, plantation],
-        (err,result)=>{
+    db.query(sql,[month, plantation],(err,result)=>{
 
-            if(err){
-                return res.status(500).json(err);
-            }
-
-            res.json({
-                total: result[0].total || 0
-            });
-
+        if(err){
+            console.log(err);
+            return res.status(500).json(err);
         }
-    );
+
+        res.json({
+            total: Number(result[0].total || 0)
+        });
+
+    });
 
 });
 
