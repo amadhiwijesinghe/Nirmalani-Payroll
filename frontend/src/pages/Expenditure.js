@@ -434,10 +434,17 @@ const updateExpense = async (id) => {
     return monthMatch && bankMatch;
   });
 
+const openingBalance = filteredData
+  .filter(row => row.transaction_type === "Opening Balance")
+  .reduce(
+    (sum,row)=>sum + Number(row.amount || 0),
+    0
+  );
+
 const totalExpense = filteredData
   .filter(
     row =>
-      row.transaction_type !== "Received"
+      row.transaction_type === "Expense"
   )
   .reduce(
     (sum,row)=>
@@ -457,7 +464,9 @@ const totalReceived = filteredData
   );
 
 const balance =
-  totalReceived - totalExpense;
+  openingBalance +
+  totalReceived -
+  totalExpense;
 
   const sampathData = filteredData.filter(
   row => row.bank_account === "Sampath"
@@ -532,8 +541,13 @@ const nationsSummary = getSummary(nationsData);
 
     let totalExpense = 0;
     let totalReceived = 0;
+    let openingBalance = 0;
 
     const rowsHTML = rows.map((row)=>{
+
+      if(row.transaction_type==="Opening Balance"){
+          openingBalance += Number(row.amount);
+      }
 
       if (row.transaction_type === "Expense") {
         totalExpense += Number(row.amount);
@@ -659,6 +673,11 @@ const nationsSummary = getSummary(nationsData);
           </table>
 
           <h3>
+            Opening Balance:
+            Rs.${openingBalance.toFixed(2)}
+            </h3>
+
+          <h3>
             Money Received:
             Rs.${totalReceived.toFixed(2)}
           </h3>
@@ -670,7 +689,11 @@ const nationsSummary = getSummary(nationsData);
 
           <h3>
             Balance:
-            Rs.${(totalReceived - totalExpense).toFixed(2)}
+            Rs.${(
+            openingBalance +
+            totalReceived -
+            totalExpense
+            ).toFixed(2)}
           </h3>
 
           <script>
@@ -716,8 +739,13 @@ const nationsSummary = getSummary(nationsData);
 
     let totalExpense = 0;
     let totalReceived = 0;
+    let openingBalance = 0;
 
     const rowsHTML = rows.map((row)=>{
+
+      if(row.transaction_type==="Opening Balance"){
+          openingBalance += Number(row.amount);
+      }
 
       if (row.transaction_type === "Expense") {
         totalExpense += Number(row.amount);
@@ -833,6 +861,11 @@ const nationsSummary = getSummary(nationsData);
           </table>
 
           <h3>
+            Opening Balance:
+            Rs.${openingBalance.toFixed(2)}
+            </h3>
+
+          <h3>
             Money Received:
             Rs.${totalReceived.toFixed(2)}
           </h3>
@@ -842,10 +875,12 @@ const nationsSummary = getSummary(nationsData);
             Rs.${totalExpense.toFixed(2)}
           </h3>
 
-          <h3>
-            Balance:
-            Rs.${(totalReceived - totalExpense).toFixed(2)}
-          </h3>
+          Balance:
+            Rs.${(
+            openingBalance +
+            totalReceived -
+            totalExpense
+            ).toFixed(2)}
 
           <script>
             window.print();
@@ -1568,6 +1603,10 @@ const nationsSummary = getSummary(nationsData);
 
                   <TableRow>
 
+                     <TableCell sx={{ color:"#f59e0b", fontWeight:"bold" }}>
+                        Opening Balance
+                    </TableCell>
+
                       <TableCell sx={{color:"#22c55e",fontWeight:"bold"}}>
                           Money Received
                       </TableCell>
@@ -1583,6 +1622,10 @@ const nationsSummary = getSummary(nationsData);
                   </TableRow>
 
                   <TableRow>
+
+                      <TableCell sx={{color:"#f59e0b"}} >
+                          Rs. {openingBalance.toFixed(2)}
+                      </TableCell>
 
                       <TableCell sx={{color:"#22c55e"}}>
                           Rs. {totalReceived.toFixed(2)}
