@@ -105,7 +105,7 @@ const loadAttendance = async () => {
                 `${row.worker_type}-${row.worker_id}-${date}`;
 
             attendanceObject[key] =
-                row.is_present === 1;
+                row.attendance_value ?? 0;
 
         });
 
@@ -123,15 +123,54 @@ const loadAttendance = async () => {
 const toggleAttendance = (worker, day) => {
 
     const date = dayjs(
-        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+        `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`
     ).format("YYYY-MM-DD");
 
-    const key = `${worker.worker_type}-${worker.worker_id}-${date}`;
+    const key =
+        `${worker.worker_type}-${worker.worker_id}-${date}`;
 
-    setAttendance(prev => ({
-        ...prev,
-        [key]: !prev[key]
-    }));
+    const currentDate = dayjs(date);
+    const isSunday = currentDate.day() === 0;
+
+    setAttendance(prev => {
+
+        const value = prev[key] || 0;
+
+        let newValue = 0;
+
+        if (isSunday) {
+
+            // Sunday:
+            // Empty -> 1.5 -> Empty
+
+            newValue =
+                value === 0 ? 1.5 : 0;
+
+        } else {
+
+            // Weekdays:
+            // Empty -> Full -> Half -> Empty
+
+            if (value === 0)
+                newValue = 1;
+
+            else if (value === 1)
+                newValue = 0.5;
+
+            else
+                newValue = 0;
+
+        }
+
+        return {
+
+            ...prev,
+
+            [key]: newValue
+
+        };
+
+    });
 
 };
 
@@ -628,11 +667,11 @@ const filteredWorkers =
                           `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
                       ).format("YYYY-MM-DD");
 
-                      return attendance[
-                          `${worker.worker_type}-${worker.worker_id}-${date}`
-                      ]
-                          ? 1
-                          : 0;
+                      return (
+                        attendance[
+                            `${worker.worker_type}-${worker.worker_id}-${date}`
+                        ] || 0
+                    );
 
                   }
               ).reduce((a, b) => a + b, 0);
@@ -690,6 +729,7 @@ const filteredWorkers =
                 const isSaturday = currentDate.day() === 6;
                 const isSunday = currentDate.day() === 0;
                 const isFuture = currentDate.isAfter(dayjs(), "day");
+                const value = attendance[attendanceKey] || 0;
 
                 return (
 
@@ -725,34 +765,40 @@ const filteredWorkers =
                       }}
                     >
 
-                        {attendance[attendanceKey] && (
+                       {value > 0 && (
 
                             <Box
-                              sx={{
-                                  width: 22,
-                                  height: 22,
+                                sx={{
+                                    width: 22,
+                                    height: 22,
+                                    bgcolor:
+                                        value === 1.5
+                                            ? "#ff9800"
+                                            : value === 0.5
+                                            ? "#2196f3"
+                                            : "#4CAF50",
 
-                                  bgcolor: "#4CAF50",
+                                    borderRadius: "6px",
 
-                                  borderRadius: "6px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
 
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
+                                    margin: "auto",
 
-                                  margin: "auto",
+                                    color: "#fff",
 
-                                  color: "#fff",
+                                    fontWeight: "bold",
+                                    fontSize: 12
+                                }}
+                            >
 
-                                  fontWeight: 700,
-                                  fontSize: 15,
+                                {value === 1
+                                    ? "✓"
+                                    : value === 0.5
+                                    ? "½"
+                                    : "1½"}
 
-                                  boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
-
-                                  transition: "0.15s"
-                              }}
-                          >
-                                ✓
                             </Box>
 
                         )}
