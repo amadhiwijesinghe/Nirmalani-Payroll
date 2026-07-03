@@ -104,8 +104,7 @@ const loadAttendance = async () => {
             const key =
                 `${row.worker_type}-${row.worker_id}-${date}`;
 
-            attendanceObject[key] =
-                row.attendance_value ?? 0;
+            attendanceObject[key] = Number(row.attendance_value) || 0;
 
         });
 
@@ -655,21 +654,21 @@ const filteredWorkers =
             {filteredWorkers.map((worker) => {
 
               const totalPresent = Array.from(
-                  { length: daysInMonth },
-                  (_, i) => {
+                { length: daysInMonth },
+                (_, i) => {
 
-                      const date = dayjs(
-                          `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
-                      ).format("YYYY-MM-DD");
+                    const date = dayjs(
+                        `${year}-${String(month).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`
+                    ).format("YYYY-MM-DD");
 
-                      return (
+                    return Number(
                         attendance[
                             `${worker.worker_type}-${worker.worker_id}-${date}`
                         ] || 0
                     );
 
-                  }
-              ).reduce((a, b) => a + b, 0);
+                }
+            ).reduce((sum, value) => sum + value, 0);
 
               return (
 
