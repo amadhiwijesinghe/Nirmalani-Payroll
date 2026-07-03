@@ -531,13 +531,12 @@ const nationsSummary = getSummary(nationsData);
     }
 
 
-  const rows = data.filter(row =>
-    row.date.startsWith(filterMonth) &&
-    (
-      !reportBank ||
-      row.bank_account === reportBank
+  const rows = data
+    .filter(row =>
+      row.date.startsWith(filterMonth) &&
+      (!reportBank || row.bank_account === reportBank)
     )
-  );
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let totalExpense = 0;
     let totalReceived = 0;
@@ -722,20 +721,18 @@ const nationsSummary = getSummary(nationsData);
       return;
     }
 
-  const rows = data.filter(row => {
+  const rows = data
+    .filter(row => {
 
-    const rowDate =
-      row.date.split("T")[0];
+      const rowDate = row.date.split("T")[0];
 
-    return (
-      rowDate >= weekStart &&
-      rowDate <= weekEnd &&
-      (
-        !reportBank ||
-        row.bank_account === reportBank
-      )
-    );
-  });
+      return (
+        rowDate >= weekStart &&
+        rowDate <= weekEnd &&
+        (!reportBank || row.bank_account === reportBank)
+      );
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let totalExpense = 0;
     let totalReceived = 0;

@@ -182,10 +182,13 @@ export default function Income({
     return;
   }
 
-  const rows = data.filter(
-    (row)=>
-      row.date.startsWith(filterMonth)
-  );
+  const rows = data
+    .filter(
+      row => row.date.startsWith(filterMonth)
+    )
+    .sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
 
   let total = 0;
 
@@ -317,16 +320,20 @@ const printWeeklyReport = () => {
     return;
   }
 
-  const rows = data.filter((row)=>{
+  const rows = data
+    .filter((row) => {
 
-    const current =
-      new Date(row.date);
+      const current = new Date(row.date);
 
-    return (
-      current >= new Date(weekStart) &&
-      current <= new Date(weekEnd)
+      return (
+        current >= new Date(weekStart) &&
+        current <= new Date(weekEnd)
+      );
+
+    })
+    .sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
     );
-  });
 
   let total = 0;
 
