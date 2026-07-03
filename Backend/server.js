@@ -2965,10 +2965,11 @@ app.get("/attendance-register", async (req, res) => {
         const [rows] = await db.promise().query(
             `
             SELECT
-                worker_id,
-                worker_type,
-                attendance_date,
-                is_present
+              worker_id,
+              worker_type,
+              attendance_date,
+              is_present,
+              attendance_value
             FROM attendance_register
             WHERE plantation = ?
             AND MONTH(attendance_date)=?
@@ -3010,20 +3011,23 @@ app.post("/attendance-register", async (req, res) => {
                     worker_type,
                     attendance_date,
                     plantation,
-                    is_present
+                    is_present,
+                    attendance_value
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
 
                 ON DUPLICATE KEY UPDATE
-                    is_present = VALUES(is_present)
+                    is_present = VALUES(is_present),
+                    attendance_value = VALUES(attendance_value)
                 `,
                 [
-                    row.worker_id,
-                    row.worker_type,
-                    row.attendance_date,
-                    row.plantation,
-                    row.is_present
-                ]
+                  row.worker_id,
+                  row.worker_type,
+                  row.attendance_date,
+                  row.plantation,
+                  row.is_present,
+                  row.attendance_value
+              ]
             );
 
         }

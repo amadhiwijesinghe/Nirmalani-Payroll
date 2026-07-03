@@ -186,17 +186,12 @@ const saveAttendance = async () => {
             const parts = key.split("-");
 
             attendanceData.push({
-
                 worker_type: parts[0],
-
                 worker_id: Number(parts[1]),
-
                 attendance_date: `${parts[2]}-${parts[3]}-${parts[4]}`,
-
                 plantation,
-
-                is_present: value ? 1 : 0
-
+                attendance_value: value,
+                is_present: value > 0 ? 1 : 0
             });
 
         });
