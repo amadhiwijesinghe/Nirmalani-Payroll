@@ -267,7 +267,9 @@ const categories = {
 
       formData.append(
         "transaction_type",
-        transactionType
+        plantation === "nirmalani"
+          ? transactionType
+          : "Expense"
       );
 
       formData.append(
@@ -361,7 +363,9 @@ const updateExpense = async (id) => {
 
     formData.append(
       "transaction_type",
-      transactionType
+      plantation === "nirmalani"
+        ? transactionType
+        : "Expense"
     );
 
     formData.append(
@@ -894,26 +898,29 @@ const nationsSummary = getSummary(nationsData);
 
         <Grid container spacing={2}>
 
-        <Grid item xs={12} md={2}>
-          <TextField
-            select
-            fullWidth
-            label="Bank Account"
-            value={bankAccount}
-            onChange={(e) =>
-              setBankAccount(e.target.value)
-            }
-            sx={{ width: 200}}
-          >
-            <MenuItem value="Sampath">
-              Sampath Bank
-            </MenuItem>
+        {plantation === "nirmalani" && (
 
-            <MenuItem value="Nations Trust">
-              Nations Trust Bank
-            </MenuItem>
-          </TextField>
+        <Grid item xs={12} md={2}>
+            <TextField
+                select
+                fullWidth
+                label="Bank Account"
+                value={bankAccount}
+                onChange={(e)=>setBankAccount(e.target.value)}
+            >
+                <MenuItem value="Sampath">
+                    Sampath Bank
+                </MenuItem>
+
+                <MenuItem value="Nations Trust">
+                    Nations Trust Bank
+                </MenuItem>
+            </TextField>
         </Grid>
+
+        )}
+
+        {plantation === "nirmalani" ? (
 
         <Grid item xs={12} md={2}>
           <TextField
@@ -943,7 +950,9 @@ const nationsSummary = getSummary(nationsData);
           </TextField>
         </Grid>
 
-        {transactionType === "Expense" && (
+      ) : null}
+
+        {(plantation !== "nirmalani" || transactionType === "Expense") && (
           <>
           <Grid item xs={12} md={2}>
             <TextField
@@ -1191,28 +1200,30 @@ const nationsSummary = getSummary(nationsData);
             }}
         >
 
-          <TextField
-            select
-            label="Report Account"
-            value={reportBank}
-            onChange={(e)=>
-              setReportBank(e.target.value)
-            }
+          {plantation === "nirmalani" && (
 
-            sx={{width: 200}}
-          >
-            <MenuItem value="">
-              All Accounts
-            </MenuItem>
+            <TextField
+                select
+                label="Report Account"
+                value={reportBank}
+                onChange={(e)=>setReportBank(e.target.value)}
+                sx={{ width:200 }}
+            >
+                <MenuItem value="">
+                    All Accounts
+                </MenuItem>
 
-            <MenuItem value="Sampath">
-              Sampath Bank
-            </MenuItem>
+                <MenuItem value="Sampath">
+                    Sampath Bank
+                </MenuItem>
 
-            <MenuItem value="Nations Trust">
-              Nations Trust Bank
-            </MenuItem>
-          </TextField>
+                <MenuItem value="Nations Trust">
+                    Nations Trust Bank
+                </MenuItem>
+
+            </TextField>
+
+            )}
 
             <TextField
             type="month"
@@ -1287,9 +1298,11 @@ const nationsSummary = getSummary(nationsData);
                 Date
               </TableCell>
 
-              <TableCell sx={{color:"#aaa"}}>
-                Bank Account
-              </TableCell>
+              {plantation === "nirmalani" && (
+                <TableCell sx={{color:"#aaa"}}>
+                    Bank Account
+                </TableCell>
+                )}
 
               <TableCell sx={{ color:"#aaa" }}>
                 Type
@@ -1338,9 +1351,11 @@ const nationsSummary = getSummary(nationsData);
                     .toLocaleDateString("en-CA")}
                 </TableCell>
 
-                <TableCell sx={{color:"#fff"}}>
-                  {row.bank_account}
-                </TableCell>
+                {plantation === "nirmalani" && (
+                  <TableCell sx={{color:"#fff"}}>
+                      {row.bank_account}
+                  </TableCell>
+                  )}
 
                 <TableCell
                   sx={{
@@ -1461,7 +1476,7 @@ const nationsSummary = getSummary(nationsData);
 
         </Paper>
 
-        {reportBank === "" ? (
+        {plantation === "nirmalani" && reportBank === "" ? (
           <Table sx={{ mt: 3 }}>
             <TableHead>
               <TableRow>

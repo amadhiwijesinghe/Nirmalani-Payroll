@@ -253,24 +253,44 @@ const groupedData = Object.values(
     const key =
       `${row.worker_id}-${row.month}`;
     if (!acc[key]) {
+
       acc[key] = {
-        worker_id: row.worker_id,
-        name: row.name,
-        month: row.month,
-        rate: Number(row.rate || 0),
 
-        worker_category: row.worker_category,
+          worker_id: row.worker_id,
 
-        epf_no: row.epf_no,
+          name: row.name,
 
-        epf_enabled: row.epf_enabled,
+          month: row.month,
 
-        kg: 0,
-        allowance: 0,
-        worked_days: 0,
-        calculated_total: 0
-    };
-    }
+          rate: Number(row.rate || 0),
+
+          worker_category: row.worker_category,
+
+          epf_no: row.epf_no,
+
+          epf_enabled: Number(row.epf_enabled),
+
+          kg: 0,
+
+          allowance: 0,
+
+          worked_days: 0,
+
+          calculated_total: 0,
+
+          epf8: 0,
+
+          epf12: 0,
+
+          epf20: 0,
+
+          etf: 0,
+
+          netSalary: 0
+
+      };
+
+  }
     acc[key].kg +=
       Number(row.kg || 0);
     acc[key].allowance +=
@@ -285,6 +305,43 @@ const groupedData = Object.values(
   }, {})
 
 );
+
+  groupedData.forEach(worker => {
+
+      const gross = Number(worker.calculated_total);
+
+      if (worker.epf_enabled === 1) {
+
+          worker.epf8 = gross * 0.08;
+
+          worker.epf12 = gross * 0.12;
+
+          worker.epf20 = gross * 0.20;
+
+          worker.etf = gross * 0.03;
+
+          worker.netSalary =
+              gross +
+              Number(worker.allowance) -
+              worker.epf8;
+
+      } else {
+
+          worker.epf8 = 0;
+
+          worker.epf12 = 0;
+
+          worker.epf20 = 0;
+
+          worker.etf = 0;
+
+          worker.netSalary =
+              gross +
+              Number(worker.allowance);
+
+      }
+
+  });
 
 const currentMonth = new Date()
   .toISOString()
@@ -311,7 +368,12 @@ const totals = groupedData
     }
   );
 
-  const totalRequired = totals.amount;
+  const totalRequired = groupedData
+    .filter(row => row.month === selectedMonth)
+    .reduce(
+        (sum, row) => sum + Number(row.netSalary || 0),
+        0
+    );
 
   const gross = Number(selectedPayroll?.calculated_total || 0);
 
@@ -327,62 +389,93 @@ const totals = groupedData
 
   const netSalary = gross + allowanceValue - epf8;
 
-  const generateSlipHTML = (row, c) => {
-  return `
-    <div class="slip">
-      <h3 style="text-align:center; margin-bottom:5px;">
-        NIRMALANI PLANTATION
-      </h3>
+  const generateSlipHTML = (row) => {
 
-      <p><b>Name:</b> ${row.name}</p>
-      <p><b>Month:</b> ${row.month}</p>
-      <p>
-        <b>Worked Days:</b>
-        ${row.worked_days}
-      </p>
+      const gross = Number(row.calculated_total);
 
-      <hr/>
+      const allowance = Number(row.allowance);
 
-      <table style="width:100%; font-size:12px;">
-        <tr>
-          <td>Total KG</td>
-          <td style="text-align:right;">${row.kg.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Rate per Day</td>
-          <td style="text-align:right;">${row.rate}</td>
-        </tr>
-        <tr>
-          <td>Allowance</td>
-          <td style="text-align:right;">${row.allowance.toFixed(2)}</td>
-        </tr>
-      </table>
+      const epf8 = row.epf_enabled ? gross * 0.08 : 0;
 
-      <hr/>
+      const epf12 = row.epf_enabled ? gross * 0.12 : 0;
 
-      <table style="width:100%; font-size:12px;">
-        <tr>
-          <td><b>Total Earnings</b></td>
-          <td style="text-align:right;"><b>${c.amount.toFixed(2)}</b></td>
-        </tr>
-      </table>
+      const epf20 = row.epf_enabled ? gross * 0.20 : 0;
 
-      <hr/>
+      const etf = row.epf_enabled ? gross * 0.03 : 0;
 
-      <div style="
-        border: 1px solid black;
-        height: 30px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: left;
-        font-size: 11px;
-        margin-top: auto;
-      ">
-        Signature
-      </div>
-    </div>
+      const netSalary = row.epf_enabled
+          ? gross + allowance - epf8
+          : gross + allowance;
+
+      return `
+
+  <div class="slip">
+
+  <h2 style="text-align:center">
+  NIRMALANI PLANTATION
+  </h2>
+
+  <hr>
+
+  <p><b>Name :</b> ${row.name}</p>
+
+  <p><b>Category :</b> ${row.worker_category}</p>
+
+  <p><b>Month :</b> ${row.month}</p>
+
+  <p><b>Worked Days :</b> ${row.worked_days}</p>
+
+  <table>
+
+  <tr>
+  <td>Gross Salary</td>
+  <td>${gross.toFixed(2)}</td>
+  </tr>
+
+  <tr>
+  <td>Allowance</td>
+  <td>${allowance.toFixed(2)}</td>
+  </tr>
+
+  ${row.epf_enabled ? `
+
+  <tr>
+  <td>EPF 8%</td>
+  <td>${epf8.toFixed(2)}</td>
+  </tr>
+
+  <tr>
+  <td>EPF 12%</td>
+  <td>${epf12.toFixed(2)}</td>
+  </tr>
+
+  <tr>
+  <td>Total EPF</td>
+  <td>${epf20.toFixed(2)}</td>
+  </tr>
+
+  <tr>
+  <td>ETF</td>
+  <td>${etf.toFixed(2)}</td>
+  </tr>
+
+  ` : ""}
+
+  <tr>
+
+  <td><b>NET SALARY</b></td>
+
+  <td><b>${netSalary.toFixed(2)}</b></td>
+
+  </tr>
+
+  </table>
+
+  </div>
+
   `;
-};
+
+  };
 
 
 const printSlip = () => {
@@ -393,18 +486,18 @@ const printSlip = () => {
   let pagesHTML = "";
 
   for (let i = 0; i < rows.length; i += 2) {
-    const chunk = rows.slice(i, i + 2);
 
-    const slips = chunk.map(row => {
-      const c = calculate(row.kg,row.rate, row.allowance || 0);
-      return generateSlipHTML(row, c);
-    }).join("");
+      const chunk = rows.slice(i, i + 2);
 
-    pagesHTML += `
-      <div class="page">
-        ${slips}
-      </div>
-    `;
+      const slips = chunk
+          .map(row => generateSlipHTML(row))
+          .join("");
+
+      pagesHTML += `
+          <div class="page">
+              ${slips}
+          </div>
+      `;
   }
 
   const html = `
@@ -1587,12 +1680,13 @@ const editAttendance = async (row) => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Days Worked</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Rate</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Category</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>KG</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Gross</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Kg Amount</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Total Earnings</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Actions</TableCell>
               
             </TableRow>
@@ -1610,14 +1704,25 @@ const editAttendance = async (row) => {
               return (
                 <TableRow key={row.id}>
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.month}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>{row.worker_category}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.worked_days}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.rate}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.allowance || 0}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.kg.toFixed(2)}</TableCell>
-
-                  <TableCell sx={{ color: "#22c55e" }}>
-                    {c.amount.toFixed(2)}
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.calculated_total.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.allowance.toFixed(2)}
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.epf8.toFixed(2)}
+                  </TableCell>
+                  <TableCell
+                      sx={{
+                          color:"#22c55e",
+                          fontWeight:"bold"
+                      }}
+                  >
+                      {row.netSalary.toFixed(2)}
                   </TableCell>
                   <TableCell>
 
@@ -1668,49 +1773,49 @@ const editAttendance = async (row) => {
 
             {/* 🔥 GRAND TOTAL */}
             <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
-              <TableCell
-                colSpan={5}
-                sx={{
-                  color: "#fff",
-                  fontWeight: "bold"
-                }}
-              >
-                TOTAL
+
+              <TableCell colSpan={3}>
+                  TOTAL
               </TableCell>
 
-              {/* KG Total */}
-              <TableCell
-                sx={{
-                  color: "#38bdf8",
-                  fontWeight: "bold"
-                }}
-              >
-                {groupedData
-                 .filter((row) => {
-                    return row.month === selectedMonth;
-                  })
-                  .reduce(
-                    (sum, row) =>
-                      sum + Number(row.kg || 0),
-                    0
-                  )
-                  .toFixed(2)}
+              <TableCell>
+                  {groupedData
+                      .filter(r => r.month === selectedMonth)
+                      .reduce((s,r)=>s+Number(r.kg||0),0)
+                      .toFixed(2)}
               </TableCell>
 
-              {/* Earnings Total */}
-              <TableCell
-                sx={{
-                  color: "#22c55e",
-                  fontWeight: "bold"
-                }}
-              >
-                {totals.amount.toFixed(2)}
+              <TableCell>
+                  {groupedData
+                      .filter(r => r.month === selectedMonth)
+                      .reduce((s,r)=>s+Number(r.calculated_total||0),0)
+                      .toFixed(2)}
               </TableCell>
 
-              {/* Empty Actions */}
+              <TableCell>
+                  {groupedData
+                      .filter(r => r.month === selectedMonth)
+                      .reduce((s,r)=>s+Number(r.allowance||0),0)
+                      .toFixed(2)}
+              </TableCell>
+
+              <TableCell>
+                  {groupedData
+                      .filter(r => r.month === selectedMonth)
+                      .reduce((s,r)=>s+Number(r.epf8||0),0)
+                      .toFixed(2)}
+              </TableCell>
+
+              <TableCell>
+                  {groupedData
+                      .filter(r => r.month === selectedMonth)
+                      .reduce((s,r)=>s+Number(r.netSalary||0),0)
+                      .toFixed(2)}
+              </TableCell>
+
               <TableCell></TableCell>
 
-            </TableRow>
+          </TableRow>
           </TableBody>
         </Table>
 
