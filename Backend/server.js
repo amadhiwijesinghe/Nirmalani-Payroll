@@ -3150,21 +3150,29 @@ app.post("/attendance-register/finalize", async (req, res) => {
 
 // ================= INCOME ================
 // GET INCOME
-app.get("/income", (req,res)=>{
+app.get("/income", (req, res) => {
+
+  const plantation = req.query.plantation;
 
   db.query(
-    "SELECT * FROM income WHERE plantation=? ORDER BY date DESC",
+    `
+    SELECT *
+    FROM income
+    WHERE plantation = ?
+    ORDER BY date DESC
+    `,
     [plantation],
-    (err,result)=>{
+    (err, result) => {
 
-      if(err){
-
+      if (err) {
+        console.log("INCOME ERROR:", err);
         return res.status(500).json(err);
       }
 
       res.json(result);
     }
   );
+
 });
 
 // ADD INCOME
@@ -3232,46 +3240,49 @@ app.delete("/income/:id", (req,res)=>{
 });
 
 // UPDATE INCOME
-app.put("/income/:id", (req,res)=>{
+app.put("/income/:id", (req, res) => {
 
   const {
     category,
     amount,
     note,
-    date
+    date,
+    plantation
   } = req.body;
 
-  const sql = `
+  db.query(
+    `
     UPDATE income
     SET
       category=?,
       amount=?,
       note=?,
-      date=?
+      date=?,
+      plantation=?
     WHERE id=?
-  `;
-
-  db.query(
-    sql,
+    `,
     [
       category,
       amount,
       note,
       date,
+      plantation,
       req.params.id
     ],
-    (err,result)=>{
+    (err) => {
 
-      if(err){
-
+      if (err) {
+        console.log(err);
         return res.status(500).json(err);
       }
 
       res.json({
-        success:true
+        success: true
       });
+
     }
   );
+
 });
 
 // ================ EXPENDITURE ============

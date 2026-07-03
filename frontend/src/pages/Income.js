@@ -146,15 +146,13 @@ export default function Income({
 
         try {
 
-            await axios.put(
-            `${API}/income/${id}`,
-            {
-                category,
-                amount,
-                note,
-                date
-            }
-            );
+            await axios.put(`${API}/income/${id}`, {
+              category,
+              amount,
+              note,
+              date,
+              plantation
+          });
 
             alert("Updated");
 
