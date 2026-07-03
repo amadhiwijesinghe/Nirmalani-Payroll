@@ -878,16 +878,16 @@ app.get(
       pda.status='present'
       AND DATE_FORMAT(pda.date,'%Y-%m') = ?
       AND pw.plantation = ?
-      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
 
       GROUP BY pw.id
     `;
 
     db.query(sql,[month, plantation],(err,result)=>{
 
-      if(err){
+      if (err) {
+        console.log("PLANTATION SUMMARY ERROR:", err);
         return res.status(500).json(err);
-      }
+    }
 
       let totalRequired = 0;
 
@@ -2817,40 +2817,38 @@ app.put(
 );
 
 //SUMMARY
-app.get(
-  "/dashboard/casual-summary/:month",
-  (req,res)=>{
+app.get("/dashboard/casual-summary/:month", (req, res) => {
 
-    db.query(
-      `
-      SELECT
-      COALESCE(
-        SUM(total_earning),
-        0
-      ) AS total
-      FROM casual_worker_attendance
-      WHERE month = ?
-      AND casual_workers.plantation = ?
-      `,
-      [req.params.month],
-      (err,result)=>{
+    const month = req.params.month;
+    const plantation = req.query.plantation;
 
-        if(err){
+    const sql = `
+        SELECT
+            COALESCE(SUM(ca.total_earning),0) AS total
+
+        FROM casual_worker_attendance ca
+
+        JOIN casual_workers cw
+            ON cw.id = ca.worker_id
+
+        WHERE ca.month = ?
+        AND cw.plantation = ?
+    `;
+
+    db.query(sql, [month, plantation], (err, result) => {
+
+        if (err) {
+          console.log("CASUAL SUMMARY ERROR:", err);
           return res.status(500).json(err);
-        }
+      }
 
         res.json({
-          totalRequired:
-            Number(
-              result[0].total
-            )
+            totalRequired: Number(result[0].total || 0)
         });
 
-      }
-    );
+    });
 
-  }
-);
+});
 
 // ======================= ATTENDANCE REGISTER ======================
 // LOAD ALL WORKERS
