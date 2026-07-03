@@ -931,11 +931,23 @@ app.get('/rubber-tappers', (req, res) => {
 
 app.post('/rubber-tappers', (req, res) => {
 
-  const { name } = req.body;
+  const {
+
+    name,
+
+    plantation,
+
+    worker_category,
+
+    epf_no,
+
+    epf_enabled
+
+  } = req.body;
 
   db.query(
-    "INSERT INTO rubber_tappers (name) VALUES (?)",
-    [name],
+    "INSERT INTO rubber_tappers (name, plantation, worker_category, epf_no, epf_enabled) VALUES (?, ?, ?, ?, ?)",
+    [name, plantation, worker_category, epf_no, epf_enabled],
     (err, result) => {
 
       if (err) {

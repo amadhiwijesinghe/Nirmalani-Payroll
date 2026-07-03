@@ -51,6 +51,9 @@ export default function RubberTappers({
   const [collectionData, setCollectionData] = useState([]);
   const [ottapaluData, setOttapaluData] = useState([]);
 
+  const [workerCategory, setWorkerCategory] = useState("Temporary");
+  const [epfNo, setEpfNo] = useState("");
+
   useEffect(() => {
 
     fetchWorkers();
@@ -110,9 +113,19 @@ const addWorker = async () => {
   try {
 
     await axios.post(`${API}/rubber-tappers`, {
+
       name,
-      plantation
-    });
+
+      plantation,
+
+      worker_category: workerCategory,
+
+      epf_no: epfNo,
+
+      epf_enabled:
+          workerCategory === "Permanent" ? 1 : 0
+
+  });
 
     setName("");
 
@@ -1045,32 +1058,75 @@ const editAttendance = async (row) => {
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
-            <TextField
-              label="Worker Name"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
-            />
+
+          <Grid item xs={12} md={4}>
+              <TextField
+                  label="Worker Name"
+                  fullWidth
+                  value={name}
+                  onChange={(e)=>setName(e.target.value)}
+                  sx={{
+                      input:{color:"#fff"},
+                      label:{color:"#aaa"}
+                  }}
+              />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+
+                  <InputLabel sx={{color:"#aaa"}}>
+                      Category
+                  </InputLabel>
+
+                  <Select
+                      value={workerCategory}
+                      label="Category"
+                      onChange={(e)=>setWorkerCategory(e.target.value)}
+                      sx={{color:"#fff"}}
+                  >
+                      <MenuItem value="Temporary">
+                          Temporary
+                      </MenuItem>
+
+                      <MenuItem value="Permanent">
+                          Permanent
+                      </MenuItem>
+
+                  </Select>
+
+              </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+
+              {workerCategory==="Permanent" && (
+
+                  <TextField
+                      label="EPF Number"
+                      fullWidth
+                      value={epfNo}
+                      onChange={(e)=>setEpfNo(e.target.value)}
+                      sx={{
+                          input:{color:"#fff"},
+                          label:{color:"#aaa"}
+                      }}
+                  />
+
+              )}
+
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
-              onClick={addWorker}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-              }}
-            >
-              Add
-            </Button>
+              <Button
+                  fullWidth
+                  onClick={addWorker}
+              >
+                  Add
+              </Button>
           </Grid>
-        </Grid>
+
+      </Grid>
       </Paper>
 
       {/* BRC CONVERSION */}
