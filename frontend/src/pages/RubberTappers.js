@@ -15,7 +15,11 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Divider
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -53,6 +57,8 @@ export default function RubberTappers({
 
   const [workerCategory, setWorkerCategory] = useState("Temporary");
   const [epfNo, setEpfNo] = useState("");
+  const [openPayroll, setOpenPayroll] = useState(false);
+  const [selectedPayroll, setSelectedPayroll] = useState(null);
 
   useEffect(() => {
 
@@ -252,11 +258,18 @@ const groupedData = Object.values(
         name: row.name,
         month: row.month,
         rate: Number(row.rate || 0),
+
+        worker_category: row.worker_category,
+
+        epf_no: row.epf_no,
+
+        epf_enabled: row.epf_enabled,
+
         kg: 0,
         allowance: 0,
         worked_days: 0,
         calculated_total: 0
-      };
+    };
     }
     acc[key].kg +=
       Number(row.kg || 0);
@@ -299,6 +312,20 @@ const totals = groupedData
   );
 
   const totalRequired = totals.amount;
+
+  const gross = Number(selectedPayroll?.calculated_total || 0);
+
+  const allowanceValue = Number(selectedPayroll?.allowance || 0);
+
+  const epf8 = gross * 0.08;
+
+  const epf12 = gross * 0.12;
+
+  const epf20 = epf8 + epf12;
+
+  const etf = gross * 0.03;
+
+  const netSalary = gross + allowanceValue - epf8;
 
   const generateSlipHTML = (row, c) => {
   return `
@@ -1596,16 +1623,18 @@ const editAttendance = async (row) => {
 
                   {/* VIEW */}
                   <Button
-                    onClick={() =>
-                      viewAttendance(row.worker_id, row.month)
-                    }
-                    sx={{
-                      background: "#38bdf8",
-                      color: "#000"
+                    variant="contained"
+                    color="info"
+                    onClick={() => {
+
+                        setSelectedPayroll(row);
+
+                        setOpenPayroll(true);
+
                     }}
-                  >
-                    View
-                  </Button>
+                >
+                    VIEW
+                </Button>
 
                   {/* EDIT */}
                   <Button
@@ -1684,6 +1713,66 @@ const editAttendance = async (row) => {
             </TableRow>
           </TableBody>
         </Table>
+
+        <Dialog
+          open={openPayroll}
+          onClose={() => setOpenPayroll(false)}
+          maxWidth="sm"
+          fullWidth
+      >
+
+          <DialogTitle>
+
+              Rubber Tapper Payroll
+
+          </DialogTitle>
+
+          <DialogContent>
+
+            <Typography><b>Name:</b> {selectedPayroll?.name}</Typography>
+
+            <Typography><b>Month:</b> {selectedPayroll?.month}</Typography>
+
+            <Typography><b>Category:</b> {selectedPayroll?.worker_category}</Typography>
+
+            <Typography><b>Worked Days:</b> {selectedPayroll?.worked_days}</Typography>
+
+            <Typography><b>Total KG:</b> {selectedPayroll?.kg?.toFixed(2)}</Typography>
+
+            <Typography><b>Gross Salary:</b> Rs. {gross.toFixed(2)}</Typography>
+
+            <Typography><b>Allowance:</b> Rs. {allowanceValue.toFixed(2)}</Typography>
+
+            <Divider sx={{my:2}}/>
+
+            {selectedPayroll?.worker_category === "Permanent" && (
+
+            <>
+
+            <Typography>Employee EPF (8%): Rs. {epf8.toFixed(2)}</Typography>
+
+            <Typography>Employer EPF (12%): Rs. {epf12.toFixed(2)}</Typography>
+
+            <Typography>Total EPF (20%): Rs. {epf20.toFixed(2)}</Typography>
+
+            <Typography>ETF (3%): Rs. {etf.toFixed(2)}</Typography>
+
+            <Divider sx={{my:2}}/>
+
+            <Typography
+                variant="h6"
+                color="success.main"
+            >
+                Net Salary : Rs. {netSalary.toFixed(2)}
+            </Typography>
+
+            </>
+
+            )}
+
+            </DialogContent>
+
+      </Dialog>
       </Paper>
       {open && (
   <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
