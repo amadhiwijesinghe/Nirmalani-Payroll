@@ -593,13 +593,13 @@ const nationsSummary = getSummary(nationsData);
         <head>
 
           <title>
-            Nirmalani Plantation Monthly Expenditure Report
+            ${plantation}Nirmalani Plantation Monthly Expenditure Report
           </title>
 
           <style>
 
             body{
-              font-family:Arial;
+              font-family: "Noto Sans Sinhala","Iskoola Pota","Arial",sans-serif;
               padding:20px;
             }
 
@@ -620,7 +620,7 @@ const nationsSummary = getSummary(nationsData);
         <body>
 
           <h2>
-            Nirmalani Plantation Monthly Expenditure Report
+            ${plantation} Nirmalani Plantation Monthly Expenditure Report
           </h2>
 
         <h3>
@@ -791,13 +791,13 @@ const nationsSummary = getSummary(nationsData);
         <head>
 
           <title>
-            Nirmalani Plantation Weekly Expenditure Report
+            ${plantation} Nirmalani Plantation Weekly Expenditure Report
           </title>
 
           <style>
 
             body{
-              font-family:Arial;
+              font-family: "Noto Sans Sinhala","Iskoola Pota","Arial",sans-serif;
               padding:20px;
             }
 
@@ -818,7 +818,7 @@ const nationsSummary = getSummary(nationsData);
         <body>
 
           <h2>
-            Nirmalani Plantation Weekly Expenditure Report
+            ${plantation} Nirmalani Plantation Weekly Expenditure Report
           </h2>
 
           <p>

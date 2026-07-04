@@ -216,16 +216,16 @@ export default function Income({
 
       <head>
 
-        <title>
-          Nirmalani Plantation Monthly Income Report
+       <title>
+          ${plantation} Plantation Monthly Income Report
         </title>
 
         <style>
 
           body{
-            font-family:Arial;
+            font-family: "Noto Sans Sinhala","Iskoola Pota","Arial",sans-serif;
             padding:20px;
-          }
+        }
 
           table{
             width:100%;
@@ -244,7 +244,7 @@ export default function Income({
       <body>
 
         <h2>
-          Nirmalani Plantation Monthly Income Report
+          ${plantation} Plantation Monthly Income Report
         </h2>
 
         <h3>
@@ -362,15 +362,15 @@ const printWeeklyReport = () => {
       <head>
 
         <title>
-          Nirmalani Plantation Weekly Income Report
+          ${plantation} Plantation Monthly Income Report
         </title>
 
         <style>
 
           body{
-            font-family:Arial;
+            font-family: "Noto Sans Sinhala","Iskoola Pota","Arial",sans-serif;
             padding:20px;
-          }
+        }
 
           table{
             width:100%;
@@ -389,7 +389,7 @@ const printWeeklyReport = () => {
       <body>
 
         <h2>
-          Nirmalani Plantation Weekly Income Report
+          ${plantation} Plantation Monthly Income Report
         </h2>
 
         <p>

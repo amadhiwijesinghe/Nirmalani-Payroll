@@ -249,15 +249,15 @@ const yearlyProfit =
       <head>
 
         <title>
-          Financial Report
+          ${plantation} Financial Report
         </title>
 
         <style>
 
           body{
-            font-family:Arial;
+            font-family: "Noto Sans Sinhala","Iskoola Pota","Arial",sans-serif;
             padding:20px;
-          }
+        }
 
           table{
             width:100%;
@@ -276,7 +276,7 @@ const yearlyProfit =
       <body>
 
         <h1>
-          Nirmalani Plantation
+          ${plantation} Nirmalani Plantation
         </h1>
 
         <h2>
