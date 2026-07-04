@@ -587,13 +587,18 @@ const nationsSummary = getSummary(nationsData);
       `;
     }).join("");
 
+    const plantationName =
+      plantation === "nirmalani"
+        ? "Nirmalani Plantation"
+        : "Ingurupaththala Plantation";
+
     const html = `
       <html>
 
         <head>
 
           <title>
-            ${plantation}Nirmalani Plantation Monthly Expenditure Report
+            ${plantation} Plantation Monthly Expenditure Report
           </title>
 
           <style>
@@ -620,7 +625,7 @@ const nationsSummary = getSummary(nationsData);
         <body>
 
           <h2>
-            ${plantation} Nirmalani Plantation Monthly Expenditure Report
+            ${plantation} Plantation Monthly Expenditure Report
           </h2>
 
         <h3>
@@ -785,13 +790,18 @@ const nationsSummary = getSummary(nationsData);
       `;
     }).join("");
 
+    const plantationName =
+      plantation === "nirmalani"
+        ? "Nirmalani Plantation"
+        : "Ingurupaththala Plantation";
+
     const html = `
       <html>
 
         <head>
 
           <title>
-            ${plantation} Nirmalani Plantation Weekly Expenditure Report
+            ${plantation} Plantation Weekly Expenditure Report
           </title>
 
           <style>
@@ -818,7 +828,7 @@ const nationsSummary = getSummary(nationsData);
         <body>
 
           <h2>
-            ${plantation} Nirmalani Plantation Weekly Expenditure Report
+            ${plantation} Plantation Weekly Expenditure Report
           </h2>
 
           <p>
