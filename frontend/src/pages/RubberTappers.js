@@ -152,12 +152,14 @@ const viewAttendance = async (workerId, month) => {
   try {
 
     const filtered = data.filter(
-      (row) =>
-        row.worker_id === workerId &&
-        row.month === month
-    );
+      row =>
+          row.worker_id === workerId &&
+          row.month === month
+  );
 
-    setAttendanceDates(filtered);
+  console.log("Filtered Attendance:", filtered);
+
+  setAttendanceDates(filtered);
     setOpen(true);
 
   } catch (err) {
