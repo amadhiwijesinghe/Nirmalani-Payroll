@@ -278,6 +278,10 @@ const groupedData = Object.values(
 
           calculated_total: 0,
 
+          averageKg: 0,
+
+          bonus: 0,
+
           epf8: 0,
 
           epf12: 0,
@@ -296,11 +300,6 @@ const groupedData = Object.values(
     acc[key].allowance +=
       Number(row.allowance || 0);
     acc[key].worked_days += 1;
-    acc[key].calculated_total +=
-      (Number(row.kg || 0) *
-      Number(row.rate || 0))
-      +
-      Number(row.allowance || 0);
     return acc;
   }, {})
 
@@ -308,39 +307,78 @@ const groupedData = Object.values(
 
   groupedData.forEach(worker => {
 
-      const gross = Number(worker.calculated_total);
+      let gross = 0;
 
-      if (worker.epf_enabled === 1) {
+      // Permanent Worker
+      if (worker.worker_category === "Permanent") {
 
-          worker.epf8 = gross * 0.08;
+          const averageKg =
+              worker.worked_days > 0
+              ? worker.kg / worker.worked_days
+              : 0;
 
-          worker.epf12 = gross * 0.12;
+          worker.averageKg = averageKg;
 
-          worker.epf20 = gross * 0.20;
+          if (averageKg < 2.5) {
 
-          worker.etf = gross * 0.03;
+              gross = 0;
 
-          worker.netSalary =
-              gross +
-              Number(worker.allowance) -
-              worker.epf8;
+          }
+          else if (averageKg <= 7) {
 
-      } else {
+              gross =
+                  worker.worked_days * 1550;
 
-          worker.epf8 = 0;
+          }
+          else {
 
-          worker.epf12 = 0;
+              const bonus =
+                  (averageKg - 7) * 250;
 
-          worker.epf20 = 0;
+              worker.bonus = bonus;
 
-          worker.etf = 0;
+              gross =
+                  (worker.worked_days * 1550)
+                  + bonus;
 
-          worker.netSalary =
-              gross +
-              Number(worker.allowance);
+          }
 
       }
 
+      // Temporary Worker
+      else {
+
+          gross =
+              worker.kg * worker.rate;
+
+      }
+
+      worker.calculated_total = gross;
+    
+      if (worker.epf_enabled === 1) {
+
+        worker.epf8 = gross * 0.08;
+        worker.epf12 = gross * 0.12;
+        worker.epf20 = gross * 0.20;
+        worker.etf = gross * 0.03;
+
+        worker.netSalary =
+            gross +
+            worker.allowance -
+            worker.epf8;
+
+    } else {
+
+        worker.epf8 = 0;
+        worker.epf12 = 0;
+        worker.epf20 = 0;
+        worker.etf = 0;
+
+        worker.netSalary =
+            gross +
+            worker.allowance;
+
+    }
   });
 
 const currentMonth = new Date()
