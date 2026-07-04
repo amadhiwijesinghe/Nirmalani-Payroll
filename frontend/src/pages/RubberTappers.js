@@ -417,15 +417,16 @@ const totals = groupedData
 
   const allowanceValue = Number(selectedPayroll?.allowance || 0);
 
-  const epf8 = gross * 0.08;
+  const isPermanent = selectedPayroll?.epf_enabled === 1;
 
-  const epf12 = gross * 0.12;
-
+  const epf8 = isPermanent ? gross * 0.08 : 0;
+  const epf12 = isPermanent ? gross * 0.12 : 0;
   const epf20 = epf8 + epf12;
+  const etf = isPermanent ? gross * 0.03 : 0;
 
-  const etf = gross * 0.03;
-
-  const netSalary = gross + allowanceValue - epf8;
+  const netSalary = isPermanent
+      ? gross + allowanceValue - epf8
+      : gross + allowanceValue;
 
   const generateSlipHTML = (row) => {
 
@@ -1165,7 +1166,7 @@ const editAttendance = async (row) => {
     await axios.put(
       `${API}/rubber-tappers-attendance/${row.id}`,
       {
-        liter: newKg,
+        kg: newKg,
         rate: newRate,
         allowance: newAllowance,
         total_earning: total
@@ -1721,6 +1722,8 @@ const editAttendance = async (row) => {
               <TableCell sx={{ color: "#aaa" }}>Category</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
               <TableCell sx={{ color: "#aaa" }}>KG</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Avg KG</TableCell>
+              <TableCell sx={{ color: "#aaa" }}>Bonus</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Gross</TableCell>
               <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
               <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
@@ -1744,7 +1747,18 @@ const editAttendance = async (row) => {
                   <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.worker_category}</TableCell>
                   <TableCell sx={{ color: "#fff" }}>{row.worked_days}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.kg.toFixed(2)}</TableCell>
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.kg.toFixed(2)}
+                  </TableCell>
+
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.averageKg.toFixed(2)}
+                  </TableCell>
+
+                  <TableCell sx={{ color: "#fff" }}>
+                      {row.bonus.toFixed(2)}
+                  </TableCell>
+
                   <TableCell sx={{ color: "#fff" }}>
                       {row.calculated_total.toFixed(2)}
                   </TableCell>
@@ -1822,6 +1836,9 @@ const editAttendance = async (row) => {
                       .reduce((s,r)=>s+Number(r.kg||0),0)
                       .toFixed(2)}
               </TableCell>
+
+              <TableCell></TableCell>
+              <TableCell></TableCell>
 
               <TableCell>
                   {groupedData
