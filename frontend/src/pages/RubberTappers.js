@@ -1111,15 +1111,19 @@ const printMonthlyReport = () => {
 
 const deleteAttendance = async (id) => {
 
+  console.log("Deleting ID:", id);
+
   if (!window.confirm("Delete attendance?")) return;
 
   try {
 
-    await axios.delete(
+    const res = await axios.delete(
       `${API}/rubber-tappers-attendance/${id}`
     );
 
-    alert("✅ Attendance Deleted");
+    console.log(res.data);
+
+    alert("Deleted");
 
     setAttendanceDates(
       attendanceDates.filter(d => d.id !== id)
@@ -1129,9 +1133,11 @@ const deleteAttendance = async (id) => {
 
   } catch (err) {
 
-    console.error(err);
+    console.log(err.response);
+    console.log(err.response?.data);
+    console.log(err.response?.status);
 
-    alert("❌ Error deleting attendance");
+    alert("Delete failed");
   }
 };
 
