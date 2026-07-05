@@ -147,31 +147,21 @@ const addWorker = async () => {
   }
 };
 
-const viewAttendance = async (workerId, month) => {
+const viewAttendance = (workerId, month) => {
 
-  try {
+    const filtered = data.filter(
+        row =>
+            Number(row.worker_id) === Number(workerId) &&
+            row.month === month
+    );
 
-    const viewAttendance = (workerId, month) => {
+    console.log("Worker:", workerId);
+    console.log("Month:", month);
+    console.log("Filtered:", filtered);
 
-        const filtered = data.filter(
-            row =>
-                Number(row.worker_id) === Number(workerId) &&
-                row.month === month
-        );
+    setAttendanceDates(filtered);
 
-        console.log(filtered);
-
-        setAttendanceDates(filtered);
-
-        setOpenPayroll(true);
-
-    };
-
-  } catch (err) {
-
-    console.error(err);
-    alert("Server error");
-  }
+    setOpenPayroll(true);
 };
 
 const addDailyAttendance = async () => {
