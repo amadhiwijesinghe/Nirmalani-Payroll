@@ -3179,6 +3179,7 @@ app.get("/income", (req, res) => {
 app.post("/income", (req,res)=>{
 
   const {
+    income_type,
     category,
     amount,
     note,
@@ -3189,18 +3190,20 @@ app.post("/income", (req,res)=>{
   const sql = `
     INSERT INTO income
     (
-      category,
-      amount,
-      note,
-      date,
-      plantation
+        income_type,
+        category,
+        amount,
+        note,
+        date,
+        plantation
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
     sql,
     [
+      income_type,
       category,
       amount,
       note,
@@ -3480,6 +3483,7 @@ app.put(
   async (req, res) => {
 
     const {
+      income_type,
       bank_account,
       category,
       sub_category,
@@ -3527,6 +3531,7 @@ app.put(
         const sql = `
           UPDATE expenditure
           SET
+            income_type=?,
             bank_account=?,
             category=?,
             sub_category=?,
@@ -3542,6 +3547,7 @@ app.put(
         db.query(
           sql,
           [
+            income_type,
             bank_account,
             category,
             sub_category,

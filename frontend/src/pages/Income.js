@@ -42,6 +42,7 @@ export default function Income({
   const [weekStart, setWeekStart] = useState("");
 
   const [weekEnd, setWeekEnd] = useState("");
+  const [incomeType, setIncomeType] = useState("Income");
 
   const categories = [
 
@@ -91,16 +92,14 @@ export default function Income({
 
     try {
 
-      await axios.post(
-        `${API}/income`,
-        {
-          category: customCategory || category,
-          amount,
-          note,
-          date,
-          plantation
-        }
-      );
+      await axios.post(`${API}/income`, {
+        income_type: incomeType,
+        category: customCategory || category,
+        amount,
+        note,
+        date,
+        plantation
+    });
 
       alert("Income Added");
 
@@ -147,6 +146,7 @@ export default function Income({
         try {
 
             await axios.put(`${API}/income/${id}`, {
+              income_type: incomeType,
               category,
               amount,
               note,
@@ -485,8 +485,30 @@ const printWeeklyReport = () => {
         }}
       >
 
-        <Grid container spacing={2}>
+        <Grid item xs={12} md={3}>
+          <TextField
+              select
+              fullWidth
+              label="Income Type"
+              value={incomeType}
+              onChange={(e) => setIncomeType(e.target.value)}
+          >
+              <MenuItem value="Opening Balance">
+                  Opening Balance
+              </MenuItem>
 
+              <MenuItem value="Money Received">
+                  Money Received
+              </MenuItem>
+
+              <MenuItem value="Income">
+                  Income
+              </MenuItem>
+          </TextField>
+        </Grid>
+
+        {incomeType === "Income" && (
+          <>
           <Grid item xs={12} md={3}>
             <TextField
               select
@@ -533,6 +555,11 @@ const printWeeklyReport = () => {
         />
 
         </Grid>
+          </>
+        )}
+        <Grid container spacing={2}>
+
+          
 
           <Grid item xs={12} md={2}>
             <TextField
@@ -698,26 +725,30 @@ const printWeeklyReport = () => {
             <TableRow>
 
               <TableCell sx={{color:"#aaa"}}>
-                Category
+                  Type
               </TableCell>
 
               <TableCell sx={{color:"#aaa"}}>
-                Amount
+                  Category
               </TableCell>
 
               <TableCell sx={{color:"#aaa"}}>
-                Note
+                  Amount
               </TableCell>
 
               <TableCell sx={{color:"#aaa"}}>
-                Date
+                  Note
               </TableCell>
 
               <TableCell sx={{color:"#aaa"}}>
-                Actions
+                  Date
               </TableCell>
 
-            </TableRow>
+              <TableCell sx={{color:"#aaa"}}>
+                  Actions
+              </TableCell>
+
+          </TableRow>
 
           </TableHead>
 
@@ -728,7 +759,11 @@ const printWeeklyReport = () => {
               <TableRow key={row.id}>
 
                 <TableCell sx={{color:"#fff"}}>
-                  {row.category}
+                    {row.income_type}
+                </TableCell>
+
+                <TableCell sx={{color:"#fff"}}>
+                    {row.category || "-"}
                 </TableCell>
 
                 <TableCell sx={{color:"#22c55e"}}>
