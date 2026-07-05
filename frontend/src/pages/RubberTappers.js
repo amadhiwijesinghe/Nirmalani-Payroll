@@ -1123,15 +1123,13 @@ const deleteAttendance = async (id) => {
       `${API}/rubber-tappers-attendance/${id}`
     );
 
-    console.log(res.data);
+    fetchData();
 
-    alert("Deleted");
-
-    setAttendanceDates(
-      attendanceDates.filter(d => d.id !== id)
+    setAttendanceDates(prev =>
+        prev.filter(row => row.id !== id)
     );
 
-    fetchData();
+    alert("Attendance deleted");
 
   } catch (err) {
 
@@ -1184,6 +1182,11 @@ const editAttendance = async (row) => {
     alert("✅ Row Updated");
 
     fetchData();
+
+    viewAttendance(
+      row.worker_id,
+      row.month
+  );
 
   } catch (err) {
 
@@ -1801,30 +1804,6 @@ const editAttendance = async (row) => {
                     VIEW
                 </Button>
 
-                  {/* EDIT */}
-                  <Button
-                    onClick={() => editAttendance(row)}
-                    sx={{
-                      background: "#facc15",
-                      color: "#000",
-                      ml: 1
-                    }}
-                  >
-                    Edit
-                  </Button>
-
-                  {/* DELETE */}
-                  <Button
-                    onClick={() => deleteAttendance(row.id)}
-                    sx={{
-                      background: "#ef4444",
-                      color: "#fff",
-                      ml: 1
-                    }}
-                  >
-                    Delete
-                  </Button>
-
                 </TableCell>
 
                 </TableRow>
@@ -1897,46 +1876,73 @@ const editAttendance = async (row) => {
 
           <DialogContent>
 
-            <Typography><b>Name:</b> {selectedPayroll?.name}</Typography>
+            <Table>
 
-            <Typography><b>Month:</b> {selectedPayroll?.month}</Typography>
+            <TableHead>
 
-            <Typography><b>Category:</b> {selectedPayroll?.worker_category}</Typography>
+            <TableRow>
 
-            <Typography><b>Worked Days:</b> {selectedPayroll?.worked_days}</Typography>
+            <TableCell>Date</TableCell>
 
-            <Typography><b>Total KG:</b> {selectedPayroll?.kg?.toFixed(2)}</Typography>
+            <TableCell>KG</TableCell>
 
-            <Typography><b>Gross Salary:</b> Rs. {gross.toFixed(2)}</Typography>
+            <TableCell>Rate</TableCell>
 
-            <Typography><b>Allowance:</b> Rs. {allowanceValue.toFixed(2)}</Typography>
+            <TableCell>Allowance</TableCell>
 
-            <Divider sx={{my:2}}/>
+            <TableCell>Total</TableCell>
 
-            {selectedPayroll?.worker_category === "Permanent" && (
+            <TableCell>Actions</TableCell>
 
-            <>
+            </TableRow>
 
-            <Typography>Employee EPF (8%): Rs. {epf8.toFixed(2)}</Typography>
+            </TableHead>
 
-            <Typography>Employer EPF (12%): Rs. {epf12.toFixed(2)}</Typography>
+            <TableBody>
 
-            <Typography>Total EPF (20%): Rs. {epf20.toFixed(2)}</Typography>
+            {attendanceDates.map((d)=>(
 
-            <Typography>ETF (3%): Rs. {etf.toFixed(2)}</Typography>
+            <TableRow key={d.id}>
 
-            <Divider sx={{my:2}}/>
+            <TableCell>
+            {new Date(d.date).toISOString().split("T")[0]}
+            </TableCell>
 
-            <Typography
-                variant="h6"
-                color="success.main"
+            <TableCell>{d.kg}</TableCell>
+
+            <TableCell>{d.rate}</TableCell>
+
+            <TableCell>{d.allowance}</TableCell>
+
+            <TableCell>{d.total_earning}</TableCell>
+
+            <TableCell>
+
+            <Button
+            size="small"
+            color="warning"
+            onClick={()=>editAttendance(d)}
             >
-                Net Salary : Rs. {netSalary.toFixed(2)}
-            </Typography>
+            EDIT
+            </Button>
 
-            </>
+            <Button
+            size="small"
+            color="error"
+            onClick={()=>deleteAttendance(d.id)}
+            >
+            DELETE
+            </Button>
 
-            )}
+            </TableCell>
+
+            </TableRow>
+
+            ))}
+
+            </TableBody>
+
+            </Table>
 
             </DialogContent>
 
