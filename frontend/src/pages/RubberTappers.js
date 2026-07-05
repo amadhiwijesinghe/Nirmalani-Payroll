@@ -153,11 +153,11 @@ const viewAttendance = async (workerId, month) => {
 
     const filtered = data.filter(
       row =>
-          row.worker_id === workerId &&
+          Number(row.worker_id) === Number(workerId) &&
           row.month === month
   );
 
-  console.log("Filtered Attendance:", filtered);
+  console.log(filtered);
 
   setAttendanceDates(filtered);
     setOpen(true);
@@ -1990,6 +1990,10 @@ const editAttendance = async (row) => {
             KG: {d.kg}
             {" | "}
             Rate: {d.rate}
+          </Typography>
+
+          <Typography sx={{ color: "yellow" }}>
+            ID = {String(d.id)}
           </Typography>
 
           <Box sx={{ display: "flex", gap: 1 }}>
