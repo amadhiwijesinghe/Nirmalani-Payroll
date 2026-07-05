@@ -2697,24 +2697,32 @@ app.get("/casual-workers", (req,res)=>{
 // ADD CASUAL WORKERS
 app.post("/casual-workers", (req, res) => {
 
-  const { name } = req.body;
+  const { name, plantation } = req.body;
 
   db.query(
     `
-    INSERT INTO casual_workers (name, plantation)
-    VALUES (?,?)
+    INSERT INTO casual_workers
+    (
+      name,
+      plantation
+    )
+    VALUES (?, ?)
     `,
-    [name],
+    [name, plantation],
     (err, result) => {
 
       if (err) {
-        console.log(err);
+        console.log("CASUAL WORKER INSERT ERROR:", err);
         return res.status(500).json(err);
       }
 
-      res.json(result);
+      res.json({
+        success: true,
+        message: "Worker Added"
+      });
     }
   );
+
 });
 
 // ADD DAILY ATTENDANCE - CASUAL WORKERS
