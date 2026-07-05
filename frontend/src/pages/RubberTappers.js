@@ -151,16 +151,21 @@ const viewAttendance = async (workerId, month) => {
 
   try {
 
-    const filtered = data.filter(
-      row =>
-          Number(row.worker_id) === Number(workerId) &&
-          row.month === month
-  );
+    const viewAttendance = (workerId, month) => {
 
-  console.log(filtered);
+        const filtered = data.filter(
+            row =>
+                Number(row.worker_id) === Number(workerId) &&
+                row.month === month
+        );
 
-  setAttendanceDates(filtered);
-    setOpen(true);
+        console.log(filtered);
+
+        setAttendanceDates(filtered);
+
+        setOpenPayroll(true);
+
+    };
 
   } catch (err) {
 
@@ -1790,15 +1795,12 @@ const editAttendance = async (row) => {
                   <TableCell>
 
                   {/* VIEW */}
-                  <Button
+                 <Button
                     variant="contained"
                     color="info"
                     onClick={() => {
-
                         setSelectedPayroll(row);
-
-                        setOpenPayroll(true);
-
+                        viewAttendance(row.worker_id, row.month);
                     }}
                 >
                     VIEW
@@ -1948,100 +1950,6 @@ const editAttendance = async (row) => {
 
       </Dialog>
       </Paper>
-      {open && (
-  <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
-    <Typography
-      variant="h6"
-      sx={{
-        color: "#22c55e",
-        fontWeight: "bold",
-        mb: 1
-      }}
-    >
-      👤 {selectedWorkerName}
-    </Typography>
-
-    <Typography
-          sx={{
-            color: "#22c55e",
-            mb: 2,
-          }}
-        >
-          Total Days Worked: {attendanceDates.length}
-        </Typography>
-
-    {attendanceDates.length === 0 ? (
-      <Typography sx={{ color: "#aaa" }}>
-        No attendance found
-      </Typography>
-    ) : (
-      attendanceDates.map((d) => (
-
-        <Box
-          key={d.id}
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 1,
-            mb: 1,
-            borderRadius: 1,
-            background: "rgba(255,255,255,0.05)"
-          }}
-        >
-
-          <Typography sx={{ color: "#fff" }}>
-            {new Date(d.date).toLocaleDateString("en-CA")}
-            {" | "}
-            KG: {d.kg}
-            {" | "}
-            Rate: {d.rate}
-          </Typography>
-
-          <Typography sx={{ color: "yellow" }}>
-            ID = {String(d.id)}
-          </Typography>
-
-          <Box sx={{ display: "flex", gap: 1 }}>
-
-            <Button
-              size="small"
-              onClick={() => editAttendance(d)}
-              sx={{
-                background: "#facc15",
-                color: "#000",
-                minWidth: "80px"
-              }}
-            >
-              EDIT
-            </Button>
-
-            <Button
-              size="small"
-              onClick={() => deleteAttendance(d.id)}
-              sx={{
-                background: "#ef4444",
-                color: "#fff",
-                minWidth: "80px"
-              }}
-            >
-              DELETE
-            </Button>
-
-          </Box>
-
-        </Box>
-      ))
-    )}
-
-    <Button
-      onClick={() => setOpen(false)}
-      sx={{ mt: 1, background: "#475569", color: "#fff" }}
-    >
-      Close
-    </Button>
-  </Paper>
-)}
     </Box>
   );
 }
