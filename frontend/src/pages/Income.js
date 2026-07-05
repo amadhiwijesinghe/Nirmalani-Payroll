@@ -488,7 +488,7 @@ const printWeeklyReport = () => {
         <Grid item xs={12} md={3}>
           <TextField
               select
-              fullWidth
+              sx={{ mb: 3, width: 250}}
               label="Income Type"
               value={incomeType}
               onChange={(e) => setIncomeType(e.target.value)}
@@ -521,6 +521,7 @@ const printWeeklyReport = () => {
                 )
               }
               sx={{
+                mb: 3,
                 width: 250,
                 input:{color:"#fff"},
                 label:{color:"#aaa"}
@@ -549,8 +550,10 @@ const printWeeklyReport = () => {
             )
             }
             sx={{
-            input:{color:"#fff"},
-            label:{color:"#aaa"}
+              width: 250,
+              mb: 3,
+              input:{color:"#fff"},
+              label:{color:"#aaa"}
             }}
         />
 
