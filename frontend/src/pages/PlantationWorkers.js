@@ -772,11 +772,6 @@ const rowsHTML = rows.map((row) => {
     row.allowance || 0
   );
 
-  const grandTotal =
-    totals.balance +
-    totals.epf_20 +
-    totals.etf;
-
   return `
     <tr>
 
@@ -807,6 +802,11 @@ const rowsHTML = rows.map((row) => {
     </tr>
   `;
 }).join("");
+
+  const grandTotal =
+    totals.balance +
+    totals.epf_20 +
+    totals.etf;
 
 const plantationName =
   plantation === "nirmalani"
