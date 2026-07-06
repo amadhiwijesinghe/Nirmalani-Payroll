@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2";
 import {
   TextField,
   Button,
@@ -15,7 +16,9 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Card,
+  CardContent,
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -29,13 +32,8 @@ export default function PlantationWorkers({
 
   const [name, setName] = useState("");
 
-  const [workerId, setWorkerId] = useState("");
-  const [days, setDays] = useState("");
   const [month, setMonth] = useState("");
   const [allowance, setAllowance] = useState("");
-  const [dailyRate, setDailyRate] = useState("");
-
-  const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -62,17 +60,12 @@ export default function PlantationWorkers({
 
       fetchWorkers();
 
-      fetchPayroll();
+      fetchData();
 
       fetchDailyRate();
 
   }, [plantation]);
 
-  useEffect(() => {
-  if (workerId && month) {
-    fetchDaysWorked(workerId, month);
-  }
-}, [workerId, month]);
 
   const fetchWorkers = async () => {
     const res = await axios.get(`${API}/plantation-workers?plantation=${plantation}`);
@@ -84,25 +77,6 @@ const fetchData = async () => {
     const res = await axios.get(`${API}/plantation-data?plantation=${plantation}`);
     console.log("NEW DATA:", res.data);
     setData(res.data);
-  } catch (err) {
-    console.error(err);
-  }
-};
-  const fetchDaysWorked = async (worker, monthVal) => {
-  if (!worker || !monthVal) return;
-
-  try {
-    const res = await axios.get(
-      `${API}/plantation-attendance-days?plantation=${plantation}`,
-      {
-        params: {
-          worker_id: worker,
-          month: monthVal,
-        },
-      }
-    );
-
-    setDays(res.data.days);
   } catch (err) {
     console.error(err);
   }
@@ -143,25 +117,6 @@ const fetchDailyRate = async () => {
     fetchWorkers();
   };
 
-  const addAttendance = async () => {
-    if (!workerId || !days || !month)
-      return alert("Fill all fields");
-
-    await axios.post(`${API}/plantation-attendance`, {
-      worker_id: workerId,
-      days_worked: days,
-      month,
-      allowance,
-      rate_per_day: dailyRate
-    });
-
-    alert("✅ Worker Attendance Added Successfully!");
-
-    setDays("");
-    setMonth("");
-    fetchData();
-    setAllowance("");
-  };
 
 const viewAttendance = async (workerId, month, name) => {
 
@@ -205,79 +160,6 @@ const viewAttendance = async (workerId, month, name) => {
 );
 };
 
-const addDailyAttendance = async () => {
-  if (!workerId || !date || !dailyRate) {
-    alert("Enter worker, date and rate");
-    return;
-  }
-
-  try {
-
-    // CHECK IF SUNDAY
-    const dayName = new Date(date).getDay();
-
-    console.log("dailyRate =", dailyRate);
-    // Sunday = 0
-    const finalRate =
-      dayName === 0
-        ? Number(dailyRate) * 1.5
-        : Number(dailyRate);
-    // Save daily attendance
-    await axios.post(`${API}/plantation-daily-attendance`, {
-      worker_id: workerId,
-      date,
-      status: "present",
-      rate_per_day: finalRate
-    });
-
-    // Extract month from date
-    const selectedMonth = date.substring(0, 7);
-
-    // Get total days for that month
-    const res = await axios.get(`${API}/plantation-attendance-days`, {
-      params: {
-        worker_id: workerId,
-        month: selectedMonth
-      }
-    });
-
-    const daysWorked = res.data.days;
-
-    console.log("dailyRate =", dailyRate);
-    console.log("finalRate =", finalRate);
-
- // SAVE / UPDATE monthly attendance automatically
-   await axios.post(`${API}/plantation-attendance`, {
-      worker_id: workerId,
-      days_worked: daysWorked,
-      month: selectedMonth,
-      rate_per_day: finalRate,
-      allowance
-    });
-
-   // 🔥 Refresh table ONLY ONCE (clean way)
-    await fetchData();
-
-    if (dayName === 0) {
-
-      alert(
-        `✅ Sunday attendance marked!\nSunday Rate Applied: Rs.${finalRate}`
-      );
-
-    } else {
-
-      alert("✅ Attendance marked & updated!");
-    }
-
-  } catch (err) {
-    if (err.response?.data === "Already marked for this date") {
-      alert("⚠️ Already marked for this date");
-    } else {
-      console.error(err);
-    }
-  }
-};
-
 // Save the Rate
 const saveDailyRate = async () => {
 
@@ -305,7 +187,7 @@ const saveDailyRate = async () => {
 
     fetchDailyRate();
 
-    fetchPayroll();
+    fetchData();
 
   } catch (err) {
 
