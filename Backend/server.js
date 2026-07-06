@@ -799,11 +799,8 @@ app.get('/plantation-data', (req, res) => {
 
   const sql = `
     SELECT
-
       pw.id AS worker_id,
-
       pw.name,
-
       pw.epf_no,
 
       DATE_FORMAT(ar.attendance_date,'%Y-%m') AS month,
@@ -814,7 +811,7 @@ app.get('/plantation-data', (req, res) => {
 
       SUM(ar.attendance_value) * ps.daily_rate AS amount,
 
-      COALESCE(pa.allowance,0) AS allowance
+      COALESCE(MAX(pa.allowance),0) AS allowance
 
   FROM plantation_workers pw
 
@@ -829,24 +826,18 @@ app.get('/plantation-data', (req, res) => {
   AND pa.month = DATE_FORMAT(ar.attendance_date,'%Y-%m')
 
   WHERE
-
-  pw.plantation = ?
-
-  AND ar.worker_type='plantation'
-
-  AND ar.is_present = 1
+      pw.plantation = ?
+      AND ar.worker_type='plantation'
+      AND ar.is_present=1
 
   GROUP BY
+      pw.id,
+      pw.name,
+      pw.epf_no,
+      DATE_FORMAT(ar.attendance_date,'%Y-%m'),
+      ps.daily_rate
 
-  pw.id,
-  pw.name,
-  pw.epf_no,
-  month,
-  ps.daily_rate,
-  pa.allowance
-
-  ORDER BY
-  pw.epf_no;
+  ORDER BY pw.epf_no;
   `;
 
   db.query(sql,[plantation],(err,result)=>{
