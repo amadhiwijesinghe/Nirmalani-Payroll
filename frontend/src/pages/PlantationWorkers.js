@@ -133,7 +133,7 @@ const viewAttendance = async (workerId, month, name) => {
   }
 
   try {
-    const res = await axios.get(`${API}/plantation-attendance-dates`, {
+    const res = await axios.get(`${API}/attendance-register/worker`, {
       params: {
         worker_id: workerId,
         month: month,
@@ -152,17 +152,9 @@ const viewAttendance = async (workerId, month, name) => {
   }
 
   const workedDays = attendanceDates.reduce(
-  (sum, row) => {
-
-    const day =
-      new Date(row.date).getDay();
-
-    return sum +
-      (day === 0 ? 1.5 : 1);
-
-  },
-  0
-);
+    (sum, d) => sum + Number(d.attendance_value),
+    0
+  );
 };
 
 // Save the Rate
@@ -1910,9 +1902,16 @@ const workedDays = attendanceDates.reduce(
               }
             )}
 
-            {" | Rate: Rs."}
-
-            {Number(d.rate_per_day || 0).toFixed(2)}
+            Attendance :
+            {
+              d.attendance_value === 1.5
+                ? "Sunday (1.5)"
+                : d.attendance_value === 1
+                ? "Present"
+                : d.attendance_value === 0.5
+                ? "Half Day"
+                : "Absent"
+            }
 
           </Typography>
 

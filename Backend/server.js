@@ -895,41 +895,35 @@ app.put("/payroll-settings", (req, res) => {
 
 });
 
-// 🌿 Get Working Dates
-app.get("/plantation-attendance-dates", (req, res) => {
-  const { worker_id, month } = req.query;
+// View Plantation Worker Attendance
+app.get("/attendance-register/worker", (req, res) => {
 
-  if (!worker_id || !month) {
-    return res.status(400).json({ error: "Missing worker_id or month" });
-  }
+  const { worker_id, month } = req.query;
 
   const sql = `
     SELECT
-      pda.id,
-      pda.worker_id,
-      pw.name,
-      pda.date,
-      pda.rate_per_day
-
-    FROM plantation_daily_attendance pda
-
-    JOIN plantation_workers pw
-      ON pw.id = pda.worker_id
-
-    WHERE pda.worker_id = ?
-    AND pda.date LIKE CONCAT(?, '%')
-
-    ORDER BY pda.date ASC
+      id,
+      attendance_date AS date,
+      attendance_value
+    FROM attendance_register
+    WHERE worker_id = ?
+      AND worker_type = 'plantation'
+      AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+      AND is_present = 1
+    ORDER BY attendance_date
   `;
 
   db.query(sql, [worker_id, month], (err, result) => {
+
     if (err) {
-      console.error("SQL ERROR:", err); // 👈 VERY IMPORTANT
-      return res.status(500).json({ error: "Database error" });
+      console.log(err);
+      return res.status(500).json(err);
     }
 
     res.json(result);
+
   });
+
 });
 
 // ================= DELETE PLANTATION ATTENDANCE =================
