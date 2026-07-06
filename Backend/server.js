@@ -496,6 +496,99 @@ app.put("/plantation-workers/:id", (req, res) => {
   );
 });
 
+// Plantation Workers Save Allowance 
+app.post("/plantation-allowance", (req, res) => {
+
+  const {
+    worker_id,
+    month,
+    allowance
+  } = req.body;
+
+  const sql = `
+    INSERT INTO plantation_allowance
+    (
+      worker_id,
+      month,
+      allowance
+    )
+    VALUES (?, ?, ?)
+
+    ON DUPLICATE KEY UPDATE
+      allowance = VALUES(allowance)
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      month,
+      allowance
+    ],
+    (err) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Allowance Saved"
+      });
+
+    }
+  );
+
+});
+
+// Plantation Workers Get Allowance
+app.get("/plantation-allowance", (req, res) => {
+
+  const {
+    month,
+    plantation
+  } = req.query;
+
+  const sql = `
+    SELECT
+      pa.worker_id,
+      pa.month,
+      pa.allowance,
+      pw.name
+
+    FROM plantation_allowance pa
+
+    JOIN plantation_workers pw
+      ON pw.id = pa.worker_id
+
+    WHERE
+      pa.month = ?
+      AND pw.plantation = ?
+
+    ORDER BY pw.name
+  `;
+
+  db.query(
+    sql,
+    [
+      month,
+      plantation
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
 // 🌿 Attendance
 app.post('/plantation-attendance', (req, res) => {
 
@@ -706,43 +799,54 @@ app.get('/plantation-data', (req, res) => {
 
   const sql = `
     SELECT
+
       pw.id AS worker_id,
+
       pw.name,
+
       pw.epf_no,
-      pw.plantation,
 
-      IFNULL(MIN(pda.rate_per_day),0) AS rate_per_day,
-      IFNULL(MAX(pa.allowance),0) AS allowance,
+      DATE_FORMAT(ar.attendance_date,'%Y-%m') AS month,
 
-      SUM(
-        CASE
-          WHEN DAYOFWEEK(pda.date)=1
-          THEN 1.5
-          ELSE 1
-        END
-      ) AS days_worked,
+      SUM(ar.attendance_value) AS days_worked,
 
-      SUM(pda.rate_per_day) AS amount,
+      ps.daily_rate AS rate_per_day,
 
-      DATE_FORMAT(pda.date,'%Y-%m') AS month
+      SUM(ar.attendance_value) * ps.daily_rate AS amount,
 
-    FROM plantation_workers pw
+      COALESCE(pa.allowance,0) AS allowance
 
-    JOIN plantation_daily_attendance pda
-      ON pw.id = pda.worker_id
+  FROM plantation_workers pw
 
-    LEFT JOIN plantation_attendance pa
-      ON pa.worker_id = pw.id
-      AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+  JOIN attendance_register ar
+  ON ar.worker_id = pw.id
 
-    WHERE pda.status='present'
-    AND pw.plantation = ?
+  JOIN payroll_settings ps
+  ON ps.plantation = pw.plantation
 
-    GROUP BY
-      pw.id,
-      pw.name,
-      pw.epf_no,
-      DATE_FORMAT(pda.date,'%Y-%m')
+  LEFT JOIN plantation_allowance pa
+  ON pa.worker_id = pw.id
+  AND pa.month = DATE_FORMAT(ar.attendance_date,'%Y-%m')
+
+  WHERE
+
+  pw.plantation = ?
+
+  AND ar.worker_type='plantation'
+
+  AND ar.is_present = 1
+
+  GROUP BY
+
+  pw.id,
+  pw.name,
+  pw.epf_no,
+  month,
+  ps.daily_rate,
+  pa.allowance
+
+  ORDER BY
+  pw.epf_no;
   `;
 
   db.query(sql,[plantation],(err,result)=>{
