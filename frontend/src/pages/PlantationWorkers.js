@@ -19,6 +19,13 @@ import {
   InputLabel,
   Card,
   CardContent,
+
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider
+
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -1844,100 +1851,112 @@ const workedDays = attendanceDates.reduce(
           </TableBody>
         </Table>
       </Paper>
-      {open && (
-    <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
-    <Typography
-      variant="h6"
-      sx={{
-        color: "#22c55e",
-        fontWeight: "bold",
-        mb: 1
-      }}
-    >
-      👤 {selectedWorkerName}
-    </Typography>
 
-    <Typography
-      sx={{
-        color: "#22c55e",
-        mb: 2,
-        fontWeight: "bold"
-      }}
-    >
-      Total Days Worked:
-      {" "}
-      {workedDays.toFixed(2)}
-    </Typography>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
 
-    {attendanceDates.length === 0 ? (
-      <Typography sx={{ color: "#aaa" }}>
-        No attendance found
-      </Typography>
-    ) : (
-      attendanceDates.map((d) => (
+        <DialogTitle>
 
-        <Box
-          key={d.id}
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 1,
-            mb: 1,
-            borderRadius: 1,
-            background: "rgba(255,255,255,0.05)"
-          }}
-        >
+          Attendance History
 
-          <Typography sx={{ color: "#fff" }}>
+        </DialogTitle>
 
-            {new Date(d.date).toLocaleDateString("en-CA")}
+        <DialogContent>
 
-            {" | "}
-
-            {new Date(d.date).toLocaleDateString(
-              "en-US",
-              {
-                weekday: "long"
-              }
-            )}
-
-            Attendance :
-            {
-              Number(d.attendance_value) === 1.5
-                ? "Sunday (1.5)"
-                : Number(d.attendance_value) === 1
-                ? "Present"
-                : Number(d.attendance_value) === 0.5
-                ? "Half Day"
-                : "Absent"
-            }
-
-          </Typography>
-
-          <Button
-            size="small"
-            onClick={() => deleteAttendance(d.id)}
+          <Typography
             sx={{
-              background: "#ef4444",
-              color: "#fff"
+              mb:2,
+              fontWeight:700
             }}
           >
-            DELETE
+            {selectedWorkerName}
+          </Typography>
+
+          <Typography
+            sx={{
+              color:"#16a34a",
+              mb:3
+            }}
+          >
+            Total Days Worked :
+            {workedDays}
+          </Typography>
+
+          <Divider sx={{mb:2}}/>
+
+          {attendanceDates.map((d)=>(
+
+            <Paper
+              key={d.id}
+              sx={{
+                p:2,
+                mb:2,
+                display:"flex",
+                justifyContent:"space-between",
+                alignItems:"center"
+              }}
+            >
+
+              <Box>
+
+                <Typography>
+
+                  {new Date(d.date).toLocaleDateString()}
+
+                </Typography>
+
+                <Typography
+                  color="text.secondary"
+                >
+
+                  {
+                    Number(d.attendance_value)===1.5
+                    ? "Sunday (1.5)"
+
+                    : Number(d.attendance_value)===1
+
+                    ? "Present"
+
+                    : Number(d.attendance_value)===0.5
+
+                    ? "Half Day"
+
+                    : "Absent"
+                  }
+
+                </Typography>
+
+              </Box>
+
+              <Button
+                color="error"
+                variant="contained"
+                onClick={()=>deleteAttendance(d.id)}
+              >
+                Delete
+              </Button>
+
+            </Paper>
+
+          ))}
+
+        </DialogContent>
+
+        <DialogActions>
+
+          <Button
+            onClick={()=>setOpen(false)}
+          >
+            Close
           </Button>
 
-        </Box>
-      ))
-    )}
+        </DialogActions>
 
-    <Button
-      onClick={() => setOpen(false)}
-      sx={{ mt: 1, background: "#475569", color: "#fff" }}
-    >
-      Close
-    </Button>
-  </Paper>
-)}
+      </Dialog>
     </Box>
   );
 }
