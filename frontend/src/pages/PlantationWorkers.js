@@ -1904,11 +1904,11 @@ const workedDays = attendanceDates.reduce(
 
             Attendance :
             {
-              d.attendance_value === 1.5
+              Number(d.attendance_value) === 1.5
                 ? "Sunday (1.5)"
-                : d.attendance_value === 1
+                : Number(d.attendance_value) === 1
                 ? "Present"
-                : d.attendance_value === 0.5
+                : Number(d.attendance_value) === 0.5
                 ? "Half Day"
                 : "Absent"
             }
