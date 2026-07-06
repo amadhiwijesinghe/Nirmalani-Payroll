@@ -56,6 +56,11 @@ export default function PlantationWorkers({
   const [dailyRate, setDailyRate] = useState(1550);
   const [editingRate, setEditingRate] = useState(false);
 
+  const [allowanceWorker, setAllowanceWorker] = useState("");
+  const [allowanceMonth, setAllowanceMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+  const [allowanceAmount, setAllowanceAmount] = useState("");
   useEffect(() => {
 
       fetchWorkers();
@@ -195,6 +200,35 @@ const saveDailyRate = async () => {
 
   }
 
+};
+
+// Save Allowance 
+const saveAllowance = async () => {
+  if (!allowanceWorker) {
+    return alert("Select a worker");
+  }
+
+  try {
+    await axios.post(`${API}/plantation-allowance`, {
+      worker_id: allowanceWorker,
+      month: allowanceMonth,
+      allowance: allowanceAmount || 0
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Saved",
+      text: "Allowance Saved"
+    });
+
+    setAllowanceAmount("");
+
+    fetchData();
+
+  } catch (err) {
+    console.log(err);
+    alert("Error saving allowance");
+  }
 };
 
 // 🔥 CALCULATE
@@ -1317,6 +1351,89 @@ const workedDays = attendanceDates.reduce(
           </Grid>
         </Paper> */}
 
+
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+
+            <Typography variant="h6" gutterBottom>
+              Allowance
+            </Typography>
+
+            <Grid container spacing={2}>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+
+                  <InputLabel>
+                    Worker
+                  </InputLabel>
+
+                  <Select
+                    value={allowanceWorker}
+                    label="Worker"
+                    onChange={(e) =>
+                      setAllowanceWorker(e.target.value)
+                    }
+                  >
+
+                    {workers.map((w) => (
+
+                      <MenuItem
+                        key={w.id}
+                        value={w.id}
+                      >
+                        {w.name}
+                      </MenuItem>
+
+                    ))}
+
+                  </Select>
+
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <TextField
+                  type="month"
+                  label="Month"
+                  fullWidth
+                  value={allowanceMonth}
+                  onChange={(e) =>
+                    setAllowanceMonth(e.target.value)
+                  }
+                  InputLabelProps={{
+                    shrink: true
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <TextField
+                  label="Allowance"
+                  type="number"
+                  fullWidth
+                  value={allowanceAmount}
+                  onChange={(e) =>
+                    setAllowanceAmount(e.target.value)
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={12} md={2}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="success"
+                  onClick={saveAllowance}
+                >
+                  Save
+                </Button>
+              </Grid>
+
+            </Grid>
+
+          </CardContent>
+        </Card>
           <Box
             sx={{
               display: "grid",
