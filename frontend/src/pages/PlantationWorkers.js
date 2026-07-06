@@ -771,9 +771,9 @@ const rowsHTML = rows.map((row) => {
   return `
     <tr>
 
-      <td>${row.name}</td>
+     <td>${row.epf_no || "-"}</td>
 
-      <td>${row.month}</td>
+      <td>${row.name}</td>
 
       <td>${row.days_worked}</td>
 
@@ -821,6 +821,11 @@ const reportMonth = new Date(filterMonth + "-01")
 
         <style>
 
+        @page{
+          size:A4 landscape;
+          margin:12mm;
+      }
+
           body{
             font-family: Arial;
             padding:20px;
@@ -831,9 +836,19 @@ const reportMonth = new Date(filterMonth + "-01")
             border-collapse: collapse;
           }
 
-          th,td{
-            border:1px solid #000;
-            padding:8px;
+          th,
+          td{
+
+          border:1px solid black;
+
+          padding:5px;
+
+          font-size:11px;
+
+          white-space:nowrap;
+
+          text-align:center;
+
           }
 
         </style>
@@ -844,11 +859,11 @@ const reportMonth = new Date(filterMonth + "-01")
 
         <div style="text-align:center; margin-bottom:25px;">
 
-        <h1 style="margin:0;">
+        <h1 style="margin:0;font-size:28px;">
         ${plantationName}
         </h1>
 
-        <h2 style="margin:5px 0;">
+        <h2 style="margin:5px 0 20px 0;">
         MONTHLY PAYROLL REPORT
         </h2>
 
@@ -926,7 +941,7 @@ const reportMonth = new Date(filterMonth + "-01")
               <td>${totals.epf_12.toFixed(2)}</td>
               <td>${totals.epf_20.toFixed(2)}</td>
               <td>${totals.etf.toFixed(2)}</td>
-              <td>-</td>
+              <td>${totals.allowance.toFixed(2)}</td>
               <td>${totals.balance.toFixed(2)}</td>
             </tr>
           </tbody>
