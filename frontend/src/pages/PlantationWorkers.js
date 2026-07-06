@@ -763,8 +763,6 @@ const printMonthlyReport = () => {
         Number(b.epf_no || 0)
     );
 
-  let grandTotal = 0;
-
 const rowsHTML = rows.map((row) => {
 
   const c = calculate(
