@@ -55,11 +55,18 @@ export default function PlantationWorkers({
   
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
+  const [dailyRate, setDailyRate] = useState(1550);
+  const [editingRate, setEditingRate] = useState(false);
+
   useEffect(() => {
-    fetchWorkers();
-    fetchData();
-    
-  }, []);
+
+      fetchWorkers();
+
+      fetchPayroll();
+
+      fetchDailyRate();
+
+  }, [plantation]);
 
   useEffect(() => {
   if (workerId && month) {
@@ -99,6 +106,25 @@ const fetchData = async () => {
   } catch (err) {
     console.error(err);
   }
+};
+
+// Load the Rate
+const fetchDailyRate = async () => {
+
+  try {
+
+    const res = await axios.get(
+      `${API}/payroll-settings?plantation=${plantation}`
+    );
+
+    setDailyRate(res.data.daily_rate);
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
 };
 
   const addWorker = async () => {
@@ -252,6 +278,42 @@ const addDailyAttendance = async () => {
   }
 };
 
+// Save the Rate
+const saveDailyRate = async () => {
+
+  try {
+
+    await axios.put(`${API}/payroll-settings`, {
+
+      plantation,
+
+      daily_rate: dailyRate
+
+    });
+
+    Swal.fire({
+
+      icon: "success",
+
+      title: "Success",
+
+      text: "Daily Rate Updated"
+
+    });
+
+    setEditingRate(false);
+
+    fetchDailyRate();
+
+    fetchPayroll();
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
 
 // 🔥 CALCULATE
 const calculate = (amount, allowance = 0) => {
@@ -1013,7 +1075,7 @@ const workedDays = attendanceDates.reduce(
               }
             }}
           >
-                      <Button
+            <Button
               fullWidth
               onClick={() =>
                 setPage("casualworkers")
@@ -1196,8 +1258,75 @@ const workedDays = attendanceDates.reduce(
           </Paper>
         )}
 
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+
+          <Typography variant="h6" gutterBottom>
+            Payroll Settings
+          </Typography>
+
+          <Grid container spacing={2} alignItems="center">
+
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Daily Rate"
+                fullWidth
+                value={dailyRate}
+                onChange={(e) => setDailyRate(e.target.value)}
+                disabled={!editingRate}
+              />
+            </Grid>
+
+            <Grid item>
+
+              {!editingRate ? (
+
+                <Button
+                  variant="contained"
+                  onClick={() => setEditingRate(true)}
+                >
+                  Edit Rate
+                </Button>
+
+              ) : (
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={saveDailyRate}
+                >
+                  Save
+                </Button>
+
+              )}
+
+            </Grid>
+
+            {editingRate && (
+
+              <Grid item>
+
+                <Button
+                  color="inherit"
+                  onClick={() => {
+                    setEditingRate(false);
+                    fetchDailyRate();
+                  }}
+                >
+                  Cancel
+                </Button>
+
+              </Grid>
+
+            )}
+
+          </Grid>
+
+        </CardContent>
+      </Card>
+
       {/* DAILY ATTENDANCE */}
-        <Paper
+        {/* <Paper
           sx={{
             p: 3,
             mb: 4,
@@ -1211,10 +1340,10 @@ const workedDays = attendanceDates.reduce(
             📅 Daily Attendance
           </Typography>
 
-          <Grid container spacing={2}>
+          <Grid container spacing={2}> */}
 
             {/* Worker */}
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <FormControl sx={{ width: 250 }}>
                 <InputLabel sx={{ color: "#aaa" }}>Worker</InputLabel>
                 <Select
@@ -1246,10 +1375,10 @@ const workedDays = attendanceDates.reduce(
                 InputProps={{ readOnly: true }}
                 sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Daily Rate */}
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <TextField
                 label="Rate per Day"
                 type="number"
@@ -1261,10 +1390,10 @@ const workedDays = attendanceDates.reduce(
                   label: { color: "#aaa" }
                 }}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Allowance */}
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <TextField
                 label="Enter the Allowance"
                 type="number"
@@ -1273,10 +1402,10 @@ const workedDays = attendanceDates.reduce(
                 onChange={(e) => setAllowance(e.target.value)}
                 sx={{ input: { color: "#fff" } }}
               />
-            </Grid>
+            </Grid> */}
 
               {/* Date */}
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <TextField
                 type="date"
                 fullWidth
@@ -1284,10 +1413,10 @@ const workedDays = attendanceDates.reduce(
                 onChange={(e) => setDate(e.target.value)}
                 sx={{ input: { color: "#fff" } }}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Button */}
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <Button
                 fullWidth
                 onClick={addDailyAttendance}
@@ -1304,7 +1433,7 @@ const workedDays = attendanceDates.reduce(
             </Grid>
 
           </Grid>
-        </Paper>
+        </Paper> */}
 
           <Box
             sx={{

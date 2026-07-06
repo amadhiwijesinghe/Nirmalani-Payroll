@@ -858,6 +858,52 @@ app.get('/plantation-data', (req, res) => {
   });
 });
 
+// Get Daily Rate
+app.get("/payroll-settings", (req, res) => {
+
+  const { plantation } = req.query;
+
+  const sql = `
+    SELECT daily_rate
+    FROM payroll_settings
+    WHERE plantation = ?
+  `;
+
+  db.query(sql, [plantation], (err, result) => {
+    if (err) return res.status(500).json(err);
+
+    if (result.length === 0) {
+      return res.json({ daily_rate: 1550 });
+    }
+
+    res.json(result[0]);
+  });
+
+});
+
+// Update Daily Rate
+app.put("/payroll-settings", (req, res) => {
+
+  const { plantation, daily_rate } = req.body;
+
+  const sql = `
+    UPDATE payroll_settings
+    SET daily_rate = ?
+    WHERE plantation = ?
+  `;
+
+  db.query(sql, [daily_rate, plantation], (err) => {
+
+    if (err) return res.status(500).json(err);
+
+    res.json({
+      success: true
+    });
+
+  });
+
+});
+
 // 🌿 Get Working Dates
 app.get("/plantation-attendance-dates", (req, res) => {
   const { worker_id, month } = req.query;
