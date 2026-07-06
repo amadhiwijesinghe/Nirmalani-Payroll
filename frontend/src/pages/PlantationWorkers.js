@@ -316,10 +316,14 @@ const totals = groupedData
     totals.etf;
 
   const generateSlipHTML = (row, c) => {
+    const plantationTitle =
+      plantation === "nirmalani"
+        ? "NIRMALANI PLANTATION"
+        : "INGURUPATHTHALA PLANTATION";
   return `
     <div class="slip">
       <h3 style="text-align:center; margin-bottom:5px;">
-        NIRMALANI PLANTATION
+        ${plantationTitle}
       </h3>
 
       <p><b>Name:</b> ${row.name}</p>
@@ -650,6 +654,11 @@ const printWeeklyReport = async () => {
 
     }).join("");
 
+    const plantationTitle =
+      plantation === "nirmalani"
+        ? "NIRMALANI PLANTATION"
+        : "INGURUPATHTHALA PLANTATION";
+
     const html = `
       <html>
 
@@ -683,7 +692,7 @@ const printWeeklyReport = async () => {
       <body>
 
       <h2>
-        Nirmalani Plantation Weekly Report
+        ${plantationTitle}
       </h2>
 
       <p>
@@ -763,10 +772,10 @@ const rowsHTML = rows.map((row) => {
     row.allowance || 0
   );
 
-  grandTotal +=
-    c.balance +
-    c.epf_20 +
-    c.etf;
+  const grandTotal =
+    totals.balance +
+    totals.epf_20 +
+    totals.etf;
 
   return `
     <tr>
