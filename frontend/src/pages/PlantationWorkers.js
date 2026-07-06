@@ -799,6 +799,19 @@ const rowsHTML = rows.map((row) => {
   `;
 }).join("");
 
+const plantationName =
+  plantation === "nirmalani"
+    ? "NIRMALANI PLANTATION"
+    : "INGURUPATHTHALA PLANTATION";
+
+const reportMonth = new Date(filterMonth + "-01")
+  .toLocaleString("default", {
+    month: "long",
+    year: "numeric"
+  });
+
+  const today = new Date().toLocaleDateString();
+
   const html = `
     <html>
 
@@ -829,25 +842,65 @@ const rowsHTML = rows.map((row) => {
 
       <body>
 
-        <h2>
-          Monthly Payroll Report
+        <div style="text-align:center; margin-bottom:25px;">
+
+        <h1 style="margin:0;">
+        ${plantationName}
+        </h1>
+
+        <h2 style="margin:5px 0;">
+        MONTHLY PAYROLL REPORT
         </h2>
 
-        <h3>
-          Month:
-         ${new Date(filterMonth + "-01")
-          .toLocaleString("default", {
-            month: "long",
-            year: "numeric"
-          })}
-        </h3>
+        </div>
+
+        <table style="width:100%; margin-bottom:20px; border:none;">
+
+        <tr>
+        <td style="border:none;">
+        <b>Plantation</b>
+        </td>
+
+        <td style="border:none;">
+        ${plantationName}
+        </td>
+
+        <td style="border:none;">
+        <b>Generated</b>
+        </td>
+
+        <td style="border:none;">
+        ${today}
+        </td>
+
+        </tr>
+
+        <tr>
+
+        <td style="border:none;">
+        <b>Month</b>
+        </td>
+
+        <td style="border:none;">
+        ${reportMonth}
+        </td>
+
+        <td style="border:none;">
+        </td>
+
+        <td style="border:none;">
+        </td>
+
+        </tr>
+
+        </table>
 
         <table>
 
           <thead>
             <tr>
+              <th>EPF No</th>
               <th>Name</th>
-              <th>Month</th>
               <th>Days</th>
               <th>Rate</th>
               <th>Amount</th>
@@ -866,6 +919,7 @@ const rowsHTML = rows.map((row) => {
             <tr style="font-weight:bold;background:#f1f5f9;">
               <td colspan="4">TOTAL</td>
 
+              <td>${row.epf_no || "-"}</td>
               <td>${totals.amount.toFixed(2)}</td>
               <td>${totals.epf_8.toFixed(2)}</td>
               <td>${totals.total_deduction.toFixed(2)}</td>
