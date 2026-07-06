@@ -919,7 +919,7 @@ const reportMonth = new Date(filterMonth + "-01")
             <tr style="font-weight:bold;background:#f1f5f9;">
               <td colspan="4">TOTAL</td>
 
-              <td>${row.epf_no || "-"}</td>
+              
               <td>${totals.amount.toFixed(2)}</td>
               <td>${totals.epf_8.toFixed(2)}</td>
               <td>${totals.total_deduction.toFixed(2)}</td>
