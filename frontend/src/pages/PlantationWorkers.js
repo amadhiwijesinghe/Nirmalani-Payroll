@@ -604,12 +604,13 @@ const printWeeklyReport = async () => {
     const res = await axios.get(
       `${API}/plantation-weekly-report`,
       {
-        params: {
-          weekStart,
-          weekEnd
-        }
+          params:{
+              weekStart,
+              weekEnd,
+              plantation
+          }
       }
-    );
+      );
 
     const weeklyRows = res.data;
 
@@ -634,7 +635,8 @@ const printWeeklyReport = async () => {
           <td>${d.epf_no}</td>
 
           <td>
-            ${d.date.split("T")[0]}
+            ${new Date(d.attendance_date)
+              .toLocaleDateString()}
           </td>
 
           <td>
@@ -1790,7 +1792,7 @@ const rowsHTML = rows.map((row) => {
                           color: "#000"
                         }}
                       >
-                        Edit Allowance
+                        Allowance
                       </Button>
 
                       {/* DELETE */}

@@ -589,89 +589,89 @@ app.get("/plantation-allowance", (req, res) => {
 
 });
 
-// 🌿 Attendance
-app.post('/plantation-attendance', (req, res) => {
+// // 🌿 Attendance
+// app.post('/plantation-attendance', (req, res) => {
 
-  const { worker_id, days_worked, month, allowance, rate_per_day } = req.body;
+//   const { worker_id, days_worked, month, allowance, rate_per_day } = req.body;
 
-  const sql = `
-    INSERT INTO plantation_attendance
-    (
-      worker_id,
-      days_worked,
-      month,
-      allowance,
-      rate_per_day
-    )
-    VALUES (?, ?, ?, ?, ?)
+//   const sql = `
+//     INSERT INTO plantation_attendance
+//     (
+//       worker_id,
+//       days_worked,
+//       month,
+//       allowance,
+//       rate_per_day
+//     )
+//     VALUES (?, ?, ?, ?, ?)
 
-    ON DUPLICATE KEY UPDATE
-      days_worked = VALUES(days_worked),
-      allowance = VALUES(allowance),
-      rate_per_day = VALUES(rate_per_day)
-  `;
+//     ON DUPLICATE KEY UPDATE
+//       days_worked = VALUES(days_worked),
+//       allowance = VALUES(allowance),
+//       rate_per_day = VALUES(rate_per_day)
+//   `;
 
-  db.query(
-    sql,
-    [
-      worker_id,
-      days_worked,
-      month,
-      allowance || 0,
-      rate_per_day || 0
-    ],
-    (err, result) => {
+//   db.query(
+//     sql,
+//     [
+//       worker_id,
+//       days_worked,
+//       month,
+//       allowance || 0,
+//       rate_per_day || 0
+//     ],
+//     (err, result) => {
 
-      if (err) {
-        console.log(err);
-        return res.status(500).send(err);
-      }
+//       if (err) {
+//         console.log(err);
+//         return res.status(500).send(err);
+//       }
 
-      res.json({
-        success: true,
-        message: "Attendance added"
-      });
-    }
-  );
-});
+//       res.json({
+//         success: true,
+//         message: "Attendance added"
+//       });
+//     }
+//   );
+// });
 
-// UPDATE PLANTATION PAYROLL
-app.put("/plantation-attendance", (req, res) => {
+// // UPDATE PLANTATION PAYROLL
+// app.put("/plantation-attendance", (req, res) => {
 
-  const {
-    worker_id,
-    month,
-    rate_per_day
-  } = req.body;
+//   const {
+//     worker_id,
+//     month,
+//     rate_per_day
+//   } = req.body;
 
-  const sql = `
-    UPDATE plantation_attendance
-    SET rate_per_day = ?
-    WHERE worker_id = ?
-    AND month = ?
-  `;
+//   const sql = `
+//     UPDATE plantation_attendance
+//     SET rate_per_day = ?
+//     WHERE worker_id = ?
+//     AND month = ?
+//   `;
 
-  db.query(
-    sql,
-    [
-      rate_per_day,
-      worker_id,
-      month
-    ],
-    (err, result) => {
+//   db.query(
+//     sql,
+//     [
+//       rate_per_day,
+//       worker_id,
+//       month
+//     ],
+//     (err, result) => {
 
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
+//       if (err) {
+//         console.log(err);
+//         return res.status(500).json(err);
+//       }
 
-      res.json({
-        success: true,
-        message: "Rate updated"
-      });
-    }
-  );
-});
+//       res.json({
+//         success: true,
+//         message: "Rate updated"
+//       });
+//     }
+//   );
+// });
 
 // DELETE FULL PLANTATION PAYROLL
 app.delete("/plantation-attendance", (req, res) => {
@@ -724,70 +724,70 @@ app.delete("/plantation-attendance", (req, res) => {
 
 });
 
-// 🌿 Daily Attendance
-app.post("/plantation-daily-attendance", (req, res) => {
+// // 🌿 Daily Attendance
+// app.post("/plantation-daily-attendance", (req, res) => {
 
-  const {
-    worker_id,
-    date,
-    status,
-    rate_per_day
-  } = req.body;
+//   const {
+//     worker_id,
+//     date,
+//     status,
+//     rate_per_day
+//   } = req.body;
 
-  const sql = `
-    INSERT INTO plantation_daily_attendance
-    (
-      worker_id,
-      date,
-      status,
-      rate_per_day
-    )
-    VALUES (?, ?, ?, ?)
-  `;
+//   const sql = `
+//     INSERT INTO plantation_daily_attendance
+//     (
+//       worker_id,
+//       date,
+//       status,
+//       rate_per_day
+//     )
+//     VALUES (?, ?, ?, ?)
+//   `;
 
-  db.query(
-    sql,
-    [
-      worker_id,
-      date,
-      status,
-      rate_per_day
-    ],
-    (err) => {
-    if (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        return res.status(400).send("Already marked for this date");
-      }
-      return res.status(500).send(err);
-    }
+//   db.query(
+//     sql,
+//     [
+//       worker_id,
+//       date,
+//       status,
+//       rate_per_day
+//     ],
+//     (err) => {
+//     if (err) {
+//       if (err.code === "ER_DUP_ENTRY") {
+//         return res.status(400).send("Already marked for this date");
+//       }
+//       return res.status(500).send(err);
+//     }
 
-    res.send("Attendance saved");
-  });
-});
+//     res.send("Attendance saved");
+//   });
+// });
 
-app.get("/plantation-attendance-days", (req, res) => {
-  const { worker_id, month } = req.query;
+// app.get("/plantation-attendance-days", (req, res) => {
+//   const { worker_id, month } = req.query;
 
-  const sql = `
-    SELECT
-    SUM(
-      CASE
-        WHEN DAYOFWEEK(date)=1
-        THEN 1.5
-        ELSE 1
-      END
-    ) AS days
-    FROM plantation_daily_attendance
-    WHERE worker_id = ?
-    AND DATE_FORMAT(date,'%Y-%m') = ?
-    AND status='present'
-  `;
+//   const sql = `
+//     SELECT
+//     SUM(
+//       CASE
+//         WHEN DAYOFWEEK(date)=1
+//         THEN 1.5
+//         ELSE 1
+//       END
+//     ) AS days
+//     FROM plantation_daily_attendance
+//     WHERE worker_id = ?
+//     AND DATE_FORMAT(date,'%Y-%m') = ?
+//     AND status='present'
+//   `;
 
-  db.query(sql, [worker_id, month], (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.json(result[0]);
-  });
-});
+//   db.query(sql, [worker_id, month], (err, result) => {
+//     if (err) return res.status(500).send(err);
+//     res.json(result[0]);
+//   });
+// });
 
 
 // 🌿 Combined Data
@@ -960,25 +960,53 @@ app.get("/plantation-weekly-report", (req, res) => {
 
   const sql = `
     SELECT
-      pw.name,
-      pw.epf_no,
-      pda.date,
-      pda.rate_per_day
 
-    FROM plantation_daily_attendance pda
+        ar.id,
+
+        pw.id AS worker_id,
+
+        pw.name,
+
+        pw.epf_no,
+
+        ar.attendance_date,
+
+        ar.attendance_value,
+
+        ps.daily_rate,
+
+        ar.attendance_value * ps.daily_rate AS amount
+
+    FROM attendance_register ar
 
     JOIN plantation_workers pw
-      ON pw.id = pda.worker_id
+    ON pw.id = ar.worker_id
 
-    WHERE DATE(pda.date)
-      BETWEEN ? AND ?
+    JOIN payroll_settings ps
+    ON ps.plantation = pw.plantation
 
-    ORDER BY pda.date ASC
-  `;
+    WHERE
+
+        ar.worker_type='plantation'
+
+    AND DATE(ar.attendance_date)
+    BETWEEN ? AND ?
+
+    AND pw.plantation = ?
+
+    ORDER BY
+
+    ar.attendance_date,
+    pw.epf_no
+    `;
 
   db.query(
     sql,
-    [weekStart, weekEnd],
+    [
+        weekStart,
+        weekEnd,
+        req.query.plantation
+    ],
     (err, result) => {
 
       if (err) {
@@ -1000,59 +1028,64 @@ app.get(
 
     const sql = `
       SELECT
-        SUM(pda.rate_per_day) AS amount,
-        IFNULL(MAX(pa.allowance),0) AS allowance
+
+          SUM(ar.attendance_value * ps.daily_rate) AS gross,
+
+          COALESCE(SUM(pa.allowance),0) AS allowance
 
       FROM plantation_workers pw
 
-      JOIN plantation_daily_attendance pda
-        ON pw.id = pda.worker_id
+      JOIN attendance_register ar
+      ON ar.worker_id = pw.id
 
-      LEFT JOIN plantation_attendance pa
-        ON pa.worker_id = pw.id
-        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+      JOIN payroll_settings ps
+      ON ps.plantation = pw.plantation
+
+      LEFT JOIN plantation_allowance pa
+      ON pa.worker_id = pw.id
+      AND pa.month = DATE_FORMAT(ar.attendance_date,'%Y-%m')
 
       WHERE
-      pda.status='present'
-      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
-      AND pw.plantation = ?
 
-      GROUP BY pw.id
-    `;
+      pw.plantation = ?
 
-    db.query(sql,[month, plantation],(err,result)=>{
+      AND ar.worker_type='plantation'
 
-      if (err) {
-        console.log("PLANTATION SUMMARY ERROR:", err);
-        return res.status(500).json(err);
-    }
+      AND ar.is_present=1
 
-      let totalRequired = 0;
+      AND DATE_FORMAT(ar.attendance_date,'%Y-%m') = ?
+      `;
 
-      result.forEach(row=>{
+    db.query(
+      sql,
+      [plantation, month],
+      (err, result) => {
+
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
 
         const gross =
-          Number(row.amount || 0) +
-          Number(row.allowance || 0);
+          Number(result[0].gross || 0) +
+          Number(result[0].allowance || 0);
 
         const epf8 = gross * 0.08;
         const epf12 = gross * 0.12;
         const epf20 = epf8 + epf12;
         const etf = gross * 0.03;
 
-        const balance =
-          gross - epf8;
-
-        totalRequired +=
-          balance +
+        const totalRequired =
+          (gross - epf8) +
           epf20 +
           etf;
-      });
 
-      res.json({
-        totalRequired
-      });
-    });
+        res.json({
+          totalRequired
+        });
+
+      }
+    );
   }
 );
 
