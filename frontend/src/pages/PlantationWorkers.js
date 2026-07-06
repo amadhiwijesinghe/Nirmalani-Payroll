@@ -157,11 +157,6 @@ const viewAttendance = async (workerId, month, name) => {
     console.error(err);
     alert("Server error");
   }
-
-  const workedDays = attendanceDates.reduce(
-    (sum, d) => sum + Number(d.attendance_value),
-    0
-  );
 };
 
 // Save the Rate
@@ -481,8 +476,8 @@ const deleteAttendance = async (id) => {
   try {
 
     await axios.delete(
-      `${API}/plantation-daily-attendance/${id}`
-    );
+      `${API}/attendance-register/${id}`
+      );
 
     alert("✅ Attendance Deleted");
 
@@ -491,6 +486,10 @@ const deleteAttendance = async (id) => {
     );
 
     fetchData();
+
+    if (attendanceDates.length === 1) {
+      setOpen(false);
+    }
 
   } catch (err) {
 
@@ -530,27 +529,26 @@ const deletePayroll = async (workerId, month) => {
   }
 };
 
-const editPayroll = async (row) => {
+// Edit Allowance
 
-  const newRate = prompt(
-    "Enter new rate",
-    row.rate_per_day
+const editAllowance = async (row) => {
+
+  const value = prompt(
+    "Enter Allowance",
+    row.allowance || 0
   );
 
-  if (!newRate) return;
+  if (value === null) return;
 
   try {
 
-    await axios.put(
-      `${API}/plantation-attendance`,
-      {
-        worker_id: row.worker_id,
-        month: row.month,
-        rate_per_day: newRate
-      }
-    );
+    await axios.post(`${API}/plantation-allowance`, {
+      worker_id: row.worker_id,
+      month: row.month,
+      allowance: Number(value)
+    });
 
-    alert("✅ Payroll Updated");
+    alert("✅ Allowance Updated");
 
     fetchData();
 
@@ -558,8 +556,10 @@ const editPayroll = async (row) => {
 
     console.error(err);
 
-    alert("❌ Update failed");
+    alert("Error updating allowance");
+
   }
+
 };
 
 const updateWorker = async () => {
@@ -898,14 +898,10 @@ const rowsHTML = rows.map((row) => {
   win.document.close();
 };
 
-const workedDays = attendanceDates.reduce(
-  (sum, d) => {
-    const day = new Date(d.date).getDay();
-
-    return sum + (day === 0 ? 1.5 : 1);
-  },
-  0
-);
+  const workedDays = attendanceDates.reduce(
+    (sum, d) => sum + Number(d.attendance_value),
+    0
+  );
 
   return (
     <Box
@@ -1785,16 +1781,16 @@ const workedDays = attendanceDates.reduce(
                         View
                       </Button>
 
-                      {/* EDIT */}
+                      {/* EDIT ALLOWANCE */}
                       <Button
                         size="small"
-                        onClick={() => editPayroll(row)}
+                        onClick={() => editAllowance(row)}
                         sx={{
                           background: "#facc15",
                           color: "#000"
                         }}
                       >
-                        Edit
+                        Edit Allowance
                       </Button>
 
                       {/* DELETE */}

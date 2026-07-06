@@ -676,27 +676,23 @@ app.put("/plantation-attendance", (req, res) => {
 // DELETE FULL PLANTATION PAYROLL
 app.delete("/plantation-attendance", (req, res) => {
 
-  const {
-    worker_id,
-    month
-  } = req.query;
+  const { worker_id, month } = req.query;
 
-  // DELETE MONTHLY PAYROLL
-  const deletePayroll = `
-    DELETE FROM plantation_attendance
+  const deleteAttendance = `
+    DELETE FROM attendance_register
     WHERE worker_id = ?
-    AND month = ?
+      AND worker_type = 'plantation'
+      AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
   `;
 
-  // DELETE DAILY ATTENDANCE
-  const deleteDaily = `
-    DELETE FROM plantation_daily_attendance
+  const deleteAllowance = `
+    DELETE FROM plantation_allowance
     WHERE worker_id = ?
-    AND DATE_FORMAT(date, '%Y-%m') = ?
+      AND month = ?
   `;
 
   db.query(
-    deletePayroll,
+    deleteAttendance,
     [worker_id, month],
     (err) => {
 
@@ -706,7 +702,7 @@ app.delete("/plantation-attendance", (req, res) => {
       }
 
       db.query(
-        deleteDaily,
+        deleteAllowance,
         [worker_id, month],
         (err2) => {
 
@@ -717,13 +713,15 @@ app.delete("/plantation-attendance", (req, res) => {
 
           res.json({
             success: true,
-            message:
-              "Payroll and attendance deleted"
+            message: "Payroll deleted"
           });
+
         }
       );
+
     }
   );
+
 });
 
 // 🌿 Daily Attendance
@@ -928,14 +926,18 @@ app.get("/attendance-register/worker", (req, res) => {
 
 // ================= DELETE PLANTATION ATTENDANCE =================
 
-app.delete("/plantation-daily-attendance/:id", (req, res) => {
+app.delete("/attendance-register/:id", (req, res) => {
 
   const id = req.params.id;
 
   db.query(
-    "DELETE FROM plantation_daily_attendance WHERE id = ?",
+    `
+    DELETE
+    FROM attendance_register
+    WHERE id = ?
+    `,
     [id],
-    (err, result) => {
+    (err) => {
 
       if (err) {
         console.log(err);
@@ -943,11 +945,12 @@ app.delete("/plantation-daily-attendance/:id", (req, res) => {
       }
 
       res.json({
-        success: true,
-        message: "Attendance deleted"
+        success: true
       });
+
     }
   );
+
 });
 
 // WEEKLY REPORT
