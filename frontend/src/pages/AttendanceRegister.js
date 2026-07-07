@@ -241,10 +241,9 @@ const openRubberDialog = (worker, date) => {
 const calculateKG = (liter, drc) => {
 
     const l = Number(liter || 0);
-
     const d = Number(drc || 0);
 
-    return ((l * d) / 100).toFixed(2);
+    return (l * d).toFixed(2);
 
 };
 
