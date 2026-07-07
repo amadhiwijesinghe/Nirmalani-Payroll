@@ -1338,12 +1338,17 @@ app.get("/rubber-payroll-data", (req, res) => {
 
       SUM(rar.kg) AS kg,
 
-      COALESCE(SUM(rar.allowance),0) AS allowance
+      COALESCE(SUM(rar.allowance),0) AS allowance,
+
+      ps.daily_rate AS rate
 
     FROM rubber_tappers rt
 
     JOIN rubber_attendance_register rar
       ON rar.worker_id = rt.id
+
+    JOIN payroll_settings ps
+      ON ps.plantation = rt.plantation
 
     WHERE rt.plantation = ?
 
@@ -1354,6 +1359,7 @@ app.get("/rubber-payroll-data", (req, res) => {
       rt.worker_category,
       rt.epf_no,
       rt.epf_enabled,
+      ps.daily_rate,
       DATE_FORMAT(rar.attendance_date,'%Y-%m')
 
     ORDER BY rt.name
@@ -1372,191 +1378,259 @@ app.get("/rubber-payroll-data", (req, res) => {
 
 });
 
-// ================= RUBBER TAPPERS ATTENDANCE =================
 
-// ADD DAILY ATTENDANCE
-app.post("/rubber-tappers-attendance", (req, res) => {
+// GET RUBBER TAPPERS HISTORY
+app.get("/rubber-attendance-history/:workerId/:month", (req, res) => {
 
-const {
-  worker_id,
-  liter,
-  brc,
-  kg,
-  rate,
-  allowance,
-  total_earning,
-  date,
-  status
-} = req.body;
+    const { workerId, month } = req.params;
 
-  const sql = `
-    INSERT INTO rubber_tappers_attendance
-    (
-      worker_id,
-      liter,
-      brc,
-      kg,
-      rate,
-      allowance,
-      total_earning,
-      date,
-      status
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    const sql = `
+        SELECT
+            attendance_date,
+            attendance_value,
+            kg,
+            allowance
+        FROM rubber_attendance_register
+        WHERE worker_id = ?
+        AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+        ORDER BY attendance_date
+    `;
 
-  db.query(
-    sql,
-    [
-      worker_id,
-      liter,
-      brc,
-      kg,
-      rate,
-      allowance || 0,
-      total_earning || 0,
-      date,
-      status || "present"
-    ],
-    (err, result) => {
+    db.query(sql,[workerId,month],(err,result)=>{
 
-      if (err) {
-
-        console.log(err);
-
-        if (err.code === "ER_DUP_ENTRY") {
-          return res.status(400).json({
-            message: "Already marked for this date"
-          });
+        if(err){
+            return res.status(500).json(err);
         }
 
-        return res.status(500).json(err);
-      }
+        res.json(result);
 
-      res.json({
-        success: true,
-        message: "Attendance Saved"
-      });
-    }
-  );
+    });
+
 });
 
-// GET ALL DATA
-app.get("/rubber-tappers-data", (req, res) => {
+// RUBBER TAPPERS WEEKLY REPORT 
+app.get("/rubber-weekly-report", (req, res) => {
+
+  const { plantation, weekStart, weekEnd } = req.query;
 
   const sql = `
     SELECT
-        rta.id,
-        rta.worker_id,
-
-        rt.name,
-        rt.worker_category,
-        rt.epf_no,
-        rt.epf_enabled,
-
-        rta.liter,
-        rta.brc,
-        rta.kg,
-        rta.rate,
-        rta.allowance,
-        rta.total_earning,
-        rta.date,
-        DATE_FORMAT(rta.date,'%Y-%m') AS month,
-        rta.status
-
-    FROM rubber_tappers_attendance rta
+      rt.name,
+      rt.worker_category,
+      rar.attendance_date,
+      rar.attendance_value,
+      rar.kg,
+      rar.allowance,
+      ps.daily_rate AS rate
+    FROM rubber_attendance_register rar
 
     JOIN rubber_tappers rt
-    ON rt.id = rta.worker_id
+      ON rt.id = rar.worker_id
+
+    JOIN payroll_settings ps
+      ON ps.plantation = rt.plantation
 
     WHERE rt.plantation = ?
+      AND rar.attendance_date BETWEEN ? AND ?
 
-    ORDER BY rta.date DESC
-    `;
+    ORDER BY rar.attendance_date, rt.name;
+  `;
 
-  db.query(sql, [req.query.plantation], (err, result) => {
-
+  db.query(sql, [plantation, weekStart, weekEnd], (err, result) => {
     if (err) {
-      console.log(err);
-      return res.status(500).send(err);
+      return res.status(500).json(err);
     }
 
     res.json(result);
   });
+
 });
+
+// ================= RUBBER TAPPERS ATTENDANCE =================
+
+// ADD DAILY ATTENDANCE
+// app.post("/rubber-tappers-attendance", (req, res) => {
+
+// const {
+//   worker_id,
+//   liter,
+//   brc,
+//   kg,
+//   rate,
+//   allowance,
+//   total_earning,
+//   date,
+//   status
+// } = req.body;
+
+//   const sql = `
+//     INSERT INTO rubber_tappers_attendance
+//     (
+//       worker_id,
+//       liter,
+//       brc,
+//       kg,
+//       rate,
+//       allowance,
+//       total_earning,
+//       date,
+//       status
+//     )
+//     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+//   `;
+
+//   db.query(
+//     sql,
+//     [
+//       worker_id,
+//       liter,
+//       brc,
+//       kg,
+//       rate,
+//       allowance || 0,
+//       total_earning || 0,
+//       date,
+//       status || "present"
+//     ],
+//     (err, result) => {
+
+//       if (err) {
+
+//         console.log(err);
+
+//         if (err.code === "ER_DUP_ENTRY") {
+//           return res.status(400).json({
+//             message: "Already marked for this date"
+//           });
+//         }
+
+//         return res.status(500).json(err);
+//       }
+
+//       res.json({
+//         success: true,
+//         message: "Attendance Saved"
+//       });
+//     }
+//   );
+// });
+
+// // GET ALL DATA
+// app.get("/rubber-tappers-data", (req, res) => {
+
+//   const sql = `
+//     SELECT
+//         rta.id,
+//         rta.worker_id,
+
+//         rt.name,
+//         rt.worker_category,
+//         rt.epf_no,
+//         rt.epf_enabled,
+
+//         rta.liter,
+//         rta.brc,
+//         rta.kg,
+//         rta.rate,
+//         rta.allowance,
+//         rta.total_earning,
+//         rta.date,
+//         DATE_FORMAT(rta.date,'%Y-%m') AS month,
+//         rta.status
+
+//     FROM rubber_tappers_attendance rta
+
+//     JOIN rubber_tappers rt
+//     ON rt.id = rta.worker_id
+
+//     WHERE rt.plantation = ?
+
+//     ORDER BY rta.date DESC
+//     `;
+
+//   db.query(sql, [req.query.plantation], (err, result) => {
+
+//     if (err) {
+//       console.log(err);
+//       return res.status(500).send(err);
+//     }
+
+//     res.json(result);
+//   });
+// });
 
 // ================= DELETE RUBBER TAPPER ATTENDANCE =================
 
-app.delete("/rubber-tappers-attendance/:id", (req, res) => {
+// app.delete("/rubber-tappers-attendance/:id", (req, res) => {
 
-  const id = req.params.id;
+//   const id = req.params.id;
 
-  db.query(
-    "DELETE FROM rubber_tappers_attendance WHERE id = ?",
-    [id],
-    (err, result) => {
+//   db.query(
+//     "DELETE FROM rubber_tappers_attendance WHERE id = ?",
+//     [id],
+//     (err, result) => {
 
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
+//       if (err) {
+//         console.log(err);
+//         return res.status(500).json(err);
+//       }
 
-      res.json({
-        success: true,
-        message: "Attendance deleted"
-      });
-    }
-  );
-});
+//       res.json({
+//         success: true,
+//         message: "Attendance deleted"
+//       });
+//     }
+//   );
+// });
 
 // ================= UPDATE RUBBER TAPPER ATTENDANCE =================
 
-app.put("/rubber-tappers-attendance/:id", (req, res) => {
+// app.put("/rubber-tappers-attendance/:id", (req, res) => {
 
-  const {
-    liter,
-    rate,
-    allowance,
-    total_earning
-  } = req.body;
+//   const {
+//     liter,
+//     rate,
+//     allowance,
+//     total_earning
+//   } = req.body;
 
-  const id = req.params.id;
+//   const id = req.params.id;
 
-  const sql = `
-    UPDATE rubber_tappers_attendance
-    SET
-      liter = ?,
-      rate = ?,
-      allowance = ?,
-      total_earning = ?
-    WHERE id = ?
-  `;
+//   const sql = `
+//     UPDATE rubber_tappers_attendance
+//     SET
+//       liter = ?,
+//       rate = ?,
+//       allowance = ?,
+//       total_earning = ?
+//     WHERE id = ?
+//   `;
 
-  db.query(
-    sql,
-    [
-      liter,
-      rate,
-      allowance,
-      total_earning,
-      id
-    ],
-    (err, result) => {
+//   db.query(
+//     sql,
+//     [
+//       liter,
+//       rate,
+//       allowance,
+//       total_earning,
+//       id
+//     ],
+//     (err, result) => {
 
-      if (err) {
+//       if (err) {
 
-        console.log(err);
+//         console.log(err);
 
-        return res.status(500).json(err);
-      }
+//         return res.status(500).json(err);
+//       }
 
-      res.json({
-        success: true,
-        message: "Attendance updated"
-      });
-    }
-  );
-});
+//       res.json({
+//         success: true,
+//         message: "Attendance updated"
+//       });
+//     }
+//   );
+// });
 
 // SUMMARY
 app.get(

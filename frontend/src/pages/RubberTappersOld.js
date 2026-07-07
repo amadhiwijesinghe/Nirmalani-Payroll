@@ -31,6 +31,13 @@ export default function RubberTappers({
   const [data, setData] = useState([]);
 
   const [name, setName] = useState("");
+  const [rate, setRate] = useState("");
+  const [liter, setLiter] = useState("");
+
+  const [workerId, setWorkerId] = useState("");
+  const [allowance, setAllowance] = useState("");
+
+  const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -40,9 +47,7 @@ export default function RubberTappers({
   const [open, setOpen] = useState(false);
 
   const [brc, setBrc] = useState("");
-  const [liter, setLiter] = useState("");
   const [kg, setKg] = useState("");
-  
 
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
@@ -142,64 +147,69 @@ const addWorker = async () => {
   }
 };
 
-const viewAttendance = async(workerId,month)=>{
+const viewAttendance = (workerId, month) => {
 
-    const res = await axios.get(
-        `${API}/rubber-attendance-history/${workerId}/${month}`
+    const filtered = data.filter(
+        row =>
+            Number(row.worker_id) === Number(workerId) &&
+            row.month === month
     );
 
-    setAttendanceDates(res.data);
+    console.log("Worker:", workerId);
+    console.log("Month:", month);
+    console.log("Filtered:", filtered);
+
+    setAttendanceDates(filtered);
 
     setOpenPayroll(true);
+};
 
-}
+const addDailyAttendance = async () => {
 
-// const addDailyAttendance = async () => {
+  if (!workerId || !liter || !rate || !date) {
+    alert("Fill all fields");
+    return;
+  }
 
-//   if (!workerId || !liter || !rate || !date) {
-//     alert("Fill all fields");
-//     return;
-//   }
+  try {
 
-//   try {
+    const total =
+      (Number(kg) * Number(rate)) +
+      Number(allowance || 0);
 
-//     const total =
-//       (Number(kg) * Number(rate)) +
-//       Number(allowance || 0);
+      await axios.post(
+        `${API}/rubber-tappers-attendance`,
+        {
+          worker_id: workerId,
+          liter,
+          brc,
+          kg,
+          rate,
+          allowance,
+          total_earning: total,
+          date,
+          status: "present"
+        }
+      );
 
-//       await axios.post(
-//         `${API}/rubber-tappers-attendance`,
-//         {
-//           worker_id: workerId,
-//           liter,
-//           brc,
-//           kg,
-//           rate,
-//           allowance,
-//           total_earning: total,
-//           date,
-//           status: "present"
-//         }
-//       );
+    alert("✅ Attendance Added");
 
-//     alert("✅ Attendance Added");
+    setLiter("");
+    setRate("");
+    setAllowance("");
+    setDate("");
 
-//     setLiter("");
-//     setRate("");
-//     setAllowance("");
-//     setDate("");
+    fetchData();
 
-//     fetchData();
+  } catch (err) {
+    console.error(err);
 
-//   } catch (err) {
-//     console.error(err);
-
-//     alert(
-//       err.response?.data?.message ||
-//       "Server Error"
-//     );
-//   }
-// };
+    alert(
+      err.response?.data?.message ||
+      "Server Error"
+    );
+  }
+};
 
 
   // 🔥 CALCULATE
@@ -286,7 +296,7 @@ const groupedData = Object.values(
       Number(row.kg || 0);
     acc[key].allowance +=
       Number(row.allowance || 0);
-    acc[key].worked_days += Number(row.worked_days || 0);
+    acc[key].worked_days += 1;
     return acc;
   }, {})
 
@@ -314,7 +324,7 @@ const groupedData = Object.values(
           else if (averageKg <= 7) {
 
               gross =
-                worker.worked_days * Number(worker.rate);
+                  worker.worked_days * 1550;
 
           }
           else {
@@ -325,8 +335,8 @@ const groupedData = Object.values(
               worker.bonus = bonus;
 
               gross =
-                (worker.worked_days * Number(worker.rate))
-                + bonus;
+                  (worker.worked_days * 1550)
+                  + bonus;
 
           }
 
@@ -588,7 +598,7 @@ const printSlip = () => {
   win.document.close();
 };
 
-const printWeeklyReport = async () => {
+const printWeeklyReport = () => {
 
   if (!weekStart || !weekEnd) {
 
@@ -597,18 +607,16 @@ const printWeeklyReport = async () => {
     return;
   }
 
-  const res = await axios.get(
-    `${API}/rubber-weekly-report`,
-    {
-      params: {
-        plantation,
-        weekStart,
-        weekEnd,
-      },
-    }
-  );
+  const weeklyRows = data.filter((row) => {
 
-  const weeklyRows = res.data;
+    const current =
+      new Date(row.date);
+
+    return (
+      current >= new Date(weekStart) &&
+      current <= new Date(weekEnd)
+    );
+  });
 
   if (weeklyRows.length === 0) {
 
@@ -637,7 +645,7 @@ const printWeeklyReport = async () => {
         <td>${row.name}</td>
 
         <td>
-          ${new Date(row.attendance_date)
+          ${new Date(row.date)
             .toLocaleDateString("en-CA")}
         </td>
 
@@ -656,7 +664,7 @@ const printWeeklyReport = async () => {
   const weeklyCollection =
     collectionData.filter(row => {
 
-      const d = new Date(row.attendance_date)
+      const d = new Date(row.date);
 
       return (
         d >= new Date(weekStart) &&
@@ -668,7 +676,7 @@ const printWeeklyReport = async () => {
   const weeklyDispatch =
     dispatchData.filter(row => {
 
-      const d = new Date(row.attendance_date);
+      const d = new Date(row.date);
 
       return (
         d >= new Date(weekStart) &&
@@ -1098,6 +1106,91 @@ const printMonthlyReport = () => {
   win.document.close();
 };
 
+const deleteAttendance = async (id) => {
+
+  console.log("Deleting ID:", id);
+
+  if (!window.confirm("Delete attendance?")) return;
+
+  try {
+
+    const res = await axios.delete(
+      `${API}/rubber-tappers-attendance/${id}`
+    );
+
+    fetchData();
+
+    setAttendanceDates(prev =>
+        prev.filter(row => row.id !== id)
+    );
+
+    alert("Attendance deleted");
+
+  } catch (err) {
+
+    console.log(err.response);
+    console.log(err.response?.data);
+    console.log(err.response?.status);
+
+    alert("Delete failed");
+  }
+};
+
+const editAttendance = async (row) => {
+
+  const newKg = prompt(
+    "Enter Kg",
+    row.kg
+  );
+
+  if (!newKg) return;
+
+  const newRate = prompt(
+    "Enter Rate",
+    row.rate
+  );
+
+  if (!newRate) return;
+
+  const newAllowance = prompt(
+    "Enter Allowance",
+    row.allowance || 0
+  );
+
+  const total =
+    (Number(row.kg || 0) *
+    Number(newRate)) +
+    Number(newAllowance || 0);
+
+  try {
+
+    await axios.put(
+      `${API}/rubber-tappers-attendance/${row.id}`,
+      {
+        kg: newKg,
+        rate: newRate,
+        allowance: newAllowance,
+        total_earning: total
+      }
+    );
+
+    alert("✅ Row Updated");
+
+    fetchData();
+
+    viewAttendance(
+      row.worker_id,
+      row.month
+  );
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Update failed");
+  }
+};
+
   return (
     <Box
       sx={{
@@ -1289,6 +1382,129 @@ const printMonthlyReport = () => {
             />
           </Grid>
 
+        </Grid>
+      </Paper>
+
+      {/* DAILY ATTENDANCE */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 5,
+          backdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <Typography sx={{ color: "#fff", mb: 2 }}>
+          📅 Daily Attendance
+        </Typography>
+
+        <Grid container spacing={2}>
+
+          {/* Worker Select */}
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: "#aaa" }}>
+                Select Worker
+              </InputLabel>
+
+              <Select
+                value={workerId}
+                onChange={(e) => setWorkerId(e.target.value)}
+                sx={{
+                  width: 250,
+                  color: "#fff",
+                }}
+              >
+                {workers.map((worker) => (
+                  <MenuItem key={worker.id} value={worker.id}>
+                    {worker.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+         {/* KG */}
+        <Grid item xs={12} md={2}>
+          <TextField
+            label="KG"
+            type="number"
+            fullWidth
+            value={kg}
+            InputProps={{
+              readOnly: true
+            }}
+            sx={{
+              input: {
+                color: "#22c55e",
+                fontWeight: "bold"
+              },
+              label: { color: "#aaa" },
+            }}
+          />
+        </Grid>
+
+          {/* Rate */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              label="Rate"
+              type="number"
+              fullWidth
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* Allowance */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              label="Allowance"
+              type="number"
+              fullWidth
+              value={allowance}
+              onChange={(e) => setAllowance(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+                label: { color: "#aaa" },
+              }}
+            />
+          </Grid>
+
+          {/* Date */}
+          <Grid item xs={12} md={2}>
+            <TextField
+              type="date"
+              fullWidth
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              sx={{
+                input: { color: "#fff" },
+              }}
+            />
+          </Grid>
+
+          {/* Button */}
+          <Grid item xs={12} md={1}>
+            <Button
+              fullWidth
+              onClick={addDailyAttendance}
+              sx={{
+                height: "100%",
+                borderRadius: 3,
+                background: "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                fontWeight: "bold"
+              }}
+            >
+              Save
+            </Button>
+          </Grid>
         </Grid>
       </Paper>
 
@@ -1660,11 +1876,15 @@ const printMonthlyReport = () => {
 
             <TableCell>Date</TableCell>
 
-            <TableCell>Attendance</TableCell>
-
             <TableCell>KG</TableCell>
 
+            <TableCell>Rate</TableCell>
+
             <TableCell>Allowance</TableCell>
+
+            <TableCell>Total</TableCell>
+
+            <TableCell>Actions</TableCell>
 
             </TableRow>
 
@@ -1677,26 +1897,34 @@ const printMonthlyReport = () => {
             <TableRow key={d.id}>
 
             <TableCell>
-              {new Date(d.attendance_date)
-                .toISOString()
-                .split("T")[0]}
-            </TableCell>
-
-            <TableCell>
-              {d.attendance_value === 1.5
-                ? "Sunday"
-                : d.attendance_value === 1
-                ? "Present"
-                : d.attendance_value === 0.5
-                ? "Half Day"
-                : "Absent"}
+            {new Date(d.date).toISOString().split("T")[0]}
             </TableCell>
 
             <TableCell>{d.kg}</TableCell>
 
+            <TableCell>{d.rate}</TableCell>
+
             <TableCell>{d.allowance}</TableCell>
 
+            <TableCell>{d.total_earning}</TableCell>
+
             <TableCell>
+
+            <Button
+            size="small"
+            color="warning"
+            onClick={()=>editAttendance(d)}
+            >
+            EDIT
+            </Button>
+
+            <Button
+            size="small"
+            color="error"
+            onClick={()=>deleteAttendance(d.id)}
+            >
+            DELETE
+            </Button>
 
             </TableCell>
 
