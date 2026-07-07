@@ -1314,6 +1314,64 @@ app.get("/rubber-attendance-calendar", (req, res) => {
 
 });
 
+// RUBBER TAPPERS PAYROLL DATA
+app.get("/rubber-payroll-data", (req, res) => {
+
+  const plantation = req.query.plantation;
+
+  const sql = `
+    SELECT
+
+      rt.id AS worker_id,
+
+      rt.name,
+
+      rt.worker_category,
+
+      rt.epf_no,
+
+      rt.epf_enabled,
+
+      DATE_FORMAT(rar.attendance_date,'%Y-%m') AS month,
+
+      SUM(rar.attendance_value) AS worked_days,
+
+      SUM(rar.kg) AS kg,
+
+      COALESCE(SUM(rar.allowance),0) AS allowance
+
+    FROM rubber_tappers rt
+
+    JOIN rubber_attendance_register rar
+      ON rar.worker_id = rt.id
+
+    WHERE rt.plantation = ?
+
+    GROUP BY
+
+      rt.id,
+      rt.name,
+      rt.worker_category,
+      rt.epf_no,
+      rt.epf_enabled,
+      DATE_FORMAT(rar.attendance_date,'%Y-%m')
+
+    ORDER BY rt.name
+  `;
+
+  db.query(sql, [plantation], (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+
+  });
+
+});
+
 // ================= RUBBER TAPPERS ATTENDANCE =================
 
 // ADD DAILY ATTENDANCE
