@@ -308,6 +308,7 @@ const saveRubberAttendance = async () => {
                 allowance: rubberAttendance.allowance
             }
         );
+        await loadAttendance();
 
         setRubberDialogOpen(false);
 
@@ -825,7 +826,9 @@ const filteredWorkers =
                 ).format("YYYY-MM-DD");
 
                 const attendanceKey =
-                    `${worker.worker_type}-${worker.worker_id}-${date}`;
+                    worker.worker_type === "rubber"
+                        ? `rubber-${worker.worker_id}-${date}`
+                        : `${worker.worker_type}-${worker.worker_id}-${date}`;
 
                 const currentDate = dayjs(date);
 
