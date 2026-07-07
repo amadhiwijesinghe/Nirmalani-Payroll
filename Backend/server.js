@@ -1156,8 +1156,7 @@ app.post("/rubber-attendance-register", (req, res) => {
     attendance_value,
     liter,
     drc,
-    kg,
-    allowance
+    kg
   } = req.body;
 
   const sql = `
@@ -1170,12 +1169,11 @@ app.post("/rubber-attendance-register", (req, res) => {
       liter,
       drc,
       kg,
-      allowance,
       status
     )
     VALUES
     (
-      ?, ?, ?, ?, ?, ?, ?, ?, 'finalized'
+      ?, ?, ?, ?, ?, ?, ?, 'finalized'
     )
   `;
 
@@ -1188,8 +1186,7 @@ app.post("/rubber-attendance-register", (req, res) => {
       attendance_value,
       liter,
       drc,
-      kg,
-      allowance || 0
+      kg
     ],
     (err) => {
 
@@ -1280,6 +1277,94 @@ app.delete("/rubber-attendance-register/:id", (req, res) => {
 
 });
 
+// RUBBER TAPPERS SAVE ALLOWANCE 
+app.post("/rubber-allowance",(req,res)=>{
+
+    const {worker_id,month,allowance}=req.body;
+
+    const sql=`
+    INSERT INTO rubber_allowance
+    (
+        worker_id,
+        month,
+        allowance
+    )
+    VALUES(?,?,?)
+
+    ON DUPLICATE KEY UPDATE
+
+    allowance=VALUES(allowance)
+    `;
+
+    db.query(
+        sql,
+        [worker_id,month,allowance],
+        (err)=>{
+
+            if(err)
+                return res.status(500).json(err);
+
+            res.json({
+                success:true
+            });
+
+        }
+    );
+
+});
+
+// RUBBER TAPPERS GET ALLOWANCE 
+app.get("/rubber-allowance",(req,res)=>{
+
+    const {month,plantation}=req.query;
+
+    const sql=`
+
+    SELECT
+
+        ra.worker_id,
+
+        ra.month,
+
+        ra.allowance,
+
+        rt.name
+
+    FROM rubber_allowance ra
+
+    JOIN rubber_tappers rt
+
+    ON rt.id=ra.worker_id
+
+    WHERE
+
+        ra.month=?
+
+    AND rt.plantation=?
+
+    ORDER BY rt.name
+
+    `;
+
+    db.query(
+
+        sql,
+
+        [month,plantation],
+
+        (err,result)=>{
+
+            if(err)
+                return res.status(500).json(err);
+
+            res.json(result);
+
+        }
+
+    );
+
+});
+
 // RUBBER TAPPERS CALENDAR
 app.get("/rubber-attendance-calendar", (req, res) => {
 
@@ -1322,48 +1407,52 @@ app.get("/rubber-payroll-data", (req, res) => {
   const sql = `
     SELECT
 
-      rt.id AS worker_id,
+        rt.id AS worker_id,
 
-      rt.name,
+        rt.name,
 
-      rt.worker_category,
+        rt.worker_category,
 
-      rt.epf_no,
+        rt.epf_no,
 
-      rt.epf_enabled,
+        rt.epf_enabled,
 
-      DATE_FORMAT(rar.attendance_date,'%Y-%m') AS month,
+        DATE_FORMAT(rar.attendance_date,'%Y-%m') AS month,
 
-      SUM(rar.attendance_value) AS worked_days,
+        SUM(rar.attendance_value) AS worked_days,
 
-      SUM(rar.kg) AS kg,
+        SUM(rar.kg) AS kg,
 
-      COALESCE(SUM(rar.allowance),0) AS allowance,
+        COALESCE(MAX(ra.allowance),0) AS allowance,
 
-      ps.daily_rate AS rate
+        ps.daily_rate AS rate
 
     FROM rubber_tappers rt
 
     JOIN rubber_attendance_register rar
-      ON rar.worker_id = rt.id
+    ON rar.worker_id = rt.id
 
     JOIN payroll_settings ps
-      ON ps.plantation = rt.plantation
+    ON ps.plantation = rt.plantation
+
+    LEFT JOIN rubber_allowance ra
+    ON ra.worker_id = rt.id
+    AND ra.month = DATE_FORMAT(rar.attendance_date,'%Y-%m')
 
     WHERE rt.plantation = ?
 
     GROUP BY
 
-      rt.id,
-      rt.name,
-      rt.worker_category,
-      rt.epf_no,
-      rt.epf_enabled,
-      ps.daily_rate,
-      DATE_FORMAT(rar.attendance_date,'%Y-%m')
+        rt.id,
+        rt.name,
+        rt.worker_category,
+        rt.epf_no,
+        rt.epf_enabled,
+        ps.daily_rate,
+        DATE_FORMAT(rar.attendance_date,'%Y-%m')
 
     ORDER BY rt.name
-  `;
+    `;
 
   db.query(sql, [plantation], (err, result) => {
 

@@ -53,11 +53,11 @@ export default function AttendanceRegister({ plantation }) {
   const [selectedDate, setSelectedDate] = useState("");
 
   const [rubberAttendance, setRubberAttendance] = useState({
-    attendance_value: 1,
-    liter: "",
-    drc: "",
-    kg: "",
-    allowance: 0
+    attendance_value:1,
+    liter:"",
+    drc:"",
+    kg:""
+
   });
 
   useEffect(()=>{
@@ -230,8 +230,7 @@ const openRubberDialog = (worker, date) => {
         attendance_value: dayjs(date).day() === 0 ? 1.5 : 1,
         liter: "",
         drc: "",
-        kg: "",
-        allowance: 0
+        kg: ""
     });
 
     setRubberDialogOpen(true);
@@ -1070,23 +1069,6 @@ const filteredWorkers =
                     value={rubberAttendance.kg}
                     InputProps={{
                         readOnly:true
-                    }}
-                />
-
-                <TextField
-                    label="Allowance"
-                    type="number"
-                    value={rubberAttendance.allowance}
-                    onChange={(e)=>{
-
-                        setRubberAttendance({
-
-                            ...rubberAttendance,
-
-                            allowance:e.target.value
-
-                        });
-
                     }}
                 />
 

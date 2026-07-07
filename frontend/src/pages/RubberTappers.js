@@ -19,7 +19,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Divider
+  Divider,
+  Stack
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -55,6 +56,8 @@ export default function RubberTappers({
   const [openPayroll, setOpenPayroll] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
 
+  const [allowanceWorker, setAllowanceWorker] = useState("");
+  const [allowanceAmount, setAllowanceAmount] = useState("");
   useEffect(() => {
 
     fetchWorkers();
@@ -153,6 +156,38 @@ const viewAttendance = async(workerId,month)=>{
     setOpenPayroll(true);
 
 }
+
+// Save Allowance 
+const saveAllowance = async () => {
+
+  if (!allowanceWorker) {
+    alert("Select a worker");
+    return;
+  }
+
+  try {
+
+    await axios.post(`${API}/rubber-allowance`, {
+
+      worker_id: allowanceWorker,
+      month: filterMonth || selectedMonth,
+      allowance: allowanceAmount
+
+    });
+
+    alert("Allowance Saved");
+
+    fetchData();
+
+    setAllowanceAmount("");
+
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+};
 
 // const addDailyAttendance = async () => {
 
@@ -1292,6 +1327,85 @@ const printMonthlyReport = () => {
         </Grid>
       </Paper>
 
+      <Paper sx={{ p:3, mb:3 }}>
+
+        <Typography variant="h6" mb={2}>
+        Rubber Allowance
+        </Typography>
+
+        <Stack direction="row" spacing={2}>
+
+        <FormControl sx={{minWidth:250}}>
+
+        <InputLabel>Worker</InputLabel>
+
+        <Select
+        value={allowanceWorker}
+        label="Worker"
+        onChange={(e)=>setAllowanceWorker(e.target.value)}
+        >
+
+        {workers.map(worker=>(
+
+        <MenuItem
+        key={worker.id}
+        value={worker.id}
+        >
+
+        {worker.name}
+
+        </MenuItem>
+
+        ))}
+
+        </Select>
+
+        </FormControl>
+
+        <TextField
+
+        type="month"
+
+        label="Month"
+
+        value={filterMonth || selectedMonth}
+
+        onChange={(e)=>setFilterMonth(e.target.value)}
+
+        InputLabelProps={{shrink:true}}
+
+        />
+
+        <TextField
+
+        label="Allowance"
+
+        type="number"
+
+        value={allowanceAmount}
+
+        onChange={(e)=>setAllowanceAmount(e.target.value)}
+
+        />
+
+        <Button
+
+        variant="contained"
+
+        color="success"
+
+        onClick={saveAllowance}
+
+        >
+
+        SAVE
+
+        </Button>
+
+        </Stack>
+
+        </Paper>
+
       {/* TABLE */}
       <Paper
         sx={{
@@ -1683,13 +1797,15 @@ const printMonthlyReport = () => {
             </TableCell>
 
             <TableCell>
-              {d.attendance_value === 1.5
-                ? "Sunday"
-                : d.attendance_value === 1
-                ? "Present"
-                : d.attendance_value === 0.5
-                ? "Half Day"
-                : "Absent"}
+              {
+              (() => {
+                  const value = Number(d.attendance_value);
+                  if (value === 1.5) return "Sunday";
+                  if (value === 1) return "Present";
+                  if (value === 0.5) return "Half Day";
+                  return "Absent";
+              })()
+              }
             </TableCell>
 
             <TableCell>{d.kg}</TableCell>
