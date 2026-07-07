@@ -1475,13 +1475,14 @@ app.get("/rubber-attendance-history/:workerId/:month", (req, res) => {
 
     const sql = `
         SELECT
-            attendance_date,
-            attendance_value,
-            kg
-        FROM rubber_attendance_register
-        WHERE worker_id = ?
-        AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
-        ORDER BY attendance_date
+          id,
+          attendance_date,
+          attendance_value,
+          kg
+      FROM rubber_attendance_register
+      WHERE worker_id = ?
+      AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+      ORDER BY attendance_date
     `;
 
     db.query(sql,[workerId,month],(err,result)=>{
