@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2";
 import {
   TextField,
   Button,
@@ -15,7 +16,9 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Card,
+  CardContent
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -24,14 +27,9 @@ export default function CasualWorkers({plantation
   }) {
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
+  const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
   const [name, setName] = useState("");
-  const [dailyRate, setDailyRate] = useState("");
-
-  const [workerId, setWorkerId] = useState("");
-  const [allowance, setAllowance] = useState("");
-
-  const [date, setDate] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -39,13 +37,19 @@ export default function CasualWorkers({plantation
 
   const [attendanceDates, setAttendanceDates] = useState([]);
   const [open, setOpen] = useState(false);
+  const [selectedRate, setSelectedRate] = useState(0);
 
-  useEffect(() => {
-
-      fetchWorkers();
-      fetchData();
-
-  }, [plantation]);
+  const [allowanceWorker, setAllowanceWorker] = useState("");
+  const [allowanceMonth, setAllowanceMonth] = useState(
+      new Date().toISOString().slice(0, 7)
+    );
+  const [allowanceAmount, setAllowanceAmount] = useState("");
+    useEffect(() => {
+  
+        fetchWorkers();
+        fetchData();
+  
+    }, [plantation]);
 
   const fetchWorkers = async () => {
     const res = await axios.get(`${API}/casual-workers?plantation=${plantation}`);
@@ -53,13 +57,16 @@ export default function CasualWorkers({plantation
   };
 
 const fetchData = async () => {
-  try {
-    const res = await axios.get(`${API}/casual-workers-data?plantation=${plantation}`);
-    console.log("NEW DATA:", res.data); 
-    setData(res.data);
-  } catch (err) {
-    console.error(err);
-  }
+    try {
+        const res = await axios.get(
+            `${API}/casual-payroll-data?plantation=${plantation}`
+        );
+        console.log(res.data);
+        setData(res.data);
+    } catch (err) {
+
+        console.log(err);
+    }
 };
 
 const addWorker = async () => {
@@ -91,10 +98,16 @@ const addWorker = async () => {
 
 const viewAttendance = async (workerId, month) => {
 
+  const worker = groupedData.find(
+    w => w.worker_id === workerId &&
+         w.month === month
+  );
+
+  setSelectedWorkerName(worker?.name || "");
   try {
 
     const res = await axios.get(
-    `${API}/casual-workers-attendance-dates`,
+    `${API}/casual-attendance-register`,
     {
         params:{
             worker_id:workerId,
@@ -116,86 +129,134 @@ const viewAttendance = async (workerId, month) => {
   }
 };
 
-const addDailyAttendance = async () => {
+// const addDailyAttendance = async () => {
 
-  if (!workerId || !date || !dailyRate) {
+//   if (!workerId || !date || !dailyRate) {
 
-    alert("Enter worker, date and rate");
+//     alert("Enter worker, date and rate");
 
-    return;
+//     return;
+//   }
+
+//   try {
+
+//     const selectedMonth =
+//       date.substring(0, 7);
+
+//     // SAVE DAILY ATTENDANCE
+//     await axios.post(
+//       `${API}/casual-workers-attendance`,
+//       {
+//         worker_id: workerId,
+
+//         daily_rate: dailyRate,
+
+//         allowance,
+
+//         total_earning:
+//           Number(dailyRate) +
+//           Number(allowance || 0),
+
+//         date,
+
+//         month: selectedMonth,
+
+//         status: "present"
+//       }
+//     );
+
+//     alert("✅ Attendance marked!");
+
+//     setDate("");
+//     setAllowance("");
+//     setDailyRate("");
+
+//     fetchData();
+
+//   } catch (err) {
+
+//     console.error(err);
+
+//     alert("Server Error");
+//   }
+// };
+
+// Save Allowance 
+const saveAllowance = async () => {
+  if (!allowanceWorker) {
+    return alert("Select a worker");
   }
 
   try {
+    await axios.post(`${API}/casual-allowance`, {
+      worker_id: allowanceWorker,
+      month: allowanceMonth,
+      allowance: allowanceAmount || 0
+    });
 
-    const selectedMonth =
-      date.substring(0, 7);
+    Swal.fire({
+      icon: "success",
+      title: "Saved",
+      text: "Allowance Saved"
+    });
 
-    // SAVE DAILY ATTENDANCE
-    await axios.post(
-      `${API}/casual-workers-attendance`,
-      {
-        worker_id: workerId,
-
-        daily_rate: dailyRate,
-
-        allowance,
-
-        total_earning:
-          Number(dailyRate) +
-          Number(allowance || 0),
-
-        date,
-
-        month: selectedMonth,
-
-        status: "present"
-      }
-    );
-
-    alert("✅ Attendance marked!");
-
-    setDate("");
-    setAllowance("");
-    setDailyRate("");
+    setAllowanceAmount("");
 
     fetchData();
 
   } catch (err) {
-
-    console.error(err);
-
-    alert("Server Error");
+    console.log(err);
+    alert("Error saving allowance");
   }
 };
 
 
   // 🔥 CALCULATE
-const calculate = (
-  daysWorked,
-  dailyRate,
-  allowance = 0
-) => {
+const groupedData = data.map(worker => {
 
-  const amount =
-    (Number(daysWorked || 0) *
-    Number(dailyRate || 0)) +
-    Number(allowance || 0);
+    const gross =
+        Number(worker.worked_days) *
+        Number(worker.daily_rate);
 
-  return {
-    amount,
-    balance: amount
+    const netSalary =
+        gross +
+        Number(worker.allowance);
+
+    return {
+      ...worker,
+      days_worked: worker.worked_days,
+      gross,
+      netSalary
   };
+});
+
+const calculate = (daysWorked, dailyRate, allowance = 0) => {
+
+    const amount =
+        Number(daysWorked) * Number(dailyRate);
+
+    const balance =
+        amount + Number(allowance);
+
+    return {
+
+        amount,
+
+        balance
+
+    };
+
 };
 
   // 🔥 GRAND TOTAL
 
-  const groupedData = Object.values(
-  data.reduce((acc, row) => {
-    const key = `${row.worker_id}-${row.month}`;
-    acc[key] = row;
-    return acc;
-  }, {})
-);
+//   const groupedData = Object.values(
+//   data.reduce((acc, row) => {
+//     const key = `${row.worker_id}-${row.month}`;
+//     acc[key] = row;
+//     return acc;
+//   }, {})
+// );
 
 
 const totals = groupedData
@@ -205,7 +266,7 @@ const totals = groupedData
 )
   .reduce(
     (acc, row) => {
-      const c = calculate( row.days_worked, row.daily_rate, row.allowance );
+      const c = calculate( row.worked_days, row.daily_rate, row.allowance );
 
       acc.amount += c.amount;
       acc.balance += c.balance;
@@ -218,7 +279,7 @@ const totals = groupedData
     }
   );
 
-  const totalRequired = totals.amount;
+  const totalRequired = totals.balance;
 
   const generateSlipHTML = (row, c) => {
   return `
@@ -235,7 +296,7 @@ const totals = groupedData
       <table style="width:100%; font-size:12px;">
         <tr>
           <td>Days Worked</td>
-          <td style="text-align:right;">${row.days_worked}</td>
+          <td style="text-align:right;">${row.worked_days}</td>
         </tr>
         <tr>
           <td>Rate per Day</td>
@@ -286,7 +347,7 @@ const printSlip = () => {
 
     const slips = chunk.map(row => {
       const c = calculate(
-        row.days_worked,
+        row.worked_days,
         row.daily_rate,
         row.allowance
         );
@@ -390,12 +451,13 @@ const printWeeklyReport = () => {
 
   let total = 0;
 
-  const workerName =
-    workers.find(w => w.id === workerId)?.name || "";
+  const workerName = selectedWorkerName;
 
   const rowsHTML = weeklyRows.map((d) => {
 
-    total += Number(d.daily_rate || 0);
+    total +=
+      Number(d.attendance_value) *
+      Number(selectedRate);
 
     return `
       <tr>
@@ -409,7 +471,7 @@ const printWeeklyReport = () => {
         </td>
 
         <td>
-          Rs.${Number(d.daily_rate).toFixed(2)}
+          Rs.${Number(selectedRate).toFixed(2)}
         </td>
 
       </tr>
@@ -523,7 +585,7 @@ const printMonthlyReport = () => {
   const rowsHTML = rows.map((row) => {
 
     const c = calculate(
-      row.days_worked,
+      row.worked_days,
       row.daily_rate,
       row.allowance
     );
@@ -535,7 +597,7 @@ const printMonthlyReport = () => {
 
         <td>${row.name}</td>
 
-        <td>${row.days_worked}</td>
+        <td>${row.worked_days}</td>
 
         <td>${row.daily_rate}</td>
 
@@ -645,8 +707,8 @@ const deleteAttendance = async (id) => {
   try {
 
     await axios.delete(
-      `${API}/casual-workers-attendance/${id}`
-    );
+      `${API}/casual-attendance-register/${id}`
+  );
 
     alert("✅ Attendance Deleted");
 
@@ -661,49 +723,6 @@ const deleteAttendance = async (id) => {
     console.error(err);
 
     alert("❌ Error deleting attendance");
-  }
-};
-
-const editAttendance = async (row) => {
-
-  const newDailyRate = prompt(
-    "Enter Daily Rate",
-    row.daily_rate
-  );
-
-  if (!newDailyRate) return;
-
-  const newAllowance = prompt(
-    "Enter Allowance",
-    row.allowance
-  );
-
-  if (!newAllowance) return;
-
-  const total =
-    (Number(newDailyRate) * Number(row.days_worked)) +
-    Number(newAllowance || 0);
-
-  try {
-
-    await axios.put(
-      `${API}/casual-workers-attendance/${row.id}`,
-      {
-        daily_rate: newDailyRate,
-        allowance: newAllowance,
-        total_earning: total
-      }
-    );
-
-    alert("✅ Row Updated");
-
-    fetchData();
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("❌ Update failed");
   }
 };
 
@@ -767,110 +786,88 @@ const editAttendance = async (row) => {
         </Grid>
       </Paper>
 
-      {/* DAILY ATTENDANCE */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <Typography sx={{ color: "#fff", mb: 2 }}>
-          📅 Daily Attendance
-        </Typography>
-
-        <Grid container spacing={2}>
-
-          {/* Worker Select */}
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel sx={{ color: "#aaa" }}>
-                Select Worker
-              </InputLabel>
-
-              <Select
-                value={workerId}
-                onChange={(e) => setWorkerId(e.target.value)}
-                sx={{
-                  width: 250,
-                  color: "#fff",
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+      
+          <Typography variant="h6" gutterBottom>
+            Allowance
+          </Typography>
+      
+          <Grid container spacing={2}>
+      
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+      
+                <InputLabel>
+                  Worker
+                </InputLabel>
+      
+                <Select
+                  value={allowanceWorker}
+                  label="Worker"
+                  onChange={(e) =>
+                  setAllowanceWorker(e.target.value)
+                  }
+                >
+      
+                  {workers.map((w) => (
+      
+                    <MenuItem
+                      key={w.id}
+                      value={w.id}
+                    >
+                      {w.name}
+                    </MenuItem>
+      
+                  ))}
+      
+                </Select>
+      
+              </FormControl>
+            </Grid>
+      
+            <Grid item xs={12} md={3}>
+              <TextField
+                type="month"
+                label="Month"
+                fullWidth
+                value={allowanceMonth}
+                onChange={(e) =>
+                  setAllowanceMonth(e.target.value)
+                }
+                InputLabelProps={{
+                  shrink: true
                 }}
-              >
-                {workers.map((worker) => (
-                  <MenuItem key={worker.id} value={worker.id}>
-                    {worker.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Rate */}
-          <Grid item xs={12} md={2}>
-            <TextField
-                label="Daily Rate"
+              />
+            </Grid>
+      
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Allowance"
                 type="number"
                 fullWidth
-                value={dailyRate}
+                value={allowanceAmount}
                 onChange={(e) =>
-                setDailyRate(e.target.value)
+                  setAllowanceAmount(e.target.value)
                 }
-                sx={{
-                input: { color: "#fff" },
-                label: { color: "#aaa" },
-                }}
-            />
+               />
             </Grid>
-
-          {/* Allowance */}
-          <Grid item xs={12} md={2}>
-            <TextField
-              label="Allowance"
-              type="number"
-              fullWidth
-              value={allowance}
-              onChange={(e) => setAllowance(e.target.value)}
-              sx={{
-                input: { color: "#fff" },
-                label: { color: "#aaa" },
-              }}
-            />
+      
+            <Grid item xs={12} md={2}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="success"
+                onClick={saveAllowance}
+              >
+                Save
+              </Button>
+            </Grid>
+      
           </Grid>
-
-          {/* Date */}
-          <Grid item xs={12} md={2}>
-            <TextField
-              type="date"
-              fullWidth
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              sx={{
-                input: { color: "#fff" },
-              }}
-            />
-          </Grid>
-
-          {/* Button */}
-          <Grid item xs={12} md={1}>
-            <Button
-              fullWidth
-              onClick={addDailyAttendance}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                fontWeight: "bold"
-              }}
-            >
-              Save
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+      
+        </CardContent>
+      </Card>
 
       <Box
         sx={{
@@ -1040,7 +1037,7 @@ const editAttendance = async (row) => {
                 (!filterMonth || row.month === filterMonth)
               )
               .map((row) => {
-              const c = calculate( row.days_worked, row.daily_rate);
+              const c = calculate( row.days_worked, row.daily_rate, row.allowance);
 
               return (
                 <TableRow key={row.id}>
@@ -1051,7 +1048,7 @@ const editAttendance = async (row) => {
                   <TableCell sx={{ color: "#fff" }}>{row.days_worked}</TableCell>
 
                   <TableCell sx={{ color: "#22c55e" }}>
-                    {c.amount.toFixed(2)}
+                    {c.balance.toFixed(2)}
                   </TableCell>
                   <TableCell>
 
@@ -1066,30 +1063,6 @@ const editAttendance = async (row) => {
                     }}
                   >
                     View
-                  </Button>
-
-                  {/* EDIT */}
-                  <Button
-                    onClick={() => editAttendance(row)}
-                    sx={{
-                      background: "#facc15",
-                      color: "#000",
-                      ml: 1
-                    }}
-                  >
-                    Edit
-                  </Button>
-
-                  {/* DELETE */}
-                  <Button
-                    onClick={() => deleteAttendance(row.id)}
-                    sx={{
-                      background: "#ef4444",
-                      color: "#fff",
-                      ml: 1
-                    }}
-                  >
-                    Delete
                   </Button>
 
                 </TableCell>
@@ -1117,7 +1090,7 @@ const editAttendance = async (row) => {
                   fontWeight: "bold"
                 }}
               >
-                {totals.amount.toFixed(2)}
+                {totals.balance.toFixed(2)}
               </TableCell>
 
               {/* Empty Actions */}
@@ -1162,7 +1135,18 @@ const editAttendance = async (row) => {
 
                 {" - Rs."}
 
-                {d.daily_rate}
+                {
+                Number(d.attendance_value) === 1.5
+                ? "Sunday"
+
+                : Number(d.attendance_value) === 1
+                ? "Present"
+
+                : Number(d.attendance_value) === 0.5
+                ? "Half Day"
+
+                : "Absent"
+                }
           </Typography>
 
           <Button

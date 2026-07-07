@@ -3283,6 +3283,170 @@ app.post("/casual-workers", (req, res) => {
 
 });
 
+// CASUAL WORKERS SAVE ALLOWANCE
+app.post("/casual-allowance", (req, res) => {
+
+    const {
+        worker_id,
+        month,
+        allowance
+    } = req.body;
+
+    const sql = `
+        INSERT INTO casual_allowance
+        (
+            worker_id,
+            month,
+            allowance
+        )
+        VALUES (?,?,?)
+
+        ON DUPLICATE KEY UPDATE
+
+        allowance = VALUES(allowance)
+    `;
+
+    db.query(
+        sql,
+        [
+            worker_id,
+            month,
+            allowance
+        ],
+        (err) => {
+
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                success: true
+            });
+
+        }
+    );
+
+});
+
+// CASUAL WORKERS GET ALLOWANCE
+app.get("/casual-allowance", (req, res) => {
+
+    const {
+        month,
+        plantation
+    } = req.query;
+
+    const sql = `
+        SELECT
+
+            ca.worker_id,
+
+            ca.month,
+
+            ca.allowance,
+
+            cw.name
+
+        FROM casual_allowance ca
+
+        JOIN casual_workers cw
+        ON cw.id = ca.worker_id
+
+        WHERE
+
+            ca.month = ?
+
+        AND cw.plantation = ?
+
+        ORDER BY cw.name
+    `;
+
+    db.query(
+        sql,
+        [
+            month,
+            plantation
+        ],
+        (err, result) => {
+
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+
+        }
+    );
+
+});
+
+// CASUAL WORKERS PAYROLL DATA
+app.get("/casual-payroll-data", (req, res) => {
+
+    const plantation = req.query.plantation;
+
+    const sql = `
+
+    SELECT
+
+        cw.id AS worker_id,
+
+        cw.name,
+
+        DATE_FORMAT(car.attendance_date,'%Y-%m') AS month,
+
+        SUM(car.attendance_value) AS worked_days,
+
+        ps.daily_rate,
+
+        COALESCE(MAX(ca.allowance),0) AS allowance
+
+    FROM casual_workers cw
+
+    JOIN casual_attendance_register car
+    ON car.worker_id = cw.id
+
+    JOIN payroll_settings ps
+    ON ps.plantation = cw.plantation
+
+    LEFT JOIN casual_allowance ca
+    ON ca.worker_id = cw.id
+    AND ca.month = DATE_FORMAT(car.attendance_date,'%Y-%m')
+
+    WHERE
+
+        cw.plantation = ?
+
+    GROUP BY
+
+        cw.id,
+        cw.name,
+        DATE_FORMAT(car.attendance_date,'%Y-%m'),
+        ps.daily_rate
+
+    ORDER BY cw.name
+
+    `;
+
+    db.query(
+        sql,
+        [plantation],
+        (err, result) => {
+
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+
+        }
+    );
+
+});
+
 // ADD DAILY ATTENDANCE - CASUAL WORKERS
 app.post(
   "/casual-workers-attendance",
