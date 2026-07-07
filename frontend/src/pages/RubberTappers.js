@@ -157,6 +157,37 @@ const viewAttendance = async(workerId,month)=>{
 
 }
 
+// Delete Attendance
+const deleteAttendance = async (id) => {
+
+    if (!window.confirm("Delete this attendance?")) {
+        return;
+    }
+
+    try {
+
+        await axios.delete(
+            `${API}/rubber-attendance-register/${id}`
+        );
+
+        alert("Attendance Deleted");
+
+        setAttendanceDates(
+            attendanceDates.filter(d => d.id !== id)
+        );
+
+        fetchData();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Delete Failed");
+
+    }
+
+};
+
 // Save Allowance 
 const saveAllowance = async () => {
 
@@ -1796,11 +1827,13 @@ const printMonthlyReport = () => {
 
             <TableRow>
 
-            <TableCell>Date</TableCell>
+              <TableCell>Date</TableCell>
 
-            <TableCell>Attendance</TableCell>
+              <TableCell>Attendance</TableCell>
 
-            <TableCell>KG</TableCell>
+              <TableCell>KG</TableCell>
+
+              <TableCell>Action</TableCell>
 
             </TableRow>
 
@@ -1833,8 +1866,16 @@ const printMonthlyReport = () => {
             <TableCell>{d.kg}</TableCell>
 
             <TableCell>
+              <Button
+                  color="error"
+                  variant="contained"
+                  size="small"
+                  onClick={() => deleteAttendance(d.id)}
+              >
+                  Delete
+              </Button>
 
-            </TableCell>
+              </TableCell>
 
             </TableRow>
 
