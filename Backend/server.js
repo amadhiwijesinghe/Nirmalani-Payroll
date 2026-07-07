@@ -1280,6 +1280,40 @@ app.delete("/rubber-attendance-register/:id", (req, res) => {
 
 });
 
+// RUBBER TAPPERS CALENDAR
+app.get("/rubber-attendance-calendar", (req, res) => {
+
+    const { plantation, month, year } = req.query;
+
+    const sql = `
+        SELECT
+            worker_id,
+            attendance_date,
+            attendance_value
+        FROM rubber_attendance_register
+        WHERE plantation = ?
+        AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+    `;
+
+    db.query(
+        sql,
+        [
+            plantation,
+            `${year}-${String(month).padStart(2, "0")}`
+        ],
+        (err, result) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+
+        }
+    );
+
+});
+
 // ================= RUBBER TAPPERS ATTENDANCE =================
 
 // ADD DAILY ATTENDANCE

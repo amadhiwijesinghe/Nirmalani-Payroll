@@ -130,6 +130,30 @@ const loadAttendance = async () => {
 
         });
 
+        const rubberRes = await axios.get(
+            `${API}/rubber-attendance-calendar`,
+            {
+                params: {
+                    plantation,
+                    month,
+                    year
+                }
+            }
+        );
+
+        rubberRes.data.forEach(row => {
+
+            const date = dayjs(row.attendance_date)
+                .format("YYYY-MM-DD");
+
+            const key =
+                `rubber-${row.worker_id}-${date}`;
+
+            attendanceObject[key] =
+                Number(row.attendance_value) || 0;
+
+        });
+
         setAttendance(attendanceObject);
 
     } catch (err) {
@@ -913,6 +937,178 @@ const filteredWorkers =
 
       </TableContainer>
       </Paper>
+
+      <Dialog
+        open={rubberDialogOpen}
+        onClose={() => setRubberDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+    >
+
+        <DialogTitle>
+
+            Rubber Tapper Attendance
+
+        </DialogTitle>
+
+        <DialogContent>
+
+            <Stack spacing={2} sx={{ mt: 1 }}>
+
+                <Typography>
+
+                    <b>Worker :</b> {selectedWorker?.name}
+
+                </Typography>
+
+                <Typography>
+
+                    <b>Date :</b> {selectedDate}
+
+                </Typography>
+
+                {dayjs(selectedDate).day() === 0 ? (
+
+                    <FormControl fullWidth>
+
+                        <TextField
+                            label="Attendance"
+                            value="Sunday Work (1.5 Days)"
+                            InputProps={{
+                                readOnly: true
+                            }}
+                        />
+
+                    </FormControl>
+
+                    ) : (
+
+                    <FormControl fullWidth>
+
+                        <InputLabel>Attendance</InputLabel>
+
+                        <Select
+                            value={rubberAttendance.attendance_value}
+                            label="Attendance"
+                            onChange={(e) => {
+
+                                setRubberAttendance({
+                                    ...rubberAttendance,
+                                    attendance_value: e.target.value
+                                });
+
+                            }}
+                        >
+
+                            <MenuItem value={1}>
+                                Present
+                            </MenuItem>
+
+                            <MenuItem value={0.5}>
+                                Half Day
+                            </MenuItem>
+
+                        </Select>
+
+                    </FormControl>
+
+                    )}
+
+                <TextField
+                    label="Collected Liter"
+                    type="number"
+                    value={rubberAttendance.liter}
+                    onChange={(e)=>{
+
+                        const liter = e.target.value;
+
+                        setRubberAttendance({
+
+                            ...rubberAttendance,
+
+                            liter,
+
+                            kg: calculateKG(
+                                liter,
+                                rubberAttendance.drc
+                            )
+
+                        });
+
+                    }}
+                />
+
+                <TextField
+                    label="DRC %"
+                    type="number"
+                    value={rubberAttendance.drc}
+                    onChange={(e)=>{
+
+                        const drc = e.target.value;
+
+                        setRubberAttendance({
+
+                            ...rubberAttendance,
+
+                            drc,
+
+                            kg: calculateKG(
+                                rubberAttendance.liter,
+                                drc
+                            )
+
+                        });
+
+                    }}
+                />
+
+                <TextField
+                    label="KG"
+                    value={rubberAttendance.kg}
+                    InputProps={{
+                        readOnly:true
+                    }}
+                />
+
+                <TextField
+                    label="Allowance"
+                    type="number"
+                    value={rubberAttendance.allowance}
+                    onChange={(e)=>{
+
+                        setRubberAttendance({
+
+                            ...rubberAttendance,
+
+                            allowance:e.target.value
+
+                        });
+
+                    }}
+                />
+
+            </Stack>
+
+        </DialogContent>
+
+        <DialogActions>
+
+            <Button
+                onClick={()=>setRubberDialogOpen(false)}
+            >
+                Cancel
+            </Button>
+
+            <Button
+                variant="contained"
+                onClick={saveRubberAttendance}
+            >
+                Save
+            </Button>
+
+        </DialogActions>
+
+    </Dialog>
 
     </Paper>
   );
