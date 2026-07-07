@@ -680,8 +680,6 @@ const printWeeklyReport = async () => {
 
         <td>${row.rate}</td>
 
-        <td>${row.allowance || 0}</td>
-
         <td>${total.toFixed(2)}</td>
 
       </tr>
@@ -797,7 +795,6 @@ const printWeeklyReport = async () => {
               <th>Date</th>
               <th>KG</th>
               <th>Rate</th>
-              <th>Allowance</th>
               <th>Total</th>
             </tr>
 
@@ -916,23 +913,21 @@ const printMonthlyReport = () => {
       Number(row.calculated_total || 0);
 
     return `
-      <tr>
+    <tr>
+    <td>${row.epf_no || "-"}</td>
+    <td>${row.name}</td>
+    <td>${row.worker_category}</td>
+    <td>${row.worked_days}</td>
+    <td>${Number(row.rate).toFixed(2)}</td>
+    <td>${Number(row.calculated_total).toFixed(2)}</td>
+    <td>${Number(row.allowance).toFixed(2)}</td>
+    <td>${Number(row.epf8).toFixed(2)}</td>
+    <td>${Number(row.epf12).toFixed(2)}</td>
+    <td>${Number(row.epf20).toFixed(2)}</td>
+    <td>${Number(row.etf).toFixed(2)}</td>
+    <td>${Number(row.netSalary).toFixed(2)}</td>
+    </tr>
 
-        <td>${row.name}</td>
-
-        <td>${row.month}</td>
-
-        <td>${row.kg}</td>
-
-        <td>${row.rate}</td>
-
-        <td>${row.allowance || 0}</td>
-
-        <td>
-          ${Number(row.calculated_total || 0).toFixed(2)}
-        </td>
-
-      </tr>
     `;
   }).join("");
 
@@ -1033,13 +1028,20 @@ const printMonthlyReport = () => {
           <thead>
 
             <tr>
+
+              <th>EPF No</th>
               <th>Name</th>
-              <th>Month</th>
-              <th>KG</th>
+              <th>Category</th>
+              <th>Worked Days</th>
               <th>Rate</th>
+              <th>Gross Salary</th>
               <th>Allowance</th>
-              <th>Total Earnings</th>
-            </tr>
+              <th>EPF 8%</th>
+              <th>EPF 12%</th>
+              <th>Total EPF</th>
+              <th>ETF</th>
+              <th>Net Salary</th>
+              </tr>
 
           </thead>
 
@@ -1622,18 +1624,22 @@ const printMonthlyReport = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Category</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Days</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>KG</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Avg KG</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Bonus</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Gross</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Actions</TableCell>
-              
+
+            <TableCell>EPF No</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Category</TableCell>
+            <TableCell>Days</TableCell>
+            <TableCell>Rate</TableCell>
+            <TableCell>Gross Salary</TableCell>
+            <TableCell>Allowance</TableCell>
+            <TableCell>EPF 8%</TableCell>
+            <TableCell>Deduction</TableCell>
+            <TableCell>EPF 12%</TableCell>
+            <TableCell>Total EPF</TableCell>
+            <TableCell>ETF</TableCell>
+            <TableCell>Net Salary</TableCell>
+            <TableCell>Actions</TableCell>
+
             </TableRow>
           </TableHead>
 
@@ -1648,30 +1654,18 @@ const printMonthlyReport = () => {
 
               return (
                 <TableRow key={row.id}>
-                  <TableCell sx={{ color: "#fff" }}>{row.name}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.worker_category}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>{row.worked_days}</TableCell>
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.kg.toFixed(2)}
-                  </TableCell>
-
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.averageKg.toFixed(2)}
-                  </TableCell>
-
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.bonus.toFixed(2)}
-                  </TableCell>
-
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.calculated_total.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.allowance.toFixed(2)}
-                  </TableCell>
-                  <TableCell sx={{ color: "#fff" }}>
-                      {row.epf8.toFixed(2)}
-                  </TableCell>
+                  <TableCell>{row.epf_no || "-"}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.worker_category}</TableCell>
+                  <TableCell>{row.worked_days}</TableCell>
+                  <TableCell>{Number(row.rate).toFixed(2)}</TableCell>
+                  <TableCell>{row.calculated_total.toFixed(2)}</TableCell>
+                  <TableCell>{row.allowance.toFixed(2)}</TableCell>
+                  <TableCell>{row.epf8.toFixed(2)}</TableCell>
+                  <TableCell>{row.epf8.toFixed(2)}</TableCell>
+                  <TableCell>{row.epf12.toFixed(2)}</TableCell>
+                  <TableCell>{row.epf20.toFixed(2)}</TableCell>
+                  <TableCell>{row.etf.toFixed(2)}</TableCell>
                   <TableCell
                       sx={{
                           color:"#22c55e",
@@ -1703,46 +1697,76 @@ const printMonthlyReport = () => {
             {/* 🔥 GRAND TOTAL */}
             <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
 
+              <TableCell></TableCell> {/* EPF */}
+
               <TableCell colSpan={3}>
-                  TOTAL
+              TOTAL
+              </TableCell>
+
+              <TableCell></TableCell> {/* Rate */}
+
+              <TableCell>
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.calculated_total),0
+              ).toFixed(2)
+              }
               </TableCell>
 
               <TableCell>
-                  {groupedData
-                      .filter(r => r.month === selectedMonth)
-                      .reduce((s,r)=>s+Number(r.kg||0),0)
-                      .toFixed(2)}
-              </TableCell>
-
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-
-              <TableCell>
-                  {groupedData
-                      .filter(r => r.month === selectedMonth)
-                      .reduce((s,r)=>s+Number(r.calculated_total||0),0)
-                      .toFixed(2)}
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.allowance),0
+              ).toFixed(2)
+              }
               </TableCell>
 
               <TableCell>
-                  {groupedData
-                      .filter(r => r.month === selectedMonth)
-                      .reduce((s,r)=>s+Number(r.allowance||0),0)
-                      .toFixed(2)}
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.epf8),0
+              ).toFixed(2)
+              }
               </TableCell>
 
               <TableCell>
-                  {groupedData
-                      .filter(r => r.month === selectedMonth)
-                      .reduce((s,r)=>s+Number(r.epf8||0),0)
-                      .toFixed(2)}
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.epf8),0
+              ).toFixed(2)
+              }
               </TableCell>
 
               <TableCell>
-                  {groupedData
-                      .filter(r => r.month === selectedMonth)
-                      .reduce((s,r)=>s+Number(r.netSalary||0),0)
-                      .toFixed(2)}
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.epf12),0
+              ).toFixed(2)
+              }
+              </TableCell>
+
+              <TableCell>
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.epf20),0
+              ).toFixed(2)
+              }
+              </TableCell>
+
+              <TableCell>
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.etf),0
+              ).toFixed(2)
+              }
+              </TableCell>
+
+              <TableCell>
+              {
+              groupedData.reduce(
+              (s,r)=>s+Number(r.netSalary),0
+              ).toFixed(2)
+              }
               </TableCell>
 
               <TableCell></TableCell>
@@ -1778,8 +1802,6 @@ const printMonthlyReport = () => {
 
             <TableCell>KG</TableCell>
 
-            <TableCell>Allowance</TableCell>
-
             </TableRow>
 
             </TableHead>
@@ -1809,8 +1831,6 @@ const printMonthlyReport = () => {
             </TableCell>
 
             <TableCell>{d.kg}</TableCell>
-
-            <TableCell>{d.allowance}</TableCell>
 
             <TableCell>
 

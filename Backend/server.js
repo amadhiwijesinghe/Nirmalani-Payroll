@@ -1477,8 +1477,7 @@ app.get("/rubber-attendance-history/:workerId/:month", (req, res) => {
         SELECT
             attendance_date,
             attendance_value,
-            kg,
-            allowance
+            kg
         FROM rubber_attendance_register
         WHERE worker_id = ?
         AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
@@ -1509,7 +1508,6 @@ app.get("/rubber-weekly-report", (req, res) => {
       rar.attendance_date,
       rar.attendance_value,
       rar.kg,
-      rar.allowance,
       ps.daily_rate AS rate
     FROM rubber_attendance_register rar
 
@@ -1735,7 +1733,7 @@ app.get(
     SELECT
     SUM(rta.total_earning) AS total
 
-    FROM rubber_tappers_attendance rta
+    FROM rubber_attendance_register rta
 
     JOIN rubber_tappers rt
     ON rt.id = rta.worker_id
