@@ -16,7 +16,15 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TableContainer
+  TableContainer,
+
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+
+  TextField
+
 } from "@mui/material";
 import printAttendanceRegister from "../utils/printAttendanceRegister";
 
@@ -37,6 +45,20 @@ export default function AttendanceRegister({ plantation }) {
   const [isEditing, setIsEditing] = useState(true);
   const [isFinalized, setIsFinalized] = useState(false);
   const [workerType, setWorkerType] = useState("all");
+
+  const [rubberDialogOpen, setRubberDialogOpen] = useState(false);
+
+  const [selectedWorker, setSelectedWorker] = useState(null);
+
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const [rubberAttendance, setRubberAttendance] = useState({
+    attendance_value: 1,
+    liter: "",
+    drc: "",
+    kg: "",
+    allowance: 0
+  });
 
   useEffect(()=>{
 
@@ -173,6 +195,36 @@ const toggleAttendance = (worker, day) => {
 
 };
 
+// Open Dialog Boox for Rubber Tappers 
+const openRubberDialog = (worker, date) => {
+
+    setSelectedWorker(worker);
+
+    setSelectedDate(date);
+
+    setRubberAttendance({
+        attendance_value: dayjs(date).day() === 0 ? 1.5 : 1,
+        liter: "",
+        drc: "",
+        kg: "",
+        allowance: 0
+    });
+
+    setRubberDialogOpen(true);
+
+};
+
+// KG auto calculation
+const calculateKG = (liter, drc) => {
+
+    const l = Number(liter || 0);
+
+    const d = Number(drc || 0);
+
+    return ((l * d) / 100).toFixed(2);
+
+};
+
 // Save Attendance
 const saveAttendance = async () => {
 
@@ -209,6 +261,39 @@ const saveAttendance = async () => {
         console.log(err);
 
         alert("Error Saving Attendance");
+
+    }
+
+};
+
+// Save Rubber Attendance
+const saveRubberAttendance = async () => {
+
+    try {
+
+        await axios.post(
+            `${API}/rubber-attendance-register`,
+            {
+                worker_id: selectedWorker.worker_id,
+                plantation,
+                attendance_date: selectedDate,
+                attendance_value: rubberAttendance.attendance_value,
+                liter: rubberAttendance.liter,
+                drc: rubberAttendance.drc,
+                kg: rubberAttendance.kg,
+                allowance: rubberAttendance.allowance
+            }
+        );
+
+        setRubberDialogOpen(false);
+
+        alert("Rubber attendance saved.");
+
+    } catch (err) {
+
+        console.log(err);
+
+        alert(err.response?.data?.message || "Error");
 
     }
 
@@ -731,12 +816,15 @@ const filteredWorkers =
                         key={i}
                         align="center"
                         onClick={() => {
-                          if (!isEditing) return;
-                          if (isFinalized) return;
-                          if (!isFuture) {
-                            toggleAttendance(worker, i + 1);
-                          }
-                        }}
+                            if (!isEditing) return;
+                            if (isFinalized) return;
+                            if (isFuture) return;
+                            if (worker.worker_type === "rubber") {
+                                openRubberDialog(worker, date);
+                            } else {
+                                toggleAttendance(worker, i + 1);
+                            }
+                            }}
                         sx={{
                           width: 60,
                           minWidth: 60,

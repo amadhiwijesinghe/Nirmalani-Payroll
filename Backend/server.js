@@ -1146,6 +1146,140 @@ app.post('/rubber-tappers', (req, res) => {
   );
 });
 
+// SAVE RUBBER TAPPERS ATTENDANCE
+app.post("/rubber-attendance-register", (req, res) => {
+
+  const {
+    worker_id,
+    plantation,
+    attendance_date,
+    attendance_value,
+    liter,
+    drc,
+    kg,
+    allowance
+  } = req.body;
+
+  const sql = `
+    INSERT INTO rubber_attendance_register
+    (
+      worker_id,
+      plantation,
+      attendance_date,
+      attendance_value,
+      liter,
+      drc,
+      kg,
+      allowance,
+      status
+    )
+    VALUES
+    (
+      ?, ?, ?, ?, ?, ?, ?, ?, 'finalized'
+    )
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      plantation,
+      attendance_date,
+      attendance_value,
+      liter,
+      drc,
+      kg,
+      allowance || 0
+    ],
+    (err) => {
+
+      if (err) {
+
+        console.log(err);
+
+        if (err.code === "ER_DUP_ENTRY") {
+
+          return res.status(400).json({
+            message: "Attendance already exists."
+          });
+
+        }
+
+        return res.status(500).json(err);
+
+      }
+
+      res.json({
+        success: true
+      });
+
+    }
+  );
+
+});
+
+// GET RUBBER TAPPERS ATTENDANCE
+app.get("/rubber-attendance-register", (req, res) => {
+
+  const {
+    worker_id,
+    month
+  } = req.query;
+
+  const sql = `
+    SELECT *
+    FROM rubber_attendance_register
+    WHERE worker_id = ?
+      AND DATE_FORMAT(attendance_date,'%Y-%m') = ?
+    ORDER BY attendance_date
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      month
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
+// DELETE RUBBER TAPPERS ATTENDANCE
+app.delete("/rubber-attendance-register/:id", (req, res) => {
+
+  db.query(
+    `
+    DELETE
+    FROM rubber_attendance_register
+    WHERE id = ?
+    `,
+    [req.params.id],
+    (err) => {
+
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true
+      });
+
+    }
+  );
+
+});
+
 // ================= RUBBER TAPPERS ATTENDANCE =================
 
 // ADD DAILY ATTENDANCE
