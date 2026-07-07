@@ -1254,26 +1254,67 @@ app.get("/rubber-attendance-register", (req, res) => {
 // DELETE RUBBER TAPPERS ATTENDANCE
 app.delete("/rubber-attendance-register/:id", (req, res) => {
 
-  db.query(
-    `
-    DELETE
-    FROM rubber_attendance_register
-    WHERE id = ?
-    `,
-    [req.params.id],
-    (err) => {
+    const id = req.params.id;
 
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
+    const getSql = `
+        SELECT
+            worker_id,
+            attendance_date
+        FROM rubber_attendance_register
+        WHERE id = ?
+    `;
 
-      res.json({
-        success: true
-      });
+    db.query(getSql, [id], (err, rows) => {
 
-    }
-  );
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: "Attendance not found"
+            });
+        }
+
+        const { worker_id, attendance_date } = rows[0];
+
+        db.query(
+            `DELETE FROM rubber_attendance_register WHERE id = ?`,
+            [id],
+            (err) => {
+
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json(err);
+                }
+
+                db.query(
+                    `
+                    DELETE FROM attendance_register
+                    WHERE worker_type='rubber'
+                    AND worker_id=?
+                    AND attendance_date=?
+                    `,
+                    [worker_id, attendance_date],
+                    (err2) => {
+
+                        if (err2) {
+                            console.log(err2);
+                            return res.status(500).json(err2);
+                        }
+
+                        res.json({
+                            success: true
+                        });
+
+                    }
+                );
+
+            }
+        );
+
+    });
 
 });
 
