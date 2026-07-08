@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
+import ActionButtons from "../components/mobile/ActionButtons";
 import {
   TextField,
   Button,
@@ -727,36 +736,24 @@ const deleteAttendance = async (id) => {
 };
 
   return (
-    <Box
-      sx={{
-        p: 3,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-      }}
-    >
+    <MobilePage>
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-        }}
-      >
-        👷 Casual Workers Dashboard
-      </Typography>
+      <MobileHeader
+        title="👷 Casual Workers"
+        subtitle="Manage casual worker payroll"
+      />
 
       {/* ADD WORKER */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+      <ResponsiveCard>
+        <Typography
+          sx={{
+              color:"#fff",
+              fontWeight:700,
+              mb:2
+          }}
+        >
+          👷 Add Casual Worker
+        </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
@@ -784,7 +781,7 @@ const deleteAttendance = async (id) => {
             </Button>
           </Grid>
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -1174,6 +1171,6 @@ const deleteAttendance = async (id) => {
     </Button>
   </Paper>
 )}
-    </Box>
+    </MobilePage>
   );
 }
