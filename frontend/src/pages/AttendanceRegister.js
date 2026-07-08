@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileInput from "../components/mobile/MobileInput";
 import {
   Box,
   Paper,
@@ -391,23 +396,14 @@ const filteredWorkers =
         );
 
   return (
-    <Paper
-      sx={{
-        p: 3,
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        height: "100%"
-      }}
-    >
 
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        mb={3}
-      >
-        Attendance Register
-      </Typography>
+    <MobilePage>   
+
+      <MobileHeader
+        title="📅 Attendance Register"
+        subtitle="Manage daily worker attendance"
+      />
+      <ResponsiveCard>
 
       <Stack
         direction="row"
@@ -510,71 +506,53 @@ const filteredWorkers =
 
       </FormControl>
 
-        <Button
-        sx={{
-          width:120,
-          height:48,
-          borderRadius:2
-      }}
-          variant="contained"
-          color="success"
-          onClick={saveAttendance}
-          disabled={!isEditing || isFinalized}
+      <MobileButton
+        color="primary"
+        onClick={saveAttendance}
+        disabled={!isEditing || isFinalized}
+        fullWidth={false}
       >
-          Save
-      </Button>
+        Save
+      </MobileButton>
 
-      <Button
-        sx={{
-          width:120,
-          height:48,
-          borderRadius:2
-      }}
-        variant="contained"
+      <MobileButton
         color="warning"
-        disabled={isEditing || isFinalized}
         onClick={() => setIsEditing(true)}
-    >
+        disabled={isEditing || isFinalized}
+        fullWidth={false}
+      >
         Edit
-    </Button>
+      </MobileButton>
 
-    <Button
-      sx={{
-        width:120,
-        height:48,
-        borderRadius:2
-    }}
-      variant="contained"
-      color="error"
-      onClick={finalizeAttendance}
-      disabled={isFinalized}
-    >
+      <MobileButton
+        color="danger"
+        onClick={finalizeAttendance}
+        disabled={isFinalized}
+        fullWidth={false}
+        >
         Finalize
-    </Button>
+      </MobileButton>
 
-    <Button
-      sx={{
-        width:120,
-        height:48,
-        borderRadius:2
-    }}
-      variant="outlined"
-      onClick={() =>
-          printAttendanceRegister({
-              workers: filteredWorkers,
-              attendance,
-              month,
-              year,
-              plantation,
-              workerType,
-              daysInMonth
-          })
-      }
-    >
+      <MobileButton
+        color="secondary"
+        fullWidth={false}
+        onClick={() =>
+            printAttendanceRegister({
+            workers: filteredWorkers,
+            attendance,
+            month,
+            year,
+            plantation,
+            workerType,
+            daysInMonth,
+            })
+        }
+        >
         Print
-    </Button>
+      </MobileButton>
 
       </Stack>
+      </ResponsiveCard>
 
       <Paper
         elevation={0}
@@ -1094,7 +1072,7 @@ const filteredWorkers =
 
     </Dialog>
 
-    </Paper>
+    </MobilePage>
   );
 
 }

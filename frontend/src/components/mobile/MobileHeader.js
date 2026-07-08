@@ -1,4 +1,5 @@
 import { Typography, Box } from "@mui/material";
+import { red } from "@mui/material/colors";
 
 export default function MobileHeader({
   title,
@@ -29,7 +30,7 @@ export default function MobileHeader({
       {subtitle && (
         <Typography
           sx={{
-            color: "#94a3b8",
+            color: "#FFFF",
 
             mt: 0.5,
 
