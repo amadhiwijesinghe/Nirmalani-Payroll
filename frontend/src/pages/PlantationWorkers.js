@@ -4,6 +4,10 @@ import Swal from "sweetalert2";
 import MobilePage from "../components/mobile/MobilePage";
 import MobileHeader from "../components/mobile/MobileHeader";
 import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileSearch from "../components/mobile/MobileSearch";
+import MobileButton from "../components/mobile/MobileButton";
+import AddIcon from "@mui/icons-material/Add";
 import {
   TextField,
   Button,
@@ -1001,39 +1005,28 @@ const reportMonth = new Date(filterMonth + "-01")
           justifyContent="space-between"
         >
           <Grid item xs={12} md={5}>
-            <TextField
+            <MobileInput
               label="Worker Name"
-              fullWidth
               value={name}
               onChange={(e) => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} md={5}>
-            <TextField
+            <MobileInput
               label="EPF Number"
-              fullWidth
               value={epf}
               onChange={(e) => setEpf(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
+            <MobileButton
               onClick={addWorker}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-              }}
             >
-              Add
-            </Button>
+              <AddIcon sx={{ mr: 1 }} />
+              Add Worker
+            </MobileButton>
           </Grid>
           <Grid
             item
@@ -1046,61 +1039,28 @@ const reportMonth = new Date(filterMonth + "-01")
               }
             }}
           >
-            <Button
-              fullWidth
-              onClick={() =>
-                setPage("casualworkers")
-              }
-              sx={{
-                height: "100%",
-
-                borderRadius: 3,
-
-                fontWeight: 700,
-
-                background:
-                  "linear-gradient(135deg,#f59e0b,#f97316)",
-
-                color: "#fff",
-
-                '&:hover': {
-                  background:
-                    "linear-gradient(135deg,#d97706,#ea580c)"
-                }
-              }}
+            <MobileButton
+              color="warning"
+              onClick={() => setPage("casualworkers")}
             >
               Casual Workers
-            </Button>
+            </MobileButton>
 
           </Grid>
         </Grid>
       </ResponsiveCard>
 
       {/* SEARCH & EDIT WORKERS */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(20px)",
-        }}
-      >
+      <ResponsiveCard>
 
         <Typography sx={{ color: "#fff", mb: 2 }}>
           🔍 Search Plantation Workers
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Search Worker"
+        <MobileSearch
+          placeholder="Search worker..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{
-            mb: 3,
-            input: { color: "#fff" },
-            label: { color: "#aaa" }
-          }}
         />
 
         {search.trim() !== "" &&
@@ -1139,41 +1099,27 @@ const reportMonth = new Date(filterMonth + "-01")
                 </Typography>
               </Box>
 
-              <Button
+              <MobileButton
+                color="warning"
+                fullWidth={false}
                 onClick={() => {
-
                   setEditingWorker(w);
-
                   setEditName(w.name);
-
                   setEditEpf(w.epf_no);
-                }}
-                sx={{
-                  background: "#facc15",
-                  color: "#000"
                 }}
               >
                 Edit
-              </Button>
+              </MobileButton>
 
             </Box>
           ))}
 
-        </Paper>
+        </ResponsiveCard>
 
         {/* EDIT WORKER */}
         {editingWorker && (
 
-          <Paper
-            sx={{
-              p: 3,
-              mt: 3,
-              mb: 4,
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 5,
-              backdropFilter: "blur(20px)"
-            }}
-          >
+          <ResponsiveCard>
 
             <Typography sx={{ color: "#fff", mb: 2 }}>
               ✏️ Edit Worker
@@ -1182,51 +1128,31 @@ const reportMonth = new Date(filterMonth + "-01")
             <Grid container spacing={2}>
 
               <Grid item xs={12} md={5}>
-                <TextField
-                  fullWidth
+                <MobileInput
                   label="Worker Name"
                   value={editName}
-                  onChange={(e) =>
-                    setEditName(e.target.value)
-                  }
-                  sx={{
-                    input: { color: "#fff" },
-                    label: { color: "#aaa" }
-                  }}
+                  onChange={(e) => setEditName(e.target.value)}
                 />
               </Grid>
 
               <Grid item xs={12} md={5}>
-                <TextField
-                  fullWidth
+                <MobileInput
                   label="EPF Number"
                   value={editEpf}
-                  onChange={(e) =>
-                    setEditEpf(e.target.value)
-                  }
-                  sx={{
-                    input: { color: "#fff" },
-                    label: { color: "#aaa" }
-                  }}
+                  onChange={(e) => setEditEpf(e.target.value)}
                 />
               </Grid>
 
               <Grid item xs={12} md={2}>
-                <Button
-                  fullWidth
+                <MobileButton
                   onClick={updateWorker}
-                  sx={{
-                    height: "100%",
-                    background: "#22c55e",
-                    color: "#000"
-                  }}
                 >
-                  Save
-                </Button>
+                  Save Worker
+                </MobileButton>
               </Grid>
 
             </Grid>
-          </Paper>
+          </ResponsiveCard>
         )}
 
       <Card sx={{ mb: 3 }}>
