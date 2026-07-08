@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
+import ActionButtons from "../components/mobile/ActionButtons";
 import {
   TextField,
   Button,
@@ -1167,36 +1176,15 @@ const printMonthlyReport = () => {
 };
 
   return (
-    <Box
-      sx={{
-        p: 3,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-      }}
-    >
+    <MobilePage>
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-        }}
-      >
-        🌿 Rubber Tappers Dashboard
-      </Typography>
+      <MobileHeader
+        title="🌿 Rubber Tappers"
+        subtitle="Payroll and rubber collection management"
+      />
 
       {/* ADD WORKER */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+      <ResponsiveCard>
         <Grid container spacing={2}>
 
           <Grid item xs={12} md={4}>
@@ -1267,7 +1255,7 @@ const printMonthlyReport = () => {
           </Grid>
 
       </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* BRC CONVERSION */}
       <Paper
@@ -1889,6 +1877,6 @@ const printMonthlyReport = () => {
 
       </Dialog>
       </Paper>
-    </Box>
+    </MobilePage>
   );
 }
