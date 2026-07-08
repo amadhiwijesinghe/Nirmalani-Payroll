@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
 import {
   TextField,
   Button,
@@ -982,36 +985,15 @@ const reportMonth = new Date(filterMonth + "-01")
   );
 
   return (
-    <Box
-      sx={{
-        p: 3,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-      }}
-    >
+    <MobilePage>
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-        }}
-      >
-        🌿 Plantation Payroll Dashboard
-      </Typography>
+      <MobileHeader
+        title="🌿 Plantation Workers"
+        subtitle="Payroll and worker management"
+      />
 
       {/* ADD WORKER */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+      <ResponsiveCard>
         <Grid
           container
           spacing={2}
@@ -1092,7 +1074,7 @@ const reportMonth = new Date(filterMonth + "-01")
 
           </Grid>
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* SEARCH & EDIT WORKERS */}
       <Paper
@@ -2031,6 +2013,6 @@ const reportMonth = new Date(filterMonth + "-01")
         </DialogActions>
 
       </Dialog>
-    </Box>
+    </MobilePage>
   );
 }
