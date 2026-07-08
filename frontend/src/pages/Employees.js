@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
 import {
   TextField,
   Button,
@@ -116,50 +120,16 @@ export default function Employees({ plantation }) {
   };
 
   return (
-    <Box sx={{
-      p: {
-        xs: 1.5,
-        sm: 2,
-        md: 3
-      },
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f172a, #1e293b)"
-    }}>
+    <MobilePage>
 
       {/* HEADER */}
-     <Typography
-      variant="h4"
-      sx={{
-        mb: 3,
-        fontWeight: 800,
-        color: "#fff",
-        letterSpacing: 1,
-
-        fontSize: {
-          xs: "1.5rem",
-          sm: "1.8rem",
-          md: "2.3rem"
-        },
-
-        textAlign: {
-          xs: "center",
-          md: "left"
-        }
-      }}
-    >
-        👥 Employees Dashboard
-      </Typography>
+     <MobileHeader
+      title="👥 Employees"
+      subtitle="Manage plantation employees"
+    />
 
       {/* FORM CARD */}
-      <Paper sx={{
-        p: 3,
-        mb: 4,
-        borderRadius: 5,
-        backdropFilter: "blur(20px)",
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
-      }}>
+      <ResponsiveCard>
         <Grid container spacing={2}>
 
           <Grid item xs={12} sm={6} md={3}>
@@ -234,7 +204,7 @@ export default function Employees({ plantation }) {
           </Grid>
 
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* SEARCH */}
       <TextField
@@ -255,14 +225,8 @@ export default function Employees({ plantation }) {
       />
 
       {/* TABLE */}
-      <Paper sx={{
-        p: 2,
-        borderRadius: 5,
-        background: "rgba(255,255,255,0.05)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}>
-        <Box sx={{ overflowX: "auto" }}>
+      <ResponsiveCard sx={{ p: 2 }}>
+        <ResponsiveTable>
 
         <Table sx={{ minWidth: 750 }}>
           <TableHead>
@@ -356,8 +320,8 @@ export default function Employees({ plantation }) {
             ))}
           </TableBody>
         </Table>
-        </Box>
-      </Paper>
-    </Box>
+        </ResponsiveTable>
+      </ResponsiveCard>
+    </MobilePage>
   );
 }
