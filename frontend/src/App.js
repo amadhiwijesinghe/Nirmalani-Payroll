@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Toolbar, Box, useMediaQuery } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from "./theme/theme";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Sidebar from './components/Sidebar';
@@ -32,21 +33,6 @@ function App() {
   const [darkMode, setDarkMode] = useState(true);
   const isMobile = useMediaQuery("(max-width:900px)");
   const [plantation, setPlantation] = useState("nirmalani");
-
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? 'dark' : 'light',
-      primary: {
-        main: '#6366f1',
-      },
-      background: {
-        default: darkMode ? '#020617' : '#f5f5f5',
-      },
-    },
-    typography: {
-      fontFamily: 'Inter, sans-serif',
-    },
-  });
 
   if (!isLoggedIn) {
     return <Login setIsLoggedIn={setIsLoggedIn} />;
