@@ -54,7 +54,14 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex' }}>
+      <Box
+        sx={{
+          display: "flex",
+          width: "100%",
+          minHeight: "100vh",
+          overflow: "hidden"
+        }}
+      >
 
         {/* SIDEBAR */}
         <Sidebar setPage={setPage} currentPage={page} plantation={plantation}/>
@@ -65,7 +72,7 @@ function App() {
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          height: "100vh",
+          minHeight: "100vh",
           overflow: "hidden"
         }}
       >
@@ -86,13 +93,22 @@ function App() {
 
           {/* CONTENT */}
          <Box
-          sx={{
-            p: 3,
-            flex: 1,
-            overflow: "auto",
-            background: "linear-gradient(135deg, #020617, #0f172a)"
-          }}
-        >
+            sx={{
+              flex: 1,
+              overflow: "auto",
+              px: {
+                xs: 1,
+                sm: 2,
+                md: 3
+              },
+              py: {
+                xs: 1,
+                sm: 2
+              },
+              background:
+                "linear-gradient(135deg,#020617,#0f172a)"
+            }}
+          >
 
             <AnimatePresence mode="wait">
 
