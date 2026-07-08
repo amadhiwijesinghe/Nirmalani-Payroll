@@ -293,7 +293,7 @@ export default function Employees({ plantation }) {
 
                     <Button
                       size="small"
-                      onClick={() => deleteEmployee(emp.memberid)}
+                      onClick={() => deleteEmployee(emp.id)}
                       sx={{
                         borderRadius: 3,
                         fontWeight: 600,
