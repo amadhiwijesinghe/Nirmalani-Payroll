@@ -6,6 +6,7 @@ import MobileHeader from "../components/mobile/MobileHeader";
 import ResponsiveCard from "../components/mobile/ResponsiveCard";
 import MobileButton from "../components/mobile/MobileButton";
 import MobileInput from "../components/mobile/MobileInput";
+import { useMediaQuery } from "@mui/material";
 import {
   Box,
   Paper,
@@ -394,6 +395,7 @@ const filteredWorkers =
         : workers.filter(
             worker => worker.worker_type === workerType
         );
+const isMobile = useMediaQuery("(max-width:900px)");
 
   return (
 
@@ -406,15 +408,25 @@ const filteredWorkers =
       <ResponsiveCard>
 
       <Stack
-        direction="row"
+        direction={{
+            xs: "column",
+            md: "row",
+        }}
         spacing={2}
-        mb={2}
-        sx={{
-            flexShrink: 0
+        alignItems={{
+            xs: "stretch",
+            md: "center",
         }}
     >
 
-        <FormControl sx={{ minWidth: 160 }}>
+        <FormControl
+            sx={{
+                minWidth: {
+                    xs: "100%",
+                    md: 160,
+                },
+            }}
+        >
           <InputLabel>Month</InputLabel>
 
           <Select
@@ -451,7 +463,14 @@ const filteredWorkers =
 
         </FormControl>
 
-        <FormControl sx={{ minWidth: 120 }}>
+        <FormControl
+            sx={{
+                minWidth: {
+                    xs: "100%",
+                    md: 220,
+                },
+            }}
+        >
           <InputLabel>Year</InputLabel>
 
           <Select
@@ -510,7 +529,7 @@ const filteredWorkers =
         color="primary"
         onClick={saveAttendance}
         disabled={!isEditing || isFinalized}
-        fullWidth={false}
+        fullWidth={isMobile}
       >
         Save
       </MobileButton>
@@ -519,7 +538,7 @@ const filteredWorkers =
         color="warning"
         onClick={() => setIsEditing(true)}
         disabled={isEditing || isFinalized}
-        fullWidth={false}
+        fullWidth={isMobile}
       >
         Edit
       </MobileButton>
@@ -528,14 +547,14 @@ const filteredWorkers =
         color="danger"
         onClick={finalizeAttendance}
         disabled={isFinalized}
-        fullWidth={false}
+        fullWidth={isMobile}
         >
         Finalize
       </MobileButton>
 
       <MobileButton
         color="secondary"
-        fullWidth={false}
+        fullWidth={isMobile}
         onClick={() =>
             printAttendanceRegister({
             workers: filteredWorkers,
@@ -564,43 +583,42 @@ const filteredWorkers =
         }}
     >
 
-        <Typography
+        <Box
             sx={{
-                fontWeight: "bold",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+                flexWrap: "wrap",
+                gap: 2,
+            }}
+            >
+            <Typography
+                sx={{
+                fontWeight: 700,
                 color: isFinalized
                     ? "#ef4444"
                     : isEditing
                     ? "#22c55e"
-                    : "#f59e0b"
-            }}
-        >
-            {isFinalized
-                ? "🔒 Finalized"
+                    : "#f59e0b",
+                }}
+            >
+                {isFinalized
+                ? "🔒 Attendance Finalized"
                 : isEditing
-                ? "🟢 Editing"
-                : "🟡 Saved (Locked)"}
-        </Typography>
+                ? "🟢 Editing Mode"
+                : "🟡 Saved (Read Only)"}
+            </Typography>
 
-      <TableContainer
-        sx={{
-            maxHeight: "70vh",
-            overflow: "auto",
-            border: "1px solid #555",
-            borderRadius: 1
-        }}
-    >
-
-      <Typography
-        sx={{
-            mb: 2,
-            fontWeight: "bold",
-            color: isEditing ? "#4caf50" : "#f44336"
-        }}
-    >
-        {isEditing
-            ? "🟢 Editing Enabled"
-            : "🔒 Attendance Locked"}
-    </Typography>
+            <Typography
+                sx={{
+                color: "#94a3b8",
+                fontWeight: 600,
+                }}
+            >
+                {dayjs(`${year}-${month}-01`).format("MMMM YYYY")}
+            </Typography>
+            </Box>
 
         <Table
           stickyHeader
@@ -913,8 +931,6 @@ const filteredWorkers =
             </TableBody>
 
         </Table>
-
-      </TableContainer>
       </Paper>
 
       <Dialog
@@ -950,7 +966,7 @@ const filteredWorkers =
 
                     <FormControl fullWidth>
 
-                        <TextField
+                        <MobileInput
                             label="Attendance"
                             value="Sunday Work (1.5 Days)"
                             InputProps={{
@@ -993,7 +1009,7 @@ const filteredWorkers =
 
                     )}
 
-                <TextField
+                <MobileInput
                     label="Collected Liter"
                     type="number"
                     value={rubberAttendance.liter}
@@ -1017,7 +1033,7 @@ const filteredWorkers =
                     }}
                 />
 
-                <TextField
+                <MobileInput
                     label="DRC %"
                     type="number"
                     value={rubberAttendance.drc}
@@ -1041,7 +1057,7 @@ const filteredWorkers =
                     }}
                 />
 
-                <TextField
+                <MobileInput
                     label="KG"
                     value={rubberAttendance.kg}
                     InputProps={{
@@ -1055,18 +1071,21 @@ const filteredWorkers =
 
         <DialogActions>
 
-            <Button
-                onClick={()=>setRubberDialogOpen(false)}
+            <MobileButton
+                color="secondary"
+                fullWidth={false}
+                onClick={() => setRubberDialogOpen(false)}
             >
                 Cancel
-            </Button>
+            </MobileButton>
 
-            <Button
-                variant="contained"
+            <MobileButton
+                color="primary"
+                fullWidth={false}
                 onClick={saveRubberAttendance}
             >
                 Save
-            </Button>
+            </MobileButton>
 
         </DialogActions>
 
