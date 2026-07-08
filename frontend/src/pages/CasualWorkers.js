@@ -11,9 +11,6 @@ import MobileSearch from "../components/mobile/MobileSearch";
 import DashboardStatCard from "../components/mobile/DashboardStatCard";
 import ActionButtons from "../components/mobile/ActionButtons";
 import {
-  TextField,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -26,8 +23,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Card,
-  CardContent
 } from "@mui/material";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
@@ -39,6 +34,7 @@ export default function CasualWorkers({plantation
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
   const [name, setName] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
@@ -81,7 +77,11 @@ const fetchData = async () => {
 const addWorker = async () => {
 
   if (!name) {
-    return alert("Enter worker name");
+    return Swal.fire({
+      icon: "warning",
+      title: "Worker Required",
+      text: "Please enter a worker name.",
+    });
   }
 
   try {
@@ -95,13 +95,21 @@ const addWorker = async () => {
 
     fetchWorkers();
 
-    alert("Worker Added");
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: "Worker added successfully",
+    });
 
   } catch (err) {
 
     console.error(err);
 
-    alert("Failed to add worker");
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Failed to add worker",
+    });
   }
 };
 
@@ -193,7 +201,11 @@ const viewAttendance = async (workerId, month) => {
 // Save Allowance 
 const saveAllowance = async () => {
   if (!allowanceWorker) {
-    return alert("Select a worker");
+    return Swal.fire({
+      icon: "warning",
+      title: "Worker Required",
+      text: "Please select a worker",
+    });
   }
 
   try {
@@ -215,7 +227,11 @@ const saveAllowance = async () => {
 
   } catch (err) {
     console.log(err);
-    alert("Error saving allowance");
+    Swal.fire({
+      icon: "warning",
+      title: "Allowance Error",
+      text: "Allowance Saving Failed",
+    });
   }
 };
 
@@ -756,56 +772,70 @@ const deleteAttendance = async (id) => {
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
-            <TextField
+            <MobileInput
               label="Worker Name"
-              fullWidth
               value={name}
               onChange={(e) => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
+            <MobileButton
               onClick={addWorker}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-              }}
             >
-              Add
-            </Button>
+              Add Worker
+            </MobileButton>
           </Grid>
         </Grid>
       </ResponsiveCard>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-      
-          <Typography variant="h6" gutterBottom>
-            Allowance
-          </Typography>
+      <ResponsiveCard>
+        <Typography
+            sx={{
+                color:"#fff",
+                fontWeight:700,
+                mb:2
+            }}
+        >
+            💰 Worker Allowance
+        </Typography>
       
           <Grid container spacing={2}>
       
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
       
-                <InputLabel>
+                <InputLabel
+                  sx={{
+                    color: "#94a3b8",
+
+                    "&.Mui-focused": {
+                      color: "#22c55e",
+                    },
+                  }}
+                >
                   Worker
                 </InputLabel>
       
-                <Select
-                  value={allowanceWorker}
-                  label="Worker"
-                  onChange={(e) =>
-                  setAllowanceWorker(e.target.value)
-                  }
-                >
+                  <Select
+                    value={allowanceWorker}
+                    label="Worker"
+                    onChange={(e) =>
+                      setAllowanceWorker(e.target.value)
+                    }
+                    sx={{
+                        color: "#fff",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#475569",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#64748b",
+                        },
+                        "& .MuiSvgIcon-root": {
+                            color: "#fff",
+                        },
+                    }}
+                  >
       
                   {workers.map((w) => (
       
@@ -824,47 +854,34 @@ const deleteAttendance = async (id) => {
             </Grid>
       
             <Grid item xs={12} md={3}>
-              <TextField
+              <MobileInput
                 type="month"
                 label="Month"
-                fullWidth
                 value={allowanceMonth}
-                onChange={(e) =>
-                  setAllowanceMonth(e.target.value)
-                }
-                InputLabelProps={{
-                  shrink: true
-                }}
+                onChange={(e)=>setAllowanceMonth(e.target.value)}
               />
             </Grid>
       
             <Grid item xs={12} md={3}>
-              <TextField
-                label="Allowance"
+              <MobileInput
+                label="Allowance Amount"
                 type="number"
-                fullWidth
                 value={allowanceAmount}
-                onChange={(e) =>
-                  setAllowanceAmount(e.target.value)
-                }
-               />
+                onChange={(e)=>setAllowanceAmount(e.target.value)}
+              />
             </Grid>
       
             <Grid item xs={12} md={2}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="success"
+              <MobileButton
                 onClick={saveAllowance}
               >
-                Save
-              </Button>
+                Save Allowance
+              </MobileButton>
             </Grid>
       
           </Grid>
       
-        </CardContent>
-      </Card>
+        </ResponsiveCard>
 
       <Box
         sx={{
@@ -876,144 +893,102 @@ const deleteAttendance = async (id) => {
         }}
       >
 
-        <Paper
-          sx={{
-            p: 2,
-            width: 300,
-            minHeight: 90,
-            background: "#14532d",
-            color: "#fff",
-            borderRadius: 4
-          }}
-        >
-          <Typography variant="subtitle1">
-            🏦 Total Required
-          </Typography>
-
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-          >
-            Rs. {totalRequired.toFixed(2)}
-          </Typography>
-        </Paper>
+        <DashboardStatCard
+          title="🏦 Total Required"
+          value={`Rs. ${totalRequired.toFixed(2)}`}
+          color="#8b5cf6"
+        />
 
       </Box>
 
       {/* TABLE */}
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(20px)",
-        }}
-        
-      >
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            type="month"
-            label="Filter by Month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            sx={{
-              input: { color: "#fff" },
-              label: { color: "#aaa" },
-              width: 200
-            }}
-          />
-
-          <TextField
-            type="date"
-            value={weekStart}
-            onChange={(e) => setWeekStart(e.target.value)}
-            InputLabelProps={{
-                shrink: true
-            }}
-            helperText="Week Start"
-            sx={{
-                ml: 2,
-                width: 180,
-
-                input: {
-                color: "#fff"
-                },
-
-                '& .MuiFormHelperText-root': {
-                color: '#aaa'
-                },
-
-                '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-                }
-            }}
-            />
-
-            <TextField
-            type="date"
-            value={weekEnd}
-            onChange={(e) => setWeekEnd(e.target.value)}
-            InputLabelProps={{
-                shrink: true
-            }}
-            helperText="Week End"
-            sx={{
-                ml: 2,
-                width: 180,
-
-                input: {
-                color: "#fff"
-                },
-
-                '& .MuiFormHelperText-root': {
-                color: '#aaa'
-                },
-
-                '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-                }
-            }}
-            />
-
-            <Button
-              onClick={printSlip}
-              sx={{
-                ml: 2,
-                background: "#22c55e",
-                color: "#000",
-                height: "56px",
-                fontWeight: "bold"
-              }}
-            >
-              PRINT PAYSLIPS
-            </Button>
-
-            <Button
-                onClick={printWeeklyReport}
-                sx={{
-                    ml: 2,
-                    background: "#0ea5e9",
-                    color: "#fff",
-                    height: "56px",
-                    fontWeight: "bold"
-                }}
-                >
-                WEEKLY REPORT
-                </Button>
-
-                <Button
-                onClick={printMonthlyReport}
-                sx={{
-                    ml: 2,
-                    background: "#a855f7",
-                    color: "#fff",
-                    height: "56px",
-                    fontWeight: "bold"
-                }}
-                >
-                MONTHLY REPORT
-                </Button>
-        </Box>
+      <ResponsiveCard>
+        <Typography
+          sx={{
+            color: "#fff",
+            fontWeight: 700,
+            mb: 2,
+          }}
+        >
+          📄 Casual Worker Reports
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+                          <Grid item xs={12} sm={6} md={3}>
+                            <MobileInput
+                                type="month"
+                                value={filterMonth}
+                                onChange={(e)=>setFilterMonth(e.target.value)}
+                                helperText="Month"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <MobileInput
+                                type="date"
+                                value={weekStart}
+                                onChange={(e)=>setWeekStart(e.target.value)}
+                                helperText="Week Start"
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <MobileInput
+                                type="date"
+                                value={weekEnd}
+                                onChange={(e)=>setWeekEnd(e.target.value)}
+                                helperText="Week End"
+                            />
+                          </Grid>
+                
+                            {/* Clear Button */}
+                            <Grid item xs={6} md={3}>
+                              <MobileButton
+                                  color="secondary"
+                                  onClick={() => setFilterMonth("")}
+                              >
+                                  Clear
+                              </MobileButton>
+                            </Grid>
+                
+                            <Grid item xs={6} md={3}>
+                              <MobileButton
+                                  onClick={printSlip}
+                              >
+                                Print Payslips
+                              </MobileButton>
+                            </Grid>
+                
+                            <Grid item xs={6} md={3}>
+                              <MobileButton
+                              color="warning"
+                              fullWidth={false}
+                              onClick={printWeeklyReport}
+                            >
+                              Weekly Report
+                            </MobileButton>
+                            </Grid>
+                
+                            <Grid item xs={6} md={3}>
+                              <MobileButton
+                              color="danger"
+                              fullWidth={false}
+                              onClick={printMonthlyReport}
+                            >
+                              Monthly Report
+                            </MobileButton>
+                            </Grid>
+                
+                            
+                
+                            
+                
+                            <Grid item xs={12} md={3}>
+                              <MobileSearch
+                                  value={tableSearch}
+                                  onChange={(e) => setTableSearch(e.target.value)}
+                                  placeholder="Search worker..."
+                              />
+                            </Grid>
+                        </Grid>
+        <ResponsiveTable>
         <Table>
           <TableHead>
             <TableRow>
@@ -1030,8 +1005,11 @@ const deleteAttendance = async (id) => {
 
           <TableBody>
             {groupedData
-              .filter((row) =>
-                (!filterMonth || row.month === filterMonth)
+              .filter(row => !filterMonth || row.month === filterMonth)
+              .filter(row =>
+                row.name
+                  .toLowerCase()
+                  .includes(tableSearch.toLowerCase())
               )
               .map((row) => {
               const c = calculate( row.days_worked, row.daily_rate, row.allowance);
@@ -1050,17 +1028,18 @@ const deleteAttendance = async (id) => {
                   <TableCell>
 
                   {/* VIEW */}
-                  <Button
+                  <MobileButton
+                    color="secondary"
+                    fullWidth={false}
                     onClick={() =>
-                      viewAttendance(row.worker_id, row.month)
+                        viewAttendance(
+                            row.worker_id,
+                            row.month
+                        )
                     }
-                    sx={{
-                      background: "#38bdf8",
-                      color: "#000"
-                    }}
                   >
                     View
-                  </Button>
+                  </MobileButton>
 
                 </TableCell>
 
@@ -1096,9 +1075,10 @@ const deleteAttendance = async (id) => {
             </TableRow>
           </TableBody>
         </Table>
-      </Paper>
+        </ResponsiveTable>
+      </ResponsiveCard>
       {open && (
-  <Paper sx={{ p: 2, mt: 2, background: "#0f172a" }}>
+  <ResponsiveCard>
     <Typography sx={{ color: "#fff", mb: 1 }}>
       Worked Days:
     </Typography>
@@ -1146,30 +1126,28 @@ const deleteAttendance = async (id) => {
                 }
           </Typography>
 
-          <Button
-            size="small"
+          <MobileButton
+            color="danger"
+            fullWidth={false}
             onClick={() =>
-              deleteAttendance(d.id)
+                deleteAttendance(d.id)
             }
-            sx={{
-              background: "#ef4444",
-              color: "#fff"
-            }}
           >
             Delete
-          </Button>
+          </MobileButton>
 
         </Box>
       ))
     )}
 
-    <Button
+    <MobileButton
+      color="secondary"
+      fullWidth={false}
       onClick={() => setOpen(false)}
-      sx={{ mt: 1, background: "#475569", color: "#fff" }}
     >
       Close
-    </Button>
-  </Paper>
+    </MobileButton>
+  </ResponsiveCard>
 )}
     </MobilePage>
   );
