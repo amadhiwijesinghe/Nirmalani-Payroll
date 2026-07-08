@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 
 import axios from "axios";
 
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
+import ActionButtons from "../components/mobile/ActionButtons";
+
 import {
   Box,
   Typography,
@@ -455,35 +465,24 @@ const printWeeklyReport = () => {
 
   return (
 
-    <Box
-      sx={{
-        p:3,
-        minHeight:"100vh",
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b)"
-      }}
-    >
+    <MobilePage>
 
-      <Typography
-        variant="h4"
-        sx={{
-          color:"#fff",
-          mb:3,
-          fontWeight:"bold"
-        }}
-      >
-        💰 Income Dashboard
-      </Typography>
+      <MobileHeader
+        title="💰 Income"
+        subtitle="Manage plantation income records"
+      />
 
-      <Paper
-        sx={{
-          p:3,
-          mb:4,
-          borderRadius:5,
-          background:
-            "rgba(255,255,255,0.05)"
-        }}
-      >
+      <ResponsiveCard>
+
+        <Typography
+          sx={{
+              color:"#fff",
+              fontWeight:700,
+              mb:2
+          }}
+        >
+          💵 Add Income
+        </Typography>
 
         <Grid item xs={12} md={3}>
           <TextField
@@ -639,7 +638,7 @@ const printWeeklyReport = () => {
 
         </Grid>
 
-      </Paper>
+      </ResponsiveCard>
 
       <Paper
         sx={{
@@ -850,6 +849,6 @@ const printWeeklyReport = () => {
 
       </Paper>
 
-    </Box>
+    </MobilePage>
   );
 }
