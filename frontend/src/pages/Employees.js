@@ -4,16 +4,17 @@ import MobilePage from "../components/mobile/MobilePage";
 import MobileHeader from "../components/mobile/MobileHeader";
 import ResponsiveCard from "../components/mobile/ResponsiveCard";
 import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import ActionButtons from "../components/mobile/ActionButtons";
+import MobileButton from '../components/mobile/MobileButton';
+import MobileSearch from "../components/mobile/MobileSearch";
+import AddIcon from "@mui/icons-material/Add";
 import {
-  TextField,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
   TableRow,
   TableHead,
-  Typography,
   Grid,
   Box
 } from '@mui/material';
@@ -133,96 +134,74 @@ export default function Employees({ plantation }) {
         <Grid container spacing={2}>
 
           <Grid item xs={12} sm={6} md={3}>
-            <TextField
+            <MobileInput
               label="Name"
-              fullWidth
               value={name}
-              onChange={e => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setName(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <TextField
+            <MobileInput
               label="Member ID"
-              fullWidth
               value={memberid}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                let value = e.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 6);
+
                 setMemberID(value);
               }}
               onBlur={() => {
-                if (memberid) setMemberID(memberid.padStart(6, "0"));
+                if (memberid)
+                  setMemberID(memberid.padStart(6, "0"));
               }}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <TextField
+            <MobileInput
               label="NIC"
-              fullWidth
               value={NIC}
-              onChange={e => setNIC(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setNIC(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <TextField
+            <MobileInput
               label="Salary"
-              fullWidth
+              type="number"
               value={salary}
-              onChange={e => setSalary(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setSalary(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <Button
-              fullWidth
-              onClick={saveEmployee}
-              sx={{
-                height: {
-                  xs: 45,
-                  md: "100%"
-                },
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                boxShadow: "0 5px 20px rgba(34,197,94,0.4)",
-                transition: "0.2s",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 10px 30px rgba(34,197,94,0.6)"
-                }
-              }}
+            <MobileButton
+                icon={<AddIcon />}
+                onClick={saveEmployee}
             >
-              {editId ? "Update" : "Add"}
-            </Button>
+                {editId ? "Update Employee" : "Add Employee"}
+            </MobileButton>
           </Grid>
 
         </Grid>
       </ResponsiveCard>
 
       {/* SEARCH */}
-      <TextField
-        placeholder="🔍 Search employee..."
-        fullWidth
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+     <Box
         sx={{
           mb: 3,
-          input: { color: "#fff" },
-          borderRadius: 3,
-          background: "rgba(255,255,255,0.05)",
-          maxWidth: {
-            xs: "100%",
-            md: 500
-          },
+          maxWidth: 500,
         }}
+      >
+      <MobileSearch
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search employee..."
       />
+    </Box>
+
 
       {/* TABLE */}
       <ResponsiveCard sx={{ p: 2 }}>
@@ -269,49 +248,10 @@ export default function Employees({ plantation }) {
                 <TableCell>
                   <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row"}}}>
                     
-                    <Button
-                      size="small"
-                      onClick={() => editEmployee(emp)}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        background: "linear-gradient(135deg, #facc15, #f59e0b)",
-                        color: "#000",
-                        transition: "0.2s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                          boxShadow: "0 10px 25px rgba(245,158,11,0.5)",
-                        },
-                        maxWidth: {
-                          xs: "100%",
-                          md: 500
-                        },
-                      }}
-                    >
-                      Edit
-                    </Button>
-
-                    <Button
-                      size="small"
-                      onClick={() => deleteEmployee(emp.id)}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        background: "linear-gradient(135deg, #ef4444, #f87171)",
-                        color: "#fff",
-                        transition: "0.2s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                          boxShadow: "0 10px 25px rgba(239,68,68,0.5)" // ✅ fixed
-                        },
-                        maxWidth: {
-                          xs: "100%",
-                          md: 500
-                        },
-                      }}
-                    >
-                      Delete
-                    </Button>
+                    <ActionButtons
+                      onEdit={() => editEmployee(emp)}
+                      onDelete={() => deleteEmployee(emp.id)}
+                    />
 
                   </Box>
                 </TableCell>

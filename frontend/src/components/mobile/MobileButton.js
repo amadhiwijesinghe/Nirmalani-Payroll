@@ -3,6 +3,7 @@ import { Button } from "@mui/material";
 export default function MobileButton({
   children,
   color = "primary",
+  icon = null,
   onClick,
   fullWidth = true,
   type = "button",
@@ -29,29 +30,37 @@ export default function MobileButton({
 
   return (
     <Button
-      type={type}
-      fullWidth={fullWidth}
-      disabled={disabled}
-      onClick={onClick}
-      sx={{
-        height: {
-          xs: 48,
-          md: 52,
-        },
-        borderRadius: 3,
-        fontWeight: 700,
-        textTransform: "none",
-        transition: "0.25s",
+        type={type}
+        fullWidth={fullWidth}
+        disabled={disabled}
+        onClick={onClick}
+        startIcon={icon}
+        sx={{
+            minHeight: 56,
 
-        ...colors[color],
+            borderRadius: 3,
 
-        "&:hover": {
-          transform: "translateY(-2px)",
-          opacity: 0.95,
-        },
-      }}
-    >
-      {children}
-    </Button>
+            px: 3,
+
+            fontSize: "0.95rem",
+
+            fontWeight: 700,
+
+            textTransform: "none",
+
+            whiteSpace: "nowrap",
+
+            transition: "all .25s ease",
+
+            ...colors[color],
+
+            "&:hover": {
+            transform: "translateY(-2px)",
+            opacity: 0.95,
+            },
+        }}
+        >
+        {children}
+        </Button>
   );
 }
