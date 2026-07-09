@@ -4255,7 +4255,6 @@ app.put(
   async (req, res) => {
 
     const {
-      income_type,
       bank_account,
       category,
       sub_category,
@@ -4303,23 +4302,21 @@ app.put(
         const sql = `
           UPDATE expenditure
           SET
-            income_type=?,
-            bank_account=?,
-            category=?,
-            sub_category=?,
-            amount=?,
-            note=?,
-            date=?,
-            transaction_type=?,
-            photos=?,
-            plantation=?
+              bank_account=?,
+              category=?,
+              sub_category=?,
+              amount=?,
+              note=?,
+              date=?,
+              transaction_type=?,
+              photos=?,
+              plantation=?
           WHERE id=?
         `;
 
         db.query(
           sql,
           [
-            income_type,
             bank_account,
             category,
             sub_category,
