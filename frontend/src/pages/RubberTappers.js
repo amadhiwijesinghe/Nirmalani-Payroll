@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
+import ActionButtons from "../components/mobile/ActionButtons";
 import {
   TextField,
   Button,
@@ -55,7 +64,7 @@ export default function RubberTappers({
   const [epfNo, setEpfNo] = useState("");
   const [openPayroll, setOpenPayroll] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
-
+  const [tableSearch, setTableSearch] = useState("");
   const [allowanceWorker, setAllowanceWorker] = useState("");
   const [allowanceAmount, setAllowanceAmount] = useState("");
   useEffect(() => {
@@ -442,10 +451,16 @@ const selectedMonth =
   filterMonth || currentMonth;
 
 const totals = groupedData
-  .filter(
-    (row) =>
-      row.month === selectedMonth
-  )
+    .filter(row => row.month === selectedMonth)
+    .filter(row =>
+        row.name
+            .toLowerCase()
+            .includes(tableSearch.toLowerCase()) ||
+
+        (row.epf_no || "")
+            .toLowerCase()
+            .includes(tableSearch.toLowerCase())
+    )
   .reduce(
     (acc, row) => {
       acc.kg += Number(row.kg || 0);
@@ -1167,48 +1182,31 @@ const printMonthlyReport = () => {
 };
 
   return (
-    <Box
-      sx={{
-        p: 3,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-      }}
-    >
+    <MobilePage>
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-        }}
-      >
-        🌿 Rubber Tappers Dashboard
-      </Typography>
+      <MobileHeader
+        title="🌿 Rubber Tappers"
+        subtitle="Payroll and rubber collection management"
+      />
 
       {/* ADD WORKER */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+      <ResponsiveCard>
+        <Typography
+          sx={{
+              color: "#fff",
+              fontWeight: 700,
+              mb: 2,
+          }}
+        >
+          👷 Add Rubber Tapper
+        </Typography>
         <Grid container spacing={2}>
 
           <Grid item xs={12} md={4}>
-              <TextField
-                  label="Worker Name"
-                  fullWidth
-                  value={name}
-                  onChange={(e)=>setName(e.target.value)}
-                  sx={{
-                      input:{color:"#fff"},
-                      label:{color:"#aaa"}
-                  }}
+              <MobileInput
+                label="Worker Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
           </Grid>
 
@@ -1220,10 +1218,21 @@ const printMonthlyReport = () => {
                   </InputLabel>
 
                   <Select
-                      value={workerCategory}
-                      label="Category"
-                      onChange={(e)=>setWorkerCategory(e.target.value)}
-                      sx={{color:"#fff"}}
+                    value={workerCategory}
+                    label="Category"
+                    onChange={(e) => setWorkerCategory(e.target.value)}
+                    sx={{
+                        color: "#fff",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#475569",
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#64748b",
+                        },
+                        "& .MuiSvgIcon-root": {
+                            color: "#fff",
+                        },
+                    }}
                   >
                       <MenuItem value="Temporary">
                           Temporary
@@ -1242,15 +1251,10 @@ const printMonthlyReport = () => {
 
               {workerCategory==="Permanent" && (
 
-                  <TextField
-                      label="EPF Number"
-                      fullWidth
-                      value={epfNo}
-                      onChange={(e)=>setEpfNo(e.target.value)}
-                      sx={{
-                          input:{color:"#fff"},
-                          label:{color:"#aaa"}
-                      }}
+                  <MobileInput
+                    label="EPF Number"
+                    value={epfNo}
+                    onChange={(e) => setEpfNo(e.target.value)}
                   />
 
               )}
@@ -1258,33 +1262,21 @@ const printMonthlyReport = () => {
           </Grid>
 
           <Grid item xs={12} md={2}>
-              <Button
-                  fullWidth
-                  onClick={addWorker}
-              >
-                  Add
-              </Button>
+              <MobileButton onClick={addWorker}>
+                Add Worker
+              </MobileButton>
           </Grid>
 
       </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* BRC CONVERSION */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <Typography
+      <ResponsiveCard>
+       <Typography
           sx={{
             color: "#fff",
+            fontWeight: 700,
             mb: 2,
-            fontWeight: "bold"
           }}
         >
           🧪 Rubber Latex Conversion
@@ -1294,76 +1286,48 @@ const printMonthlyReport = () => {
 
           {/* Liter */}
           <Grid item xs={12} md={3}>
-            <TextField
+            <MobileInput
               label="Collected Liter"
               type="number"
-              fullWidth
               value={liter}
               onChange={(e) => {
-
-                setLiter(e.target.value);
-
-                calculateKG(
-                  e.target.value,
-                  brc
-                );
-              }}
-              sx={{
-                input: { color: "#fff" },
-                label: { color: "#aaa" },
+                  setLiter(e.target.value);
+                  calculateKG(e.target.value, brc);
               }}
             />
           </Grid>
 
           {/* DRC */}
           <Grid item xs={12} md={3}>
-            <TextField
+            <MobileInput
               label="DRC"
               type="number"
-              fullWidth
               value={brc}
               onChange={(e) => {
-
-                setBrc(e.target.value);
-
-                calculateKG(
-                  liter,
-                  e.target.value
-                );
-              }}
-              sx={{
-                input: { color: "#fff" },
-                label: { color: "#aaa" },
+                  setBrc(e.target.value);
+                  calculateKG(liter, e.target.value);
               }}
             />
           </Grid>
 
           {/* KG RESULT */}
           <Grid item xs={12} md={3}>
-            <TextField
+            <MobileInput
               label="KG Result"
-              fullWidth
               value={kg}
               InputProps={{
-                readOnly: true
-              }}
-              sx={{
-                input: {
-                  color: "#22c55e",
-                  fontWeight: "bold"
-                },
-                label: { color: "#aaa" },
+                  readOnly: true,
               }}
             />
           </Grid>
 
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
-      <Paper sx={{ p:3, mb:3 }}>
+      <ResponsiveCard>
 
         <Typography variant="h6" mb={2}>
-        Rubber Allowance
+          Rubber Allowance
         </Typography>
 
         <Stack direction="row" spacing={2}>
@@ -1373,9 +1337,21 @@ const printMonthlyReport = () => {
         <InputLabel>Worker</InputLabel>
 
         <Select
-        value={allowanceWorker}
-        label="Worker"
-        onChange={(e)=>setAllowanceWorker(e.target.value)}
+          value={allowanceWorker}
+          label="Category"
+          onChange={(e)=>setAllowanceWorker(e.target.value)}
+          sx={{
+              color: "#fff",
+              "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#475569",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#64748b",
+              },
+              "& .MuiSvgIcon-root": {
+                  color: "#fff",
+              },
+          }}
         >
 
         {workers.map(worker=>(
@@ -1395,161 +1371,120 @@ const printMonthlyReport = () => {
 
         </FormControl>
 
-        <TextField
-
-        type="month"
-
-        label="Month"
-
-        value={filterMonth || selectedMonth}
-
-        onChange={(e)=>setFilterMonth(e.target.value)}
-
-        InputLabelProps={{shrink:true}}
-
+        <MobileInput
+          type="month"
+          label="Month"
+          value={filterMonth || selectedMonth}
+          onChange={(e)=>setFilterMonth(e.target.value)}
         />
 
-        <TextField
-
-        label="Allowance"
-
-        type="number"
-
-        value={allowanceAmount}
-
-        onChange={(e)=>setAllowanceAmount(e.target.value)}
-
+        <MobileInput
+          label="Allowance"
+          type="number"
+          value={allowanceAmount}
+          onChange={(e)=>setAllowanceAmount(e.target.value)}
         />
 
-        <Button
-
-        variant="contained"
-
-        color="success"
-
-        onClick={saveAllowance}
-
+        <MobileButton
+          onClick={saveAllowance}
         >
-
-        SAVE
-
-        </Button>
+          Save
+        </MobileButton>
 
         </Stack>
 
-        </Paper>
+        </ResponsiveCard>
 
       {/* TABLE */}
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(20px)",
-        }}
+      <ResponsiveCard>
+
+        <Typography
+            variant="h6"
+            sx={{
+                color: "#fff",
+                fontWeight: 700,
+                mb: 3
+            }}
+        >
+            📄 Payroll Reports
+        </Typography>
+
+        <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MobileInput
+                        type="month"
+                        value={filterMonth}
+                        onChange={(e)=>setFilterMonth(e.target.value)}
+                        helperText="Month"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MobileInput
+                        type="date"
+                        value={weekStart}
+                        onChange={(e)=>setWeekStart(e.target.value)}
+                        helperText="Week Start"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <MobileInput
+                        type="date"
+                        value={weekEnd}
+                        onChange={(e)=>setWeekEnd(e.target.value)}
+                        helperText="Week End"
+                    />
+                  </Grid>
         
-      >
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            type="month"
-            label="Filter by Month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            sx={{
-              input: { color: "#fff" },
-              label: { color: "#aaa" },
-              width: 200
-            }}
-          />
-
-          <TextField
-            type="date"
-            value={weekStart}
-            onChange={(e) =>
-              setWeekStart(e.target.value)
-            }
-            helperText="Week Start"
-            sx={{
-              ml: 2,
-              width: 180,
-
-              input: {
-                color: "#fff"
-              },
-
-              '& .MuiFormHelperText-root': {
-                color: '#aaa'
-              },
-
-              '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-              }
-            }}
-          />
-
-          <TextField
-            type="date"
-            value={weekEnd}
-            onChange={(e) =>
-              setWeekEnd(e.target.value)
-            }
-            helperText="Week End"
-            sx={{
-              ml: 2,
-              width: 180,
-
-              input: {
-                color: "#fff"
-              },
-
-              '& .MuiFormHelperText-root': {
-                color: '#aaa'
-              },
-
-              '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-              }
-            }}
-          />
-
-            <Button
-              onClick={printSlip}
-              sx={{
-                ml: 2,
-                background: "#22c55e",
-                color: "#000",
-                height: "56px",
-                fontWeight: "bold"
-              }}
-            >
-              PRINT PAYSLIPS
-            </Button>
-
-            <Button
-              onClick={printWeeklyReport}
-              sx={{
-                ml: 2,
-                background: "#0ea5e9",
-                color: "#fff",
-                height: "56px",
-                fontWeight: "bold"
-              }}
-            >
-              WEEKLY REPORT
-            </Button>
-
-            <Button
-              onClick={printMonthlyReport}
-              sx={{
-                ml: 2,
-                background: "#a855f7",
-                color: "#fff",
-                height: "56px",
-                fontWeight: "bold"
-              }}
-            >
-              MONTHLY REPORT
-            </Button>
+                    {/* Clear Button */}
+                    <Grid item xs={6} md={3}>
+                      <MobileButton
+                          color="secondary"
+                          onClick={() => setFilterMonth("")}
+                      >
+                          Clear
+                      </MobileButton>
+                    </Grid>
+        
+                    <Grid item xs={6} md={3}>
+                      <MobileButton
+                          onClick={printSlip}
+                      >
+                        Print Payslips
+                      </MobileButton>
+                    </Grid>
+        
+                    <Grid item xs={6} md={3}>
+                      <MobileButton
+                      color="warning"
+                      fullWidth={false}
+                      onClick={printWeeklyReport}
+                    >
+                      Weekly Report
+                    </MobileButton>
+                    </Grid>
+        
+                    <Grid item xs={6} md={3}>
+                      <MobileButton
+                      color="danger"
+                      fullWidth={false}
+                      onClick={printMonthlyReport}
+                    >
+                      Monthly Report
+                    </MobileButton>
+                    </Grid>
+        
+                    
+        
+                    
+        
+                    <Grid item xs={12} md={3}>
+                      <MobileSearch
+                          value={tableSearch}
+                          onChange={(e) => setTableSearch(e.target.value)}
+                          placeholder="Search worker..."
+                      />
+                    </Grid>
+                </Grid>
 
             <Box
               sx={{
@@ -1561,97 +1496,37 @@ const printMonthlyReport = () => {
               }}
             >
 
-              <Paper
-                sx={{
-                  p: 2,
-                  minHeight: 90,
-                  background: "#1e3a8a",
-                  color: "#fff",
-                  borderRadius: 4
-                }}
-              >
-                <Typography variant="subtitle1">
-                  ⚖️ Total KG
-                </Typography>
+              <DashboardStatCard
+                title="⚖️ Total KG"
+                value={totals.kg.toFixed(2)}
+                color="#3b82f6"
+              />
+              
 
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                >
-                  {totals.kg.toFixed(2)}
-                </Typography>
-              </Paper>
+              <DashboardStatCard
+                title="💰 Total Earnings"
+                value={`Rs. ${totals.amount.toFixed(2)}`}
+                color="#22c55e"
+              />
 
-              <Paper
-                sx={{
-                  p: 2,
-                  minHeight: 90,
-                  background: "#166534",
-                  color: "#fff",
-                  borderRadius: 4
-                }}
-              >
-                <Typography variant="subtitle1">
-                  💰 Total Earnings
-                </Typography>
-
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                >
-                  Rs. {totals.amount.toFixed(2)}
-                </Typography>
-              </Paper>
-
-              <Paper
-                sx={{
-                  p: 2,
-                  minHeight: 90,
-                  background: "#92400e",
-                  color: "#fff",
-                  borderRadius: 4
-                }}
-              >
-                <Typography variant="subtitle1">
-                  👥 Workers Paid
-                </Typography>
-
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                >
-                  {
+              <DashboardStatCard
+                title="👥 Workers Paid"
+                value={
                     groupedData.filter(
-                      row =>
-                        row.month === selectedMonth
+                        row => row.month === selectedMonth
                     ).length
-                  }
-                </Typography>
-              </Paper>
+                }
+                color="#f59e0b"
+              />
 
-              <Paper
-                sx={{
-                  p: 2,
-                  minHeight: 90,
-                  background: "#14532d",
-                  color: "#fff",
-                  borderRadius: 4
-                }}
-              >
-                <Typography variant="subtitle1">
-                  🏦 Total Required
-                </Typography>
-
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                >
-                  Rs. {totalRequired.toFixed(2)}
-                </Typography>
-              </Paper>
+              <DashboardStatCard
+                title="🏦 Total Required"
+                value={`Rs. ${totalRequired.toFixed(2)}`}
+                color="#8b5cf6"
+              />
 
             </Box>
-        </Box>
+        <ResponsiveTable>
         <Table>
           <TableHead>
             <TableRow>
@@ -1676,8 +1551,15 @@ const printMonthlyReport = () => {
 
           <TableBody>
             {groupedData
-              .filter((row) =>
-                row.month === selectedMonth
+              .filter(row => row.month === selectedMonth)
+              .filter(row =>
+                row.name
+                  .toLowerCase()
+                  .includes(tableSearch.toLowerCase()) ||
+
+                (row.epf_no || "")
+                  .toLowerCase()
+                  .includes(tableSearch.toLowerCase())
               )
               .map((row) => {
               const c = {
@@ -1708,16 +1590,16 @@ const printMonthlyReport = () => {
                   <TableCell>
 
                   {/* VIEW */}
-                 <Button
-                    variant="contained"
-                    color="info"
+                 <MobileButton
+                    color="secondary"
+                    fullWidth={false}
                     onClick={() => {
                         setSelectedPayroll(row);
                         viewAttendance(row.worker_id, row.month);
                     }}
                 >
-                    VIEW
-                </Button>
+                    View
+                </MobileButton>
 
                 </TableCell>
 
@@ -1805,6 +1687,7 @@ const printMonthlyReport = () => {
           </TableRow>
           </TableBody>
         </Table>
+        </ResponsiveTable>
 
         <Dialog
           open={openPayroll}
@@ -1866,14 +1749,13 @@ const printMonthlyReport = () => {
             <TableCell>{d.kg}</TableCell>
 
             <TableCell>
-              <Button
-                  color="error"
-                  variant="contained"
-                  size="small"
-                  onClick={() => deleteAttendance(d.id)}
+              <MobileButton
+                color="danger"
+                fullWidth={false}
+                onClick={() => deleteAttendance(d.id)}
               >
-                  Delete
-              </Button>
+                Delete
+              </MobileButton>
 
               </TableCell>
 
@@ -1884,11 +1766,12 @@ const printMonthlyReport = () => {
             </TableBody>
 
             </Table>
+            
 
             </DialogContent>
 
       </Dialog>
-      </Paper>
-    </Box>
+      </ResponsiveCard>
+    </MobilePage>
   );
 }

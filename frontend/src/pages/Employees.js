@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import ActionButtons from "../components/mobile/ActionButtons";
+import MobileButton from '../components/mobile/MobileButton';
+import MobileSearch from "../components/mobile/MobileSearch";
+import AddIcon from "@mui/icons-material/Add";
 import {
-  TextField,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
   TableRow,
   TableHead,
-  Typography,
   Grid,
   Box
 } from '@mui/material';
@@ -116,153 +121,91 @@ export default function Employees({ plantation }) {
   };
 
   return (
-    <Box sx={{
-      p: {
-        xs: 1.5,
-        sm: 2,
-        md: 3
-      },
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f172a, #1e293b)"
-    }}>
+    <MobilePage>
 
       {/* HEADER */}
-     <Typography
-      variant="h4"
-      sx={{
-        mb: 3,
-        fontWeight: 800,
-        color: "#fff",
-        letterSpacing: 1,
-
-        fontSize: {
-          xs: "1.5rem",
-          sm: "1.8rem",
-          md: "2.3rem"
-        },
-
-        textAlign: {
-          xs: "center",
-          md: "left"
-        }
-      }}
-    >
-        👥 Employees Dashboard
-      </Typography>
+     <MobileHeader
+      title="👥 Employees"
+      subtitle="Manage plantation employees"
+    />
 
       {/* FORM CARD */}
-      <Paper sx={{
-        p: 3,
-        mb: 4,
-        borderRadius: 5,
-        backdropFilter: "blur(20px)",
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
-      }}>
+      <ResponsiveCard>
         <Grid container spacing={2}>
 
           <Grid item xs={12} sm={6} md={3}>
-            <TextField
+            <MobileInput
               label="Name"
-              fullWidth
               value={name}
-              onChange={e => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setName(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <TextField
+            <MobileInput
               label="Member ID"
-              fullWidth
               value={memberid}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                let value = e.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 6);
+
                 setMemberID(value);
               }}
               onBlur={() => {
-                if (memberid) setMemberID(memberid.padStart(6, "0"));
+                if (memberid)
+                  setMemberID(memberid.padStart(6, "0"));
               }}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <TextField
+            <MobileInput
               label="NIC"
-              fullWidth
               value={NIC}
-              onChange={e => setNIC(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setNIC(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <TextField
+            <MobileInput
               label="Salary"
-              fullWidth
+              type="number"
               value={salary}
-              onChange={e => setSalary(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
+              onChange={(e) => setSalary(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>
-            <Button
-              fullWidth
-              onClick={saveEmployee}
-              sx={{
-                height: {
-                  xs: 45,
-                  md: "100%"
-                },
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                boxShadow: "0 5px 20px rgba(34,197,94,0.4)",
-                transition: "0.2s",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 10px 30px rgba(34,197,94,0.6)"
-                }
-              }}
+            <MobileButton
+                icon={<AddIcon />}
+                onClick={saveEmployee}
             >
-              {editId ? "Update" : "Add"}
-            </Button>
+                {editId ? "Update Employee" : "Add Employee"}
+            </MobileButton>
           </Grid>
 
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* SEARCH */}
-      <TextField
-        placeholder="🔍 Search employee..."
-        fullWidth
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+     <Box
         sx={{
           mb: 3,
-          input: { color: "#fff" },
-          borderRadius: 3,
-          background: "rgba(255,255,255,0.05)",
-          maxWidth: {
-            xs: "100%",
-            md: 500
-          },
+          maxWidth: 500,
         }}
+      >
+      <MobileSearch
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search employee..."
       />
+    </Box>
+
 
       {/* TABLE */}
-      <Paper sx={{
-        p: 2,
-        borderRadius: 5,
-        background: "rgba(255,255,255,0.05)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255,255,255,0.1)"
-      }}>
-        <Box sx={{ overflowX: "auto" }}>
+      <ResponsiveCard sx={{ p: 2 }}>
+        <ResponsiveTable>
 
         <Table sx={{ minWidth: 750 }}>
           <TableHead>
@@ -305,49 +248,10 @@ export default function Employees({ plantation }) {
                 <TableCell>
                   <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row"}}}>
                     
-                    <Button
-                      size="small"
-                      onClick={() => editEmployee(emp)}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        background: "linear-gradient(135deg, #facc15, #f59e0b)",
-                        color: "#000",
-                        transition: "0.2s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                          boxShadow: "0 10px 25px rgba(245,158,11,0.5)",
-                        },
-                        maxWidth: {
-                          xs: "100%",
-                          md: 500
-                        },
-                      }}
-                    >
-                      Edit
-                    </Button>
-
-                    <Button
-                      size="small"
-                      onClick={() => deleteEmployee(emp.memberid)}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        background: "linear-gradient(135deg, #ef4444, #f87171)",
-                        color: "#fff",
-                        transition: "0.2s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                          boxShadow: "0 10px 25px rgba(239,68,68,0.5)" // ✅ fixed
-                        },
-                        maxWidth: {
-                          xs: "100%",
-                          md: 500
-                        },
-                      }}
-                    >
-                      Delete
-                    </Button>
+                    <ActionButtons
+                      onEdit={() => editEmployee(emp)}
+                      onDelete={() => deleteEmployee(emp.id)}
+                    />
 
                   </Box>
                 </TableCell>
@@ -356,8 +260,8 @@ export default function Employees({ plantation }) {
             ))}
           </TableBody>
         </Table>
-        </Box>
-      </Paper>
-    </Box>
+        </ResponsiveTable>
+      </ResponsiveCard>
+    </MobilePage>
   );
 }

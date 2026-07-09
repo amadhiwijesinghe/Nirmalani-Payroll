@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Toolbar, Box, useMediaQuery } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from "./theme/theme";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Sidebar from './components/Sidebar';
@@ -33,28 +34,20 @@ function App() {
   const isMobile = useMediaQuery("(max-width:900px)");
   const [plantation, setPlantation] = useState("nirmalani");
 
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? 'dark' : 'light',
-      primary: {
-        main: '#6366f1',
-      },
-      background: {
-        default: darkMode ? '#020617' : '#f5f5f5',
-      },
-    },
-    typography: {
-      fontFamily: 'Inter, sans-serif',
-    },
-  });
-
   if (!isLoggedIn) {
     return <Login setIsLoggedIn={setIsLoggedIn} />;
   }
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex' }}>
+      <Box
+        sx={{
+          display: "flex",
+          width: "100%",
+          minHeight: "100vh",
+          overflow: "hidden"
+        }}
+      >
 
         {/* SIDEBAR */}
         <Sidebar setPage={setPage} currentPage={page} plantation={plantation}/>
@@ -65,7 +58,7 @@ function App() {
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          height: "100vh",
+          minHeight: "100vh",
           overflow: "hidden"
         }}
       >
@@ -86,13 +79,22 @@ function App() {
 
           {/* CONTENT */}
          <Box
-          sx={{
-            p: 3,
-            flex: 1,
-            overflow: "auto",
-            background: "linear-gradient(135deg, #020617, #0f172a)"
-          }}
-        >
+            sx={{
+              flex: 1,
+              overflow: "auto",
+              px: {
+                xs: 1,
+                sm: 2,
+                md: 3
+              },
+              py: {
+                xs: 1,
+                sm: 2
+              },
+              background:
+                "linear-gradient(135deg,#020617,#0f172a)"
+            }}
+          >
 
             <AnimatePresence mode="wait">
 

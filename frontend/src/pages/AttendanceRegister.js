@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileInput from "../components/mobile/MobileInput";
+import { useMediaQuery } from "@mui/material";
 import {
   Box,
   Paper,
@@ -389,36 +395,38 @@ const filteredWorkers =
         : workers.filter(
             worker => worker.worker_type === workerType
         );
+const isMobile = useMediaQuery("(max-width:900px)");
 
   return (
-    <Paper
-      sx={{
-        p: 3,
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        height: "100%"
-      }}
-    >
 
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        mb={3}
-      >
-        Attendance Register
-      </Typography>
+    <MobilePage>   
+
+      <MobileHeader
+        title="📅 Attendance Register"
+        subtitle="Manage daily worker attendance"
+      />
+      <ResponsiveCard>
 
       <Stack
-        direction="row"
+        direction={{
+            xs: "column",
+            md: "row",
+        }}
         spacing={2}
-        mb={2}
-        sx={{
-            flexShrink: 0
+        alignItems={{
+            xs: "stretch",
+            md: "center",
         }}
     >
 
-        <FormControl sx={{ minWidth: 160 }}>
+        <FormControl
+            sx={{
+                minWidth: {
+                    xs: "100%",
+                    md: 160,
+                },
+            }}
+        >
           <InputLabel>Month</InputLabel>
 
           <Select
@@ -455,7 +463,14 @@ const filteredWorkers =
 
         </FormControl>
 
-        <FormControl sx={{ minWidth: 120 }}>
+        <FormControl
+            sx={{
+                minWidth: {
+                    xs: "100%",
+                    md: 220,
+                },
+            }}
+        >
           <InputLabel>Year</InputLabel>
 
           <Select
@@ -510,71 +525,53 @@ const filteredWorkers =
 
       </FormControl>
 
-        <Button
-        sx={{
-          width:120,
-          height:48,
-          borderRadius:2
-      }}
-          variant="contained"
-          color="success"
-          onClick={saveAttendance}
-          disabled={!isEditing || isFinalized}
+      <MobileButton
+        color="primary"
+        onClick={saveAttendance}
+        disabled={!isEditing || isFinalized}
+        fullWidth={isMobile}
       >
-          Save
-      </Button>
+        Save
+      </MobileButton>
 
-      <Button
-        sx={{
-          width:120,
-          height:48,
-          borderRadius:2
-      }}
-        variant="contained"
+      <MobileButton
         color="warning"
-        disabled={isEditing || isFinalized}
         onClick={() => setIsEditing(true)}
-    >
+        disabled={isEditing || isFinalized}
+        fullWidth={isMobile}
+      >
         Edit
-    </Button>
+      </MobileButton>
 
-    <Button
-      sx={{
-        width:120,
-        height:48,
-        borderRadius:2
-    }}
-      variant="contained"
-      color="error"
-      onClick={finalizeAttendance}
-      disabled={isFinalized}
-    >
+      <MobileButton
+        color="danger"
+        onClick={finalizeAttendance}
+        disabled={isFinalized}
+        fullWidth={isMobile}
+        >
         Finalize
-    </Button>
+      </MobileButton>
 
-    <Button
-      sx={{
-        width:120,
-        height:48,
-        borderRadius:2
-    }}
-      variant="outlined"
-      onClick={() =>
-          printAttendanceRegister({
-              workers: filteredWorkers,
-              attendance,
-              month,
-              year,
-              plantation,
-              workerType,
-              daysInMonth
-          })
-      }
-    >
+      <MobileButton
+        color="secondary"
+        fullWidth={isMobile}
+        onClick={() =>
+            printAttendanceRegister({
+            workers: filteredWorkers,
+            attendance,
+            month,
+            year,
+            plantation,
+            workerType,
+            daysInMonth,
+            })
+        }
+        >
         Print
-    </Button>
+      </MobileButton>
 
       </Stack>
+      </ResponsiveCard>
 
       <Paper
         elevation={0}
@@ -586,43 +583,42 @@ const filteredWorkers =
         }}
     >
 
-        <Typography
+        <Box
             sx={{
-                fontWeight: "bold",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+                flexWrap: "wrap",
+                gap: 2,
+            }}
+            >
+            <Typography
+                sx={{
+                fontWeight: 700,
                 color: isFinalized
                     ? "#ef4444"
                     : isEditing
                     ? "#22c55e"
-                    : "#f59e0b"
-            }}
-        >
-            {isFinalized
-                ? "🔒 Finalized"
+                    : "#f59e0b",
+                }}
+            >
+                {isFinalized
+                ? "🔒 Attendance Finalized"
                 : isEditing
-                ? "🟢 Editing"
-                : "🟡 Saved (Locked)"}
-        </Typography>
+                ? "🟢 Editing Mode"
+                : "🟡 Saved (Read Only)"}
+            </Typography>
 
-      <TableContainer
-        sx={{
-            maxHeight: "70vh",
-            overflow: "auto",
-            border: "1px solid #555",
-            borderRadius: 1
-        }}
-    >
-
-      <Typography
-        sx={{
-            mb: 2,
-            fontWeight: "bold",
-            color: isEditing ? "#4caf50" : "#f44336"
-        }}
-    >
-        {isEditing
-            ? "🟢 Editing Enabled"
-            : "🔒 Attendance Locked"}
-    </Typography>
+            <Typography
+                sx={{
+                color: "#94a3b8",
+                fontWeight: 600,
+                }}
+            >
+                {dayjs(`${year}-${month}-01`).format("MMMM YYYY")}
+            </Typography>
+            </Box>
 
         <Table
           stickyHeader
@@ -935,8 +931,6 @@ const filteredWorkers =
             </TableBody>
 
         </Table>
-
-      </TableContainer>
       </Paper>
 
       <Dialog
@@ -972,7 +966,7 @@ const filteredWorkers =
 
                     <FormControl fullWidth>
 
-                        <TextField
+                        <MobileInput
                             label="Attendance"
                             value="Sunday Work (1.5 Days)"
                             InputProps={{
@@ -1015,7 +1009,7 @@ const filteredWorkers =
 
                     )}
 
-                <TextField
+                <MobileInput
                     label="Collected Liter"
                     type="number"
                     value={rubberAttendance.liter}
@@ -1039,7 +1033,7 @@ const filteredWorkers =
                     }}
                 />
 
-                <TextField
+                <MobileInput
                     label="DRC %"
                     type="number"
                     value={rubberAttendance.drc}
@@ -1063,7 +1057,7 @@ const filteredWorkers =
                     }}
                 />
 
-                <TextField
+                <MobileInput
                     label="KG"
                     value={rubberAttendance.kg}
                     InputProps={{
@@ -1077,24 +1071,27 @@ const filteredWorkers =
 
         <DialogActions>
 
-            <Button
-                onClick={()=>setRubberDialogOpen(false)}
+            <MobileButton
+                color="secondary"
+                fullWidth={false}
+                onClick={() => setRubberDialogOpen(false)}
             >
                 Cancel
-            </Button>
+            </MobileButton>
 
-            <Button
-                variant="contained"
+            <MobileButton
+                color="primary"
+                fullWidth={false}
                 onClick={saveRubberAttendance}
             >
                 Save
-            </Button>
+            </MobileButton>
 
         </DialogActions>
 
     </Dialog>
 
-    </Paper>
+    </MobilePage>
   );
 
 }

@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 
 import axios from "axios";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
 
 import {
   Box,
@@ -909,37 +917,25 @@ const nationsSummary = getSummary(nationsData);
 
   return (
 
-    <Box
-      sx={{
-        p:3,
-        minHeight:"100vh",
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b)"
-      }}
-    >
+    <MobilePage>
 
-      <Typography
-        variant="h4"
-        sx={{
-          color:"#fff",
-          mb:3,
-          fontWeight:"bold"
-        }}
-      >
-        💸 Expenditure Dashboard
-      </Typography>
+      <MobileHeader
+        title="💸 Expenditure"
+        subtitle="Manage plantation expenditure and receipts"
+      />
 
-      <Paper
-        sx={{
-          p:3,
-          mb:4,
-          borderRadius:5,
-          background:
-            "rgba(255,255,255,0.05)"
-        }}
-      >
+      <ResponsiveCard>
 
         <Grid container spacing={2}>
+          <Typography
+            sx={{
+                color: "#fff",
+                fontWeight: 700,
+                mb: 2,
+            }}
+          >
+            💸 Add Expenditure
+          </Typography>
 
         {plantation === "nirmalani" && (
 
@@ -1223,7 +1219,7 @@ const nationsSummary = getSummary(nationsData);
 
         </Grid>
 
-      </Paper>
+      </ResponsiveCard>
 
       <Paper
         sx={{
@@ -1690,6 +1686,6 @@ const nationsSummary = getSummary(nationsData);
       )
         )}
 
-    </Box>
+    </MobilePage>
   );
 }

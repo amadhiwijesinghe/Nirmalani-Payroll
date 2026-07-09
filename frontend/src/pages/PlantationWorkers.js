@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileSearch from "../components/mobile/MobileSearch";
+import MobileButton from "../components/mobile/MobileButton";
+import AddIcon from "@mui/icons-material/Add";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
 import {
-  TextField,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -17,8 +22,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Card,
-  CardContent,
 
   Dialog,
   DialogTitle,
@@ -27,6 +30,7 @@ import {
   Divider
 
 } from "@mui/material";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
 
 const API = "https://nirmalani-payroll-production.up.railway.app";
 
@@ -982,36 +986,15 @@ const reportMonth = new Date(filterMonth + "-01")
   );
 
   return (
-    <Box
-      sx={{
-        p: 3,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-      }}
-    >
+    <MobilePage>
       {/* HEADER */}
-      <Typography
-        variant="h4"
-        sx={{
-          mb: 3,
-          fontWeight: 800,
-          color: "#fff",
-        }}
-      >
-        🌿 Plantation Payroll Dashboard
-      </Typography>
+      <MobileHeader
+        title="🌿 Plantation Workers"
+        subtitle="Payroll and worker management"
+      />
 
       {/* ADD WORKER */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          backdropFilter: "blur(20px)",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
+      <ResponsiveCard>
         <Grid
           container
           spacing={2}
@@ -1019,39 +1002,28 @@ const reportMonth = new Date(filterMonth + "-01")
           justifyContent="space-between"
         >
           <Grid item xs={12} md={5}>
-            <TextField
+            <MobileInput
               label="Worker Name"
-              fullWidth
               value={name}
               onChange={(e) => setName(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} md={5}>
-            <TextField
+            <MobileInput
               label="EPF Number"
-              fullWidth
               value={epf}
               onChange={(e) => setEpf(e.target.value)}
-              sx={{ input: { color: "#fff" }, label: { color: "#aaa" } }}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
+            <MobileButton
               onClick={addWorker}
-              sx={{
-                height: "100%",
-                borderRadius: 3,
-                fontWeight: 700,
-                background: "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-              }}
             >
-              Add
-            </Button>
+              <AddIcon sx={{ mr: 1 }} />
+              Add Worker
+            </MobileButton>
           </Grid>
           <Grid
             item
@@ -1064,61 +1036,28 @@ const reportMonth = new Date(filterMonth + "-01")
               }
             }}
           >
-            <Button
-              fullWidth
-              onClick={() =>
-                setPage("casualworkers")
-              }
-              sx={{
-                height: "100%",
-
-                borderRadius: 3,
-
-                fontWeight: 700,
-
-                background:
-                  "linear-gradient(135deg,#f59e0b,#f97316)",
-
-                color: "#fff",
-
-                '&:hover': {
-                  background:
-                    "linear-gradient(135deg,#d97706,#ea580c)"
-                }
-              }}
+            <MobileButton
+              color="warning"
+              onClick={() => setPage("casualworkers")}
             >
               Casual Workers
-            </Button>
+            </MobileButton>
 
           </Grid>
         </Grid>
-      </Paper>
+      </ResponsiveCard>
 
       {/* SEARCH & EDIT WORKERS */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(20px)",
-        }}
-      >
+      <ResponsiveCard>
 
         <Typography sx={{ color: "#fff", mb: 2 }}>
           🔍 Search Plantation Workers
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Search Worker"
+        <MobileSearch
+          placeholder="Search worker..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{
-            mb: 3,
-            input: { color: "#fff" },
-            label: { color: "#aaa" }
-          }}
         />
 
         {search.trim() !== "" &&
@@ -1157,41 +1096,27 @@ const reportMonth = new Date(filterMonth + "-01")
                 </Typography>
               </Box>
 
-              <Button
+              <MobileButton
+                color="warning"
+                fullWidth={false}
                 onClick={() => {
-
                   setEditingWorker(w);
-
                   setEditName(w.name);
-
                   setEditEpf(w.epf_no);
-                }}
-                sx={{
-                  background: "#facc15",
-                  color: "#000"
                 }}
               >
                 Edit
-              </Button>
+              </MobileButton>
 
             </Box>
           ))}
 
-        </Paper>
+        </ResponsiveCard>
 
         {/* EDIT WORKER */}
         {editingWorker && (
 
-          <Paper
-            sx={{
-              p: 3,
-              mt: 3,
-              mb: 4,
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 5,
-              backdropFilter: "blur(20px)"
-            }}
-          >
+          <ResponsiveCard>
 
             <Typography sx={{ color: "#fff", mb: 2 }}>
               ✏️ Edit Worker
@@ -1200,64 +1125,49 @@ const reportMonth = new Date(filterMonth + "-01")
             <Grid container spacing={2}>
 
               <Grid item xs={12} md={5}>
-                <TextField
-                  fullWidth
+                <MobileInput
                   label="Worker Name"
                   value={editName}
-                  onChange={(e) =>
-                    setEditName(e.target.value)
-                  }
-                  sx={{
-                    input: { color: "#fff" },
-                    label: { color: "#aaa" }
-                  }}
+                  onChange={(e) => setEditName(e.target.value)}
                 />
               </Grid>
 
               <Grid item xs={12} md={5}>
-                <TextField
-                  fullWidth
+                <MobileInput
                   label="EPF Number"
                   value={editEpf}
-                  onChange={(e) =>
-                    setEditEpf(e.target.value)
-                  }
-                  sx={{
-                    input: { color: "#fff" },
-                    label: { color: "#aaa" }
-                  }}
+                  onChange={(e) => setEditEpf(e.target.value)}
                 />
               </Grid>
 
               <Grid item xs={12} md={2}>
-                <Button
-                  fullWidth
+                <MobileButton
                   onClick={updateWorker}
-                  sx={{
-                    height: "100%",
-                    background: "#22c55e",
-                    color: "#000"
-                  }}
                 >
-                  Save
-                </Button>
+                  Save Worker
+                </MobileButton>
               </Grid>
 
             </Grid>
-          </Paper>
+          </ResponsiveCard>
         )}
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
+      <ResponsiveCard>
 
-          <Typography variant="h6" gutterBottom>
-            Payroll Settings
+          <Typography
+            sx={{
+                color: "#fff",
+                fontWeight: 700,
+                mb: 2
+            }}
+          >
+            ⚙️ Payroll Settings
           </Typography>
 
           <Grid container spacing={2} alignItems="center">
 
             <Grid item xs={12} md={4}>
-              <TextField
+              <MobileInput
                 label="Daily Rate"
                 fullWidth
                 value={dailyRate}
@@ -1270,22 +1180,22 @@ const reportMonth = new Date(filterMonth + "-01")
 
               {!editingRate ? (
 
-                <Button
-                  variant="contained"
+                <MobileButton
+                  color="warning"
+                  fullWidth={false}
                   onClick={() => setEditingRate(true)}
                 >
                   Edit Rate
-                </Button>
+                </MobileButton>
 
               ) : (
 
-                <Button
-                  variant="contained"
-                  color="success"
+                <MobileButton
                   onClick={saveDailyRate}
+                  fullWidth={false}
                 >
-                  Save
-                </Button>
+                  Save Rate
+                </MobileButton>
 
               )}
 
@@ -1295,15 +1205,16 @@ const reportMonth = new Date(filterMonth + "-01")
 
               <Grid item>
 
-                <Button
-                  color="inherit"
-                  onClick={() => {
-                    setEditingRate(false);
-                    fetchDailyRate();
+                <MobileButton
+                  color="secondary"
+                  fullWidth={false}
+                  onClick={()=>{
+                      setEditingRate(false);
+                      fetchDailyRate();
                   }}
                 >
                   Cancel
-                </Button>
+                </MobileButton>
 
               </Grid>
 
@@ -1311,8 +1222,7 @@ const reportMonth = new Date(filterMonth + "-01")
 
           </Grid>
 
-        </CardContent>
-      </Card>
+      </ResponsiveCard>
 
       {/* DAILY ATTENDANCE */}
         {/* <Paper
@@ -1425,11 +1335,16 @@ const reportMonth = new Date(filterMonth + "-01")
         </Paper> */}
 
 
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
+        <ResponsiveCard>
 
-            <Typography variant="h6" gutterBottom>
-              Allowance
+            <Typography
+              sx={{
+                  color: "#fff",
+                  fontWeight: 700,
+                  mb: 2
+              }}
+            >
+              💰 Worker Allowance
             </Typography>
 
             <Grid container spacing={2}>
@@ -1466,7 +1381,7 @@ const reportMonth = new Date(filterMonth + "-01")
               </Grid>
 
               <Grid item xs={12} md={3}>
-                <TextField
+                <MobileInput
                   type="month"
                   label="Month"
                   fullWidth
@@ -1481,32 +1396,25 @@ const reportMonth = new Date(filterMonth + "-01")
               </Grid>
 
               <Grid item xs={12} md={3}>
-                <TextField
+                <MobileInput
                   label="Allowance"
                   type="number"
-                  fullWidth
                   value={allowanceAmount}
-                  onChange={(e) =>
-                    setAllowanceAmount(e.target.value)
-                  }
+                  onChange={(e)=>setAllowanceAmount(e.target.value)}
                 />
               </Grid>
 
               <Grid item xs={12} md={2}>
-                <Button
+                <MobileButton
                   fullWidth
-                  variant="contained"
-                  color="success"
                   onClick={saveAllowance}
                 >
                   Save
-                </Button>
+                </MobileButton>
               </Grid>
 
             </Grid>
-
-          </CardContent>
-        </Card>
+        </ResponsiveCard>
           <Box
             sx={{
               display: "grid",
@@ -1517,248 +1425,122 @@ const reportMonth = new Date(filterMonth + "-01")
             }}
           >
 
-            <Paper
-              sx={{
-                p: 3,
-                background: "#1e3a8a",
-                color: "#fff",
-                borderRadius: 4
-              }}
-            >
-              <Typography variant="h6">
-                💵 Net Salary
-              </Typography>
+            <DashboardStatCard
+              title="💵 Net Salary"
+              value={`Rs. ${totals.balance.toFixed(2)}`}
+              color="#22c55e"
+          />
 
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-              >
-                Rs. {totals.balance.toFixed(2)}
-              </Typography>
-            </Paper>
+          <DashboardStatCard
+              title="🏦 EPF 20%"
+              value={`Rs. ${totals.epf_20.toFixed(2)}`}
+              color="#3b82f6"
+          />
 
-            <Paper
-              sx={{
-                p: 3,
-                background: "#166534",
-                color: "#fff",
-                borderRadius: 4
-              }}
-            >
-              <Typography variant="h6">
-                🏦 EPF 20%
-              </Typography>
+          <DashboardStatCard
+              title="📄 ETF"
+              value={`Rs. ${totals.etf.toFixed(2)}`}
+              color="#f59e0b"
+          />
 
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-              >
-                Rs. {totals.epf_20.toFixed(2)}
-              </Typography>
-            </Paper>
-
-            <Paper
-              sx={{
-                p: 3,
-                background: "#92400e",
-                color: "#fff",
-                borderRadius: 4
-              }}
-            >
-              <Typography variant="h6">
-                📄 ETF
-              </Typography>
-
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-              >
-                Rs. {totals.etf.toFixed(2)}
-              </Typography>
-            </Paper>
-
-            <Paper
-              sx={{
-                p: 3,
-                background: "#14532d",
-                color: "#fff",
-                borderRadius: 4
-              }}
-            >
-              <Typography variant="h6">
-                💰 Total Required
-              </Typography>
-
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-              >
-                Rs. {totalRequired.toFixed(2)}
-              </Typography>
-            </Paper>
+          <DashboardStatCard
+              title="💰 Total Required"
+              value={`Rs. ${totalRequired.toFixed(2)}`}
+              color="#a855f7"
+          />
 
           </Box>
       {/* TABLE */}
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(20px)",
-        }}
-        
-      >
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            InputLabelProps={{
-              shrink: true
-            }}
-            helperText="Filter By Month"
+      <ResponsiveCard>
+
+        <Typography
+            variant="h6"
             sx={{
-              ml: 2,
-              width: 180,
-
-              input: {
-                color: "#fff"
-              },
-
-              '& .MuiFormHelperText-root': {
-                color: '#aaa'
-              },
-
-              '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-              }
+                color: "#fff",
+                fontWeight: 700,
+                mb: 3
             }}
-          />
-          <TextField
-            type="date"
-            value={weekStart}
-            onChange={(e) => setWeekStart(e.target.value)}
-            InputLabelProps={{
-              shrink: true
-            }}
-            helperText="Week Start"
-            sx={{
-              ml: 2,
-              width: 180,
+        >
+            📄 Payroll Reports
+        </Typography>
 
-              input: {
-                color: "#fff"
-              },
-
-              '& .MuiFormHelperText-root': {
-                color: '#aaa'
-              },
-
-              '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-              }
-            }}
-          />
-
-          <TextField
-            type="date"
-            value={weekEnd}
-            onChange={(e) => setWeekEnd(e.target.value)}
-            InputLabelProps={{
-              shrink: true
-            }}
-            helperText="Week End"
-            sx={{
-              ml: 2,
-              width: 180,
-
-              input: {
-                color: "#fff"
-              },
-
-              '& .MuiFormHelperText-root': {
-                color: '#aaa'
-              },
-
-              '& input::-webkit-calendar-picker-indicator': {
-                filter: 'invert(1)'
-              }
-            }}
-          />
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+                type="month"
+                value={filterMonth}
+                onChange={(e)=>setFilterMonth(e.target.value)}
+                helperText="Month"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+                type="date"
+                value={weekStart}
+                onChange={(e)=>setWeekStart(e.target.value)}
+                helperText="Week Start"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+                type="date"
+                value={weekEnd}
+                onChange={(e)=>setWeekEnd(e.target.value)}
+                helperText="Week End"
+            />
+          </Grid>
 
             {/* Clear Button */}
-            <Button
-              onClick={() => setFilterMonth("")}
-              sx={{
-                ml: 2,
-                background: "#475569",
-                color: "#fff",
-                height: "56px"
-              }}
-            >
-              Clear
-            </Button>
+            <Grid item xs={6} md={3}>
+              <MobileButton
+                  color="secondary"
+                  onClick={() => setFilterMonth("")}
+              >
+                  Clear
+              </MobileButton>
+            </Grid>
 
-            <Button
-              onClick={printSlip}
-              sx={{
-                ml: 2,
-                background: "#22c55e",
-                color: "#000",
-                height: "56px",
-                fontWeight: "bold"
-              }}
-            >
-              PRINT PAYSLIPS
-            </Button>
+            <Grid item xs={6} md={3}>
+              <MobileButton
+                  onClick={printSlip}
+              >
+                Print Payslips
+              </MobileButton>
+            </Grid>
 
-            <Button
+            <Grid item xs={6} md={3}>
+              <MobileButton
+              color="warning"
+              fullWidth={false}
               onClick={printWeeklyReport}
-              sx={{
-                ml: 2,
-                background: "#0ea5e9",
-                color: "#fff",
-                height: "56px",
-                fontWeight: "bold"
-              }}
             >
-              WEEKLY REPORT
-            </Button>
+              Weekly Report
+            </MobileButton>
+            </Grid>
 
-            <Button
+            <Grid item xs={6} md={3}>
+              <MobileButton
+              color="danger"
+              fullWidth={false}
               onClick={printMonthlyReport}
-              sx={{
-                ml: 2,
-                background: "#a855f7",
-                color: "#fff",
-                height: "56px",
-                fontWeight: "bold"
-              }}
             >
-              MONTHLY REPORT
-            </Button>
+              Monthly Report
+            </MobileButton>
+            </Grid>
 
-            <TextField
-              label="Search Worker in Table"
-              value={tableSearch}
-              onChange={(e) =>
-                setTableSearch(e.target.value)
-              }
-              sx={{
-                ml: 2,
-                mb: 2,
-                width: 300,
+            
 
-                input: {
-                  color: "#fff"
-                },
+            
 
-                label: {
-                  color: "#aaa"
-                }
-              }}
-            />
-        </Box>
+            <Grid item xs={12} md={3}>
+              <MobileSearch
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  placeholder="Search worker..."
+              />
+            </Grid>
+        </Grid>
+        <ResponsiveTable>
         <Table>
           <TableHead>
             <TableRow>
@@ -1846,44 +1628,35 @@ const reportMonth = new Date(filterMonth + "-01")
                     >
 
                       {/* VIEW */}
-                      <Button
-                        size="small"
+                      <MobileButton
+                        color="secondary"
+                        fullWidth={false}
                         onClick={() =>
                           viewAttendance(row.worker_id, row.month, row.name)
                         }
-                        sx={{
-                          background: "#38bdf8",
-                          color: "#000"
-                        }}
                       >
                         View
-                      </Button>
+                      </MobileButton>
 
                       {/* EDIT ALLOWANCE */}
-                      <Button
-                        size="small"
+                      <MobileButton
+                        color="warning"
+                        fullWidth={false}
                         onClick={() => editAllowance(row)}
-                        sx={{
-                          background: "#facc15",
-                          color: "#000"
-                        }}
                       >
                         Allowance
-                      </Button>
+                      </MobileButton>
 
                       {/* DELETE */}
-                      <Button
-                        size="small"
+                      <MobileButton
+                        color="danger"
+                        fullWidth={false}
                         onClick={() =>
                           deletePayroll(row.worker_id, row.month)
                         }
-                        sx={{
-                          background: "#ef4444",
-                          color: "#fff"
-                        }}
                       >
                         Delete
-                      </Button>
+                      </MobileButton>
                     </Box>
                   </TableCell>
 
@@ -1924,7 +1697,8 @@ const reportMonth = new Date(filterMonth + "-01")
             </TableRow>
           </TableBody>
         </Table>
-      </Paper>
+        </ResponsiveTable>
+      </ResponsiveCard>
 
       <Dialog
         open={open}
@@ -1964,14 +1738,12 @@ const reportMonth = new Date(filterMonth + "-01")
 
           {attendanceDates.map((d)=>(
 
-            <Paper
+            <ResponsiveCard
               key={d.id}
               sx={{
-                p:2,
-                mb:2,
-                display:"flex",
-                justifyContent:"space-between",
-                alignItems:"center"
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
 
@@ -2006,15 +1778,15 @@ const reportMonth = new Date(filterMonth + "-01")
 
               </Box>
 
-              <Button
-                color="error"
-                variant="contained"
-                onClick={()=>deleteAttendance(d.id)}
+              <MobileButton
+                color="danger"
+                fullWidth={false}
+                onClick={() => deleteAttendance(d.id)}
               >
                 Delete
-              </Button>
+              </MobileButton>
 
-            </Paper>
+            </ResponsiveCard>
 
           ))}
 
@@ -2022,15 +1794,17 @@ const reportMonth = new Date(filterMonth + "-01")
 
         <DialogActions>
 
-          <Button
-            onClick={()=>setOpen(false)}
+          <MobileButton
+            color="secondary"
+            fullWidth={false}
+            onClick={() => setOpen(false)}
           >
             Close
-          </Button>
+          </MobileButton>
 
         </DialogActions>
 
       </Dialog>
-    </Box>
+    </MobilePage>
   );
 }

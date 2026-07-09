@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 
 import axios from "axios";
+import { Chip } from "@mui/material";
+
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import MobileSearch from "../components/mobile/MobileSearch";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
+import ActionButtons from "../components/mobile/ActionButtons";
 
 import {
   Box,
@@ -30,6 +41,7 @@ export default function Income({
   const [customCategory, setCustomCategory] = useState("");
 
   const [amount, setAmount] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
 
   const [note, setNote] = useState("");
 
@@ -455,37 +467,27 @@ const printWeeklyReport = () => {
 
   return (
 
-    <Box
-      sx={{
-        p:3,
-        minHeight:"100vh",
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b)"
-      }}
-    >
+    <MobilePage>
 
-      <Typography
-        variant="h4"
-        sx={{
-          color:"#fff",
-          mb:3,
-          fontWeight:"bold"
-        }}
-      >
-        💰 Income Dashboard
-      </Typography>
+      <MobileHeader
+        title="💰 Income"
+        subtitle="Manage plantation income records"
+      />
 
-      <Paper
-        sx={{
-          p:3,
-          mb:4,
-          borderRadius:5,
-          background:
-            "rgba(255,255,255,0.05)"
-        }}
-      >
+      <ResponsiveCard>
 
-        <Grid item xs={12} md={3}>
+        <Typography
+          sx={{
+              color:"#fff",
+              fontWeight:700,
+              mb:2
+          }}
+        >
+          💵 Add Income
+        </Typography>
+        <Grid container spacing={2}>
+
+        <Grid item xs={12} sm={6} md={3}>
           <TextField
               select
               sx={{ mb: 3, width: 250}}
@@ -509,7 +511,7 @@ const printWeeklyReport = () => {
 
         {incomeType === "Income" && (
           <>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               select
               fullWidth
@@ -538,26 +540,15 @@ const printWeeklyReport = () => {
             </TextField>
           </Grid>
 
-          <Grid item xs={12} md={3}>
-
-        <TextField
-            fullWidth
-            label="Custom Category"
-            value={customCategory}
-            onChange={(e)=>
-            setCustomCategory(
-                e.target.value
-            )
-            }
-            sx={{
-              width: 250,
-              mb: 3,
-              input:{color:"#fff"},
-              label:{color:"#aaa"}
-            }}
-        />
-
-        </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ maxWidth: 250, mb: 3}}>
+              <MobileInput
+                label="Custom Category"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+              />
+            </Box>
+          </Grid>
           </>
         )}
         <Grid container spacing={2}>
@@ -565,162 +556,144 @@ const printWeeklyReport = () => {
           
 
           <Grid item xs={12} md={2}>
-            <TextField
+            <MobileInput
               label="Amount"
               type="number"
-              fullWidth
               value={amount}
-              onChange={(e)=>
-                setAmount(
-                  e.target.value
-                )
-              }
-              sx={{
-                input:{color:"#fff"},
-                label:{color:"#aaa"}
-              }}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={3}>
-            <TextField
+            <MobileInput
               label="Note"
-              fullWidth
               value={note}
-              onChange={(e)=>
-                setNote(
-                  e.target.value
-                )
-              }
-              sx={{
-                input:{color:"#fff"},
-                label:{color:"#aaa"}
-              }}
+              onChange={(e) => setNote(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <TextField
+            <MobileInput
               type="date"
-              fullWidth
+              label="Date"
               value={date}
-              onChange={(e)=>
-                setDate(
-                  e.target.value
-                )
-              }
-              sx={{
-                input:{color:"#fff"}
-              }}
+              onChange={(e) => setDate(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
+            <MobileButton
               onClick={() => {
-                if (editingId) {
-                    updateIncome(editingId);
-                } else {
-                    addIncome();
-                }
-                }}
-              sx={{
-                height:"100%",
-                background:
-                  "linear-gradient(135deg,#22c55e,#4ade80)",
-                color:"#000",
-                fontWeight:"bold"
+                  if (editingId) {
+                      updateIncome(editingId);
+                  } else {
+                      addIncome();
+                  }
               }}
             >
-              {editingId ? "Update" : "Add"}
-            </Button>
+              {editingId ? "Update Income" : "Add Income"}
+            </MobileButton>
           </Grid>
 
         </Grid>
+        </Grid>
 
-      </Paper>
+      </ResponsiveCard>
 
-      <Paper
-        sx={{
-          p:2,
-          borderRadius:5,
-          background:
-            "rgba(255,255,255,0.05)"
-        }}
-      >
+      <ResponsiveCard>
+        <Typography
+          sx={{
+              color: "#fff",
+              fontWeight: 700,
+              mb: 2,
+          }}
+        >
+          📄 Income Reports
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="month"
+              value={filterMonth}
+              onChange={(e)=>setFilterMonth(e.target.value)}
+              helperText="Month"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="date"
+              value={weekStart}
+              onChange={(e)=>setWeekStart(e.target.value)}
+              helperText="Week Start"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="date"
+              value={weekEnd}
+              onChange={(e)=>setWeekEnd(e.target.value)}
+              helperText="Week End"
+            />
+          </Grid>
+                        
+          {/* Clear Button */}
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="secondary"
+              onClick={() => setFilterMonth("")}
+            >
+              Clear
+            </MobileButton>
+          </Grid>
+                        
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="warning"
+              fullWidth={false}
+              onClick={printWeeklyReport}
+            >
+              Weekly Report
+            </MobileButton>
+          </Grid>
+                        
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="danger"
+              fullWidth={false}
+              onClick={printMonthlyReport}
+            >
+              Monthly Report
+            </MobileButton>
+          </Grid>
+                                                                                                                                  
+          <Grid item xs={12} md={3}>
+            <MobileSearch
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+              placeholder="Search income..."
+            />
+          </Grid>
+        </Grid>
+
         <Box
-            sx={{
-                display:"flex",
-                gap:2,
-                flexWrap:"wrap",
-                mb:3
-            }}
-            >
+          sx={{
+              display: "grid",
+              gridTemplateColumns:
+                  "repeat(auto-fit,minmax(250px,1fr))",
+              gap: 3,
+              mb: 3,
+          }}
+      >
 
-            <TextField
-                type="month"
-                value={filterMonth}
-                onChange={(e)=>
-                setFilterMonth(
-                    e.target.value
-                )
-                }
-                sx={{
-                input:{color:"#fff"}
-                }}
-            />
+      <DashboardStatCard
+          title="💰 Total Income"
+          value={`Rs. ${totalIncome.toFixed(2)}`}
+          color="#22c55e"
+      />
 
-            <TextField
-                type="date"
-                value={weekStart}
-                onChange={(e)=>
-                setWeekStart(
-                    e.target.value
-                )
-                }
-                sx={{
-                input:{color:"#fff"}
-                }}
-            />
+      </Box>
 
-            <TextField
-                type="date"
-                value={weekEnd}
-                onChange={(e)=>
-                setWeekEnd(
-                    e.target.value
-                )
-                }
-                sx={{
-                input:{color:"#fff"}
-                }}
-            />
-
-            <Button
-                onClick={printWeeklyReport}
-                sx={{
-                background:"#0ea5e9",
-                color:"#fff",
-                fontWeight: "bold"
-                }}
-            >
-                Weekly Report
-            </Button>
-
-            <Button
-                onClick={printMonthlyReport}
-                sx={{
-                background:"#8b5cf6",
-                color:"#fff",
-                fontWeight: "bold"
-                }}
-            >
-                Monthly Report
-            </Button>
-
-            </Box>
-
+      <ResponsiveTable>
         <Table>
 
           <TableHead>
@@ -757,12 +730,28 @@ const printWeeklyReport = () => {
 
           <TableBody>
 
-            {data.map((row)=>(
+            {data
+              .filter((row) =>
+                row.category?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                row.income_type?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                (row.note || "").toLowerCase().includes(tableSearch.toLowerCase())
+              )
+              .map((row) => (
 
               <TableRow key={row.id}>
 
-                <TableCell sx={{color:"#fff"}}>
-                    {row.income_type}
+                <TableCell>
+                  <Chip
+                    label={row.income_type}
+                    color={
+                      row.income_type === "Income"
+                        ? "success"
+                        : row.income_type === "Money Received"
+                        ? "info"
+                        : "secondary"
+                    }
+                    size="small"
+                  />
                 </TableCell>
 
                 <TableCell sx={{color:"#fff"}}>
@@ -784,72 +773,41 @@ const printWeeklyReport = () => {
 
                 <TableCell>
 
-                    <Button
-                        size="small"
-                        sx={{
-                        mr:1,
-                        background:"#eab308",
-                        color:"#000"
-                        }}
-                        onClick={() => {
-                        setEditingId(row.id);
-                        setCategory(row.category);
-                        setAmount(row.amount);
-                        setNote(row.note || "");
-                        setDate(
-                            row.date.split("T")[0]
-                        );
-                        }}
+                    <MobileButton
+                      color="warning"
+                      fullWidth={false}
+                      onClick={() => {
+                          setEditingId(row.id);
+                          setCategory(row.category);
+                          setAmount(row.amount);
+                          setNote(row.note || "");
+                          setDate(row.date.split("T")[0]);
+                      }}
                     >
-                        Edit
-                    </Button>
+                      Edit
+                    </MobileButton>
 
-                    <Button
-                        size="small"
-                        sx={{
-                        background:"#ef4444",
-                        color:"#fff"
-                        }}
-                        onClick={() =>
-                        deleteIncome(row.id)
-                        }
+                    <MobileButton
+                      color="danger"
+                      fullWidth={false}
+                      onClick={() => deleteIncome(row.id)}
                     >
-                        Delete
-                    </Button>
+                      Delete
+                    </MobileButton>
 
                     </TableCell>
 
               </TableRow>
             ))}
 
-            <TableRow>
-
-              <TableCell
-                sx={{
-                  color:"#fff",
-                  fontWeight:"bold"
-                }}
-              >
-                TOTAL
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  color:"#22c55e",
-                  fontWeight:"bold"
-                }}
-              >
-                {totalIncome.toFixed(2)}
-              </TableCell>
-
-            </TableRow>
 
           </TableBody>
 
         </Table>
+        </ResponsiveTable>
 
-      </Paper>
+      </ResponsiveCard>
 
-    </Box>
+    </MobilePage>
   );
 }
