@@ -4,22 +4,19 @@ import MobilePage from "../components/mobile/MobilePage";
 import MobileHeader from "../components/mobile/MobileHeader";
 import ResponsiveCard from "../components/mobile/ResponsiveCard";
 import ResponsiveTable from "../components/mobile/ResponsiveTable";
-import MobileInput from "../components/mobile/MobileInput";
 import MobileButton from "../components/mobile/MobileButton";
 import DashboardStatCard from "../components/mobile/DashboardStatCard";
 
 import {
   Box,
   Grid,
-  Paper,
   Typography,
   Table,
   TableHead,
   TableBody,
   TableRow,
   TableCell,
-  CircularProgress,
-  Button
+  CircularProgress
 } from "@mui/material";
 import {
   MenuItem,
@@ -765,276 +762,92 @@ const downloadFinancialReport = async () => {
 
         <Grid item xs={12} md={4}>
 
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 4,
-              background:
-                "rgba(34,197,94,0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}
-          >
-
-            <Typography
-              sx={{
-                color: "#cbd5e1"
-              }}
-            >
-              Total Income
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#22c55e",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(income)
-                .toLocaleString()}
-            </Typography>
-
-          </Paper>
+          <DashboardStatCard
+            title="💰 Total Income"
+            value={`Rs. ${Number(income).toLocaleString()}`}
+            color="#22c55e"
+          />
 
         </Grid>
 
         <Grid item xs={12} md={4}>
 
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 4,
-              background:
-                "rgba(239,68,68,0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}
-          >
-
-            <Typography
-              sx={{
-                color: "#cbd5e1"
-              }}
-            >
-              Total Expenditure
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#ef4444",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(expense)
-                .toLocaleString()}
-            </Typography>
-
-          </Paper>
+          <DashboardStatCard
+            title="💸 Total Expenditure"
+            value={`Rs. ${Number(expense).toLocaleString()}`}
+            color="#22c55e"
+          />
 
         </Grid>
 
         <Grid item xs={12} md={4}>
 
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 4,
-              background:
-                netProfit >= 0
-                  ? "rgba(59,130,246,0.15)"
-                  : "rgba(239,68,68,0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}
-          >
-
-            <Typography
-              sx={{
-                color: "#cbd5e1"
-              }}
-            >
-              Net Profit
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color:
-                  netProfit >= 0
-                    ? "#3b82f6"
-                    : "#ef4444",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(netProfit)
-                .toLocaleString()}
-            </Typography>
-
-          </Paper>
+          <DashboardStatCard
+            title="📈 Net Profit"
+            value={`Rs. ${Number(netProfit).toLocaleString()}`}
+            color="#22c55e"
+          />
 
         </Grid>
 
-        <Button
-          variant="contained"
+        <MobileButton
+          color="primary"
+          fullWidth={false}
           onClick={downloadFinancialReport}
-          sx={{
-            ml: 2,
-            mt: 4,
-            background:"linear-gradient(135deg,#22c55e,#16a34a)",
-            height: 50,
-            fontWeight: "bold"
-            
-          }}
-            
         >
-          DOWNLOAD MONTHLY FINANCIAL REPORT
-        </Button>
+          Download Monthly Report
+        </MobileButton>
 
       </Grid>
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Opening Balance
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                color: "#cbd5e1",
-                fontWeight: "bold"
-              }}>
-              Rs.{Number(cashflow.opening).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🟡 Opening Balance"
+            value={`Rs. ${Number(cashflow.opening).toLocaleString()}`}
+            color="#facc15"
+          />
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Total Income
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                  color: "#cbd5e1",
-                  fontWeight: "bold"
-              }}>
-              Rs.{Number(income).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🟢 Total Income"
+            value={`Rs. ${Number(income).toLocaleString()}`}
+            color="#22c55e"
+          />
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Money Received
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                    color: "#cbd5e1",
-                    fontWeight: "bold"
-            }}>
-              Rs.{Number(cashflow.received).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🔵 Money Received"
+            value={`Rs. ${Number(cashflow.received).toLocaleString()}`}
+            color="#3b82f6"
+          />
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Total Expenditure
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                    color: "#cbd5e1",
-                    fontWeight: "bold"
-            }}>
-              Rs.{Number(expense).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🔴 Total Expenditure"
+            value={`Rs. ${Number(expense).toLocaleString()}`}
+            color="#ef4444"
+          />
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Net Profit
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                    color: "#cbd5e1",
-                    fontWeight: "bold"
-            }}>
-              Rs.{Number(netProfit).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🟣 Net Profit"
+            value={`Rs. ${Number(netProfit).toLocaleString()}`}
+            color="#8b5cf6"
+          />
         </Grid>
 
         <Grid item xs={12} md={2}>
-          <Paper sx={{
-              p: 3,
-              borderRadius: 4,
-              background: "rgba(241, 230, 16, 0.15)",
-              backdropFilter:
-                "blur(10px)"
-            }}>
-            <Typography sx={{
-                color: "#ffffff"
-              }}>
-                Closing Balance
-            </Typography>
-            <Typography variant="h6"
-              sx={{
-                    color: "#cbd5e1",
-                    fontWeight: "bold"
-            }}>
-              Rs.{Number(cashflow.closing).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🟦 Closing Balance"
+            value={`Rs. ${Number(cashflow.closing).toLocaleString()}`}
+            color="#06b6d4"
+          />
         </Grid>
 
       </Grid>
@@ -1046,133 +859,44 @@ const downloadFinancialReport = async () => {
       >
 
         <Grid item xs={12} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              height: 130,
-              borderRadius: 4,
-              background: "rgba(34,197,94,0.15)",
-              backdropFilter: "blur(10px)"
-            }}
-          >
-            <Typography sx={{ color: "#cbd5e1" }}>
-              🌱 Plantation Labour Cost
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#22c55e",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(
-                plantationSummary.totalRequired || 0
-              ).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🌱 Plantation Labour Cost"
+            value={`Rs. ${Number(plantationSummary.totalRequired || 0).toLocaleString()}`}
+            color="#22c55e"
+          />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              height: 130,
-              borderRadius: 4,
-              background: "rgba(249,115,22,0.15)",
-              backdropFilter: "blur(10px)"
-            }}
-          >
-            <Typography sx={{ color: "#cbd5e1" }}>
-              👷 Casual Labour Cost
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#f97316",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(
-                casualSummary.totalRequired || 0
-              ).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="👷 Casual Labour Cost"
+            value={`Rs. ${Number(casualSummary.totalRequired || 0).toLocaleString()}`}
+            color="#f97316"
+          />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              height: 130,
-              borderRadius: 4,
-              background: "rgba(6,182,212,0.15)",
-              backdropFilter: "blur(10px)"
-            }}
-          >
-            <Typography sx={{ color: "#cbd5e1" }}>
-              🥛 Rubber Labour Cost
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#06b6d4",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {Number(
-                rubberSummary.totalRequired || 0
-              ).toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="🥛 Rubber Labour Cost"
+            value={`Rs. ${Number(rubberSummary.totalRequired || 0).toLocaleString()}`}
+            color="#06b6d4"
+          />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Paper
-            sx={{
-              p: 3,
-              height: 130,
-              borderRadius: 4,
-              background: "rgba(59,130,246,0.15)",
-              backdropFilter: "blur(10px)"
-            }}
-          >
-            <Typography sx={{ color: "#cbd5e1" }}>
-              💰 Total Labour Cost
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#3b82f6",
-                fontWeight: "bold"
-              }}
-            >
-              Rs.
-              {totalPayrollRequired.toLocaleString()}
-            </Typography>
-          </Paper>
+          <DashboardStatCard
+            title="💰 Total Labour Cost"
+            value={`Rs. ${Number(totalPayrollRequired).toLocaleString()}`}
+            color="#3b82f6"
+          />
         </Grid>
 
-        <Button
-          variant="contained"
+        <MobileButton
+          color="warning"
+          fullWidth={false}
           onClick={downloadSalaryPDF}
-          sx={{
-            ml: 2,
-            mt: 7,
-            background:
-              "linear-gradient(135deg,#facc15,#eab308)",
-            height: 50,
-            fontWeight: "bold"
-          }}
-          >
-          📄 Download BALANCE PAY PDF
-        </Button>
+        >
+          Download Balance Pay PDF
+        </MobileButton>
       </Grid>
 
 
@@ -1213,110 +937,42 @@ const downloadFinancialReport = async () => {
             >
 
             <Grid item xs={12} md={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    borderRadius: 4,
-                    background: "rgba(34,197,94,0.15)",
-                    backdropFilter: "blur(10px)",
-                    color: "#fff"
-                  }}
-                >
-
-                <Typography>
-                    Year Income
-                </Typography>
-
-                <Typography
-                    variant="h5"
-                >
-                    Rs.
-                    {yearlyIncome
-                    .toLocaleString()}
-                </Typography>
-
-                </Paper>
+               <DashboardStatCard
+                  title="Year Income"
+                  value={`Rs. ${Number(yearlyIncome).toLocaleString()}`}
+                  color="#06b6d4"
+                />
             </Grid>
 
             <Grid item xs={12} md={4}>
-                 <Paper
-                  sx={{
-                    p: 2,
-                    borderRadius: 4,
-                    background: "rgba(249,115,22,0.15)",
-                    backdropFilter: "blur(10px)",
-                    color: "#fff"
-                  }}
-                >
-
-                <Typography>
-                    Year Expense
-                </Typography>
-
-                <Typography
-                    variant="h5"
-                >
-                    Rs.
-                    {yearlyExpense
-                    .toLocaleString()}
-                </Typography>
-
-                </Paper>
+              <DashboardStatCard
+                  title="Year Expense"
+                  value={`Rs. ${Number(yearlyExpense).toLocaleString()}`}
+                  color="#f97316"
+                />
             </Grid>
 
             <Grid item xs={12} md={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    borderRadius: 4,
-                    background: "rgba(168,85,247,0.15)",
-                    backdropFilter: "blur(10px)",
-                    color: "#fff"
-                  }}
-                >
-
-                <Typography>
-                    Year Profit
-                </Typography>
-
-                <Typography
-                    variant="h5"
-                >
-                    Rs.
-                    {yearlyProfit
-                    .toLocaleString()}
-                </Typography>
-
-                </Paper>
+              <DashboardStatCard
+                  title="Year Profit"
+                  value={`Rs. ${Number(yearlyProfit).toLocaleString()}`}
+                  color="#22c55e"
+                />
             </Grid>
 
             </Grid>
 
-        <Button
-            variant="contained"
-            onClick={printFinancialReport}
-            sx={{
-                mb: 3,
-                background:
-                "linear-gradient(135deg,#3b82f6,#2563eb)",
-                fontWeight: "bold"
-            }}
-            >
-            📄 Print Financial Report
-            </Button>
+        <MobileButton
+          color="secondary"
+          fullWidth={false}
+          onClick={printFinancialReport}
+        >
+          Print Financial Report
+        </MobileButton>
 
       {/* MONTHLY PROFIT TABLE */}
 
-      <Paper
-        sx={{
-          mt: 4,
-          p: 3,
-          borderRadius: 4,
-          background:
-            "rgba(255,255,255,0.05)",
-          overflowX: "auto"
-        }}
-      >
+      <ResponsiveCard>
 
         <Typography
           variant="h6"
@@ -1328,6 +984,8 @@ const downloadFinancialReport = async () => {
         >
           📈 Monthly Profit & Loss
         </Typography>
+
+        <ResponsiveTable>
 
         <Table>
 
@@ -1446,7 +1104,8 @@ const downloadFinancialReport = async () => {
 
         </Table>
 
-      </Paper>
+      </ResponsiveTable>
+      </ResponsiveCard>
 
     </MobilePage>
   );
