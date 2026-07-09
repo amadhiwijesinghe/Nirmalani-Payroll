@@ -9,7 +9,7 @@ import MobileInput from "../components/mobile/MobileInput";
 import MobileButton from "../components/mobile/MobileButton";
 import MobileSearch from "../components/mobile/MobileSearch";
 import DashboardStatCard from "../components/mobile/DashboardStatCard";
-
+import ActionButtons from "../components/mobile/ActionButtons";
 import {
   Box,
   Typography,
@@ -926,7 +926,7 @@ const nationsSummary = getSummary(nationsData);
 
       <ResponsiveCard>
 
-        <Grid container spacing={2}>
+        
           <Typography
             sx={{
                 color: "#fff",
@@ -937,8 +937,10 @@ const nationsSummary = getSummary(nationsData);
             💸 Add Expenditure
           </Typography>
 
+        <Grid container spacing={2}>
         {plantation === "nirmalani" && (
 
+        
         <Grid item xs={12} md={2}>
             <TextField
                 select
@@ -1066,20 +1068,10 @@ const nationsSummary = getSummary(nationsData);
 
                 <Grid item xs={12} md={2}>
 
-                <TextField
-                    fullWidth
-                    label="Custom Subcategory"
-                    value={customSubCategory}
-                    onChange={(e)=>
-                    setCustomSubCategory(
-                        e.target.value
-                    )
-                    }
-                    sx={{
-                    width:250,
-                    input:{color:"#fff"},
-                    label:{color:"#aaa"}
-                    }}
+                <MobileInput
+                  label="Custom Subcategory"
+                  value={customSubCategory}
+                  onChange={(e) => setCustomSubCategory(e.target.value)}
                 />
 
                 </Grid>
@@ -1090,19 +1082,10 @@ const nationsSummary = getSummary(nationsData);
 
             <Grid item xs={12} md={2}>
 
-                <TextField
-                    fullWidth
-                    label="Custom Category"
-                    value={customCategory}
-                    onChange={(e)=>
-                    setCustomCategory(
-                        e.target.value
-                    )
-                    }
-                    sx={{
-                    input:{color:"#fff"},
-                    label:{color:"#aaa"}
-                    }}
+                <MobileInput
+                  label="Custom Category"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
                 />
 
                 </Grid>
@@ -1112,47 +1095,28 @@ const nationsSummary = getSummary(nationsData);
           
 
           <Grid item xs={12} md={2}>
-            <TextField
+            <MobileInput
               label="Amount"
               type="number"
-              fullWidth
               value={amount}
-              onChange={(e)=>
-                setAmount(e.target.value)
-              }
-              sx={{
-                input:{color:"#fff"},
-                label:{color:"#aaa"}
-              }}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <TextField
+            <MobileInput
               label="Note"
-              fullWidth
               value={note}
-              onChange={(e)=>
-                setNote(e.target.value)
-              }
-              sx={{
-                input:{color:"#fff"},
-                label:{color:"#aaa"}
-              }}
+              onChange={(e) => setNote(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <TextField
+            <MobileInput
               type="date"
-              fullWidth
+              label="Date"
               value={date}
-              onChange={(e)=>
-                setDate(e.target.value)
-              }
-              sx={{
-                input:{color:"#fff"}
-              }}
+              onChange={(e) => setDate(e.target.value)}
             />
           </Grid>
 
@@ -1196,136 +1160,107 @@ const nationsSummary = getSummary(nationsData);
           </Grid>
 
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
+            <MobileButton
               onClick={() => {
                 if (editingId) {
-                    updateExpense(editingId);
+                  updateExpense(editingId);
                 } else {
-                    addExpense();
+                  addExpense();
                 }
-                }}
-              sx={{
-                height:"100%",
-                background:
-                  "linear-gradient(135deg,#ef4444,#f87171)",
-                color:"#fff",
-                fontWeight:"bold"
               }}
             >
-              {editingId ? "Update" : "Add"}
-            </Button>
+              {editingId ? "Update Expense" : "Add Expense"}
+            </MobileButton>
           </Grid>
 
         </Grid>
 
       </ResponsiveCard>
 
-      <Paper
-        sx={{
-            p:3,
-            borderRadius:5,
-            background:
-            "rgba(255,255,255,0.05)"
-        }}
+      <ResponsiveCard>
+        <Typography
+          sx={{
+            color: "#fff",
+            fontWeight: 700,
+            mb: 2,
+          }}
         >
-
-        <Box
-            sx={{
-            display:"flex",
-            gap:2,
-            flexWrap:"wrap",
-            mb:3
-            }}
-        >
+          📄 Expenditure Reports
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
 
           {plantation === "nirmalani" && (
-
-            <TextField
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
                 select
+                fullWidth
                 label="Report Account"
                 value={reportBank}
-                onChange={(e)=>setReportBank(e.target.value)}
-                sx={{ width:200 }}
-            >
-                <MenuItem value="">
-                    All Accounts
-                </MenuItem>
-
-                <MenuItem value="Sampath">
-                    Sampath Bank
-                </MenuItem>
-
-                <MenuItem value="Nations Trust">
-                    Nations Trust Bank
-                </MenuItem>
-
-            </TextField>
-
-            )}
-
-            <TextField
-            type="month"
-            value={filterMonth}
-            onChange={(e)=>
-                setFilterMonth(
-                e.target.value
-                )
-            }
-            sx={{
-                input:{color:"#fff"}
-            }}
+                onChange={(e) => setReportBank(e.target.value)}
+              >
+                <MenuItem value="">All Accounts</MenuItem>
+                <MenuItem value="Sampath">Sampath Bank</MenuItem>
+                <MenuItem value="Nations Trust">Nations Trust Bank</MenuItem>
+              </TextField>
+            </Grid>
+          )}
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="month"
+              value={filterMonth}
+              onChange={(e)=>setFilterMonth(e.target.value)}
+              label="Month"
             />
-
-            <TextField
-            type="date"
-            value={weekStart}
-            onChange={(e)=>
-                setWeekStart(
-                e.target.value
-                )
-            }
-            sx={{
-                input:{color:"#fff"}
-            }}
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="date"
+              value={weekStart}
+              onChange={(e)=>setWeekStart(e.target.value)}
+              label="Week Start"
             />
-
-            <TextField
-            type="date"
-            value={weekEnd}
-            onChange={(e)=>
-                setWeekEnd(
-                e.target.value
-                )
-            }
-            sx={{
-                input:{color:"#fff"}
-            }}
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MobileInput
+              type="date"
+              value={weekEnd}
+              onChange={(e)=>setWeekEnd(e.target.value)}
+              label="Week End"
             />
-
-            <Button
-            onClick={printWeeklyReport}
-            sx={{
-                background:"#0ea5e9",
-                color:"#fff",
-                fontWeight: "bold"
-            }}
+          </Grid>
+                              
+          {/* Clear Button */}
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="secondary"
+              onClick={() => setFilterMonth("")}
             >
-            Weekly Report
-            </Button>
-
-            <Button
-            onClick={printMonthlyReport}
-            sx={{
-                background:"#8b5cf6",
-                color:"#fff",
-                fontWeight: "bold"
-            }}
+              Clear
+            </MobileButton>
+          </Grid>
+                              
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="warning"
+              fullWidth={false}
+              onClick={printWeeklyReport}
             >
-            Monthly Report
-            </Button>
+              Weekly Report
+            </MobileButton>
+          </Grid>
+                              
+          <Grid item xs={6} md={3}>
+            <MobileButton
+              color="danger"
+              fullWidth={false}
+              onClick={printMonthlyReport}
+            >
+              Monthly Report
+            </MobileButton>
+          </Grid>
+        </Grid>
 
-        </Box>
+        <ResponsiveTable>
 
         <Table>
 
@@ -1464,53 +1399,24 @@ const nationsSummary = getSummary(nationsData);
                 </TableCell>
 
                 <TableCell>
+                  <ActionButtons
+                    onEdit={() => {
+                      setEditingId(row.id);
 
-                    <Button
-                    size="small"
-                    sx={{
-                        mr:1,
-                        background:"#eab308",
-                        color:"#000"
+                      setCategory(row.category);
+
+                      setSubCategory(row.sub_category || "");
+
+                      setAmount(row.amount);
+
+                      setNote(row.note || "");
+
+                      setDate(row.date.split("T")[0]);
+
+                      setPhoto([]);
                     }}
-                    onClick={() => {
-
-                        setEditingId(row.id);
-
-                        setCategory(row.category);
-
-                        setSubCategory(
-                          row.sub_category || ""
-                        );
-
-                        setAmount(row.amount);
-
-                        setNote(
-                          row.note || ""
-                        );
-
-                        setDate(
-                          row.date.split("T")[0]
-                        );
-
-                        setPhoto([]);
-                    }}
-                    >
-                    Edit
-                    </Button>
-
-                    <Button
-                    size="small"
-                    sx={{
-                        background:"#ef4444",
-                        color:"#fff"
-                    }}
-                    onClick={() =>
-                        deleteExpense(row.id)
-                    }
-                    >
-                    Delete
-                    </Button>
-
+                    onDelete={() => deleteExpense(row.id)}
+                  />
                 </TableCell>
 
                 </TableRow>
@@ -1519,8 +1425,9 @@ const nationsSummary = getSummary(nationsData);
             </TableBody>
 
         </Table>
+        </ResponsiveTable>
 
-        </Paper>
+        </ResponsiveCard>
 
         {plantation === "nirmalani" && reportBank === "" ? (
           <Table sx={{ mt: 3 }}>
