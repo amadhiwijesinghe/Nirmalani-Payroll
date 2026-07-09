@@ -573,15 +573,7 @@ const isMobile = useMediaQuery("(max-width:900px)");
       </Stack>
       </ResponsiveCard>
 
-      <Paper
-        elevation={0}
-        sx={{
-            p:2,
-            borderRadius:4,
-            bgcolor:"#1e293b",
-            border:"1px solid rgba(255,255,255,.08)"
-        }}
-    >
+      <ResponsiveCard sx={{ p: 2 }}>
 
         <Box
             sx={{
@@ -620,6 +612,13 @@ const isMobile = useMediaQuery("(max-width:900px)");
             </Typography>
             </Box>
 
+        <TableContainer
+            sx={{
+            overflowX: "auto",
+            overflowY: "auto",
+            maxHeight: "70vh"
+            }}
+        >
         <Table
           stickyHeader
           sx={{
@@ -931,7 +930,8 @@ const isMobile = useMediaQuery("(max-width:900px)");
             </TableBody>
 
         </Table>
-      </Paper>
+        </TableContainer>
+      </ResponsiveCard>
 
       <Dialog
         open={rubberDialogOpen}
