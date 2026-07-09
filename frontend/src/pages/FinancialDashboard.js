@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import MobilePage from "../components/mobile/MobilePage";
+import MobileHeader from "../components/mobile/MobileHeader";
+import ResponsiveCard from "../components/mobile/ResponsiveCard";
+import ResponsiveTable from "../components/mobile/ResponsiveTable";
+import MobileInput from "../components/mobile/MobileInput";
+import MobileButton from "../components/mobile/MobileButton";
+import DashboardStatCard from "../components/mobile/DashboardStatCard";
 
 import {
   Box,
@@ -724,27 +731,14 @@ const downloadFinancialReport = async () => {
 
   return (
 
-    <Box
-      sx={{
-        p: 3,
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b)",
-        minHeight: "100vh"
-      }}
-    >
+    <MobilePage>
 
       {/* HEADER */}
 
-      <Typography
-        variant="h4"
-        sx={{
-          color: "#fff",
-          fontWeight: "bold",
-          mb: 4
-        }}
-      >
-        📊 Financial Dashboard
-      </Typography>
+      <MobileHeader
+        title="📊 Financial Dashboard"
+        subtitle="Financial overview and reports"
+      />
 
             <TextField
               select
@@ -1454,6 +1448,6 @@ const downloadFinancialReport = async () => {
 
       </Paper>
 
-    </Box>
+    </MobilePage>
   );
 }
