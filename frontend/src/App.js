@@ -43,6 +43,10 @@ function App() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: {
+            xs: "column",
+            md: "row"
+          },
           width: "100%",
           minHeight: "100vh",
           overflow: "hidden"
@@ -55,9 +59,12 @@ function App() {
         {/* MAIN AREA */}
        <Box
         sx={{
-          flexGrow: 1,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: {
+            xs: "column",
+            md: "row"
+          },
+          width: "100%",
           minHeight: "100vh",
           overflow: "hidden"
         }}

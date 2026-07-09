@@ -205,7 +205,9 @@ return (
             fontWeight: 700
           }}
         >
-          Nirmalani Payroll
+          {plantation === "nirmalani"
+            ? "Nirmalani Payroll"
+            : "Ingurupaththala Payroll"}
         </Typography>
 
       </Box>
