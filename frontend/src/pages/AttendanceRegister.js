@@ -573,7 +573,9 @@ const isMobile = useMediaQuery("(max-width:900px)");
       </Stack>
       </ResponsiveCard>
 
-      <ResponsiveCard sx={{ p: 2 }}>
+      {!isMobile && (
+
+        <ResponsiveCard sx={{ p: 2 }}>
 
         <Box
             sx={{
@@ -932,6 +934,27 @@ const isMobile = useMediaQuery("(max-width:900px)");
         </Table>
         </TableContainer>
       </ResponsiveCard>
+      )}
+
+      {isMobile && (
+
+        <ResponsiveCard>
+
+            <Typography
+                variant="h6"
+                fontWeight="bold"
+                mb={2}
+            >
+                📱 Mobile Attendance
+            </Typography>
+
+            <Typography>
+                Mobile version coming...
+            </Typography>
+
+        </ResponsiveCard>
+
+        )}
 
       <Dialog
         open={rubberDialogOpen}
