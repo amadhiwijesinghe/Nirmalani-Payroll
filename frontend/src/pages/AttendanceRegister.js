@@ -43,6 +43,7 @@ export default function AttendanceRegister({ plantation }) {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(currentYear);
   const [workers, setWorkers] = useState([]);
+  const [search, setSearch] = useState("");
   const [attendance, setAttendance] = useState({});
 
   const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
@@ -51,7 +52,7 @@ export default function AttendanceRegister({ plantation }) {
   const [isEditing, setIsEditing] = useState(true);
   const [isFinalized, setIsFinalized] = useState(false);
   const [workerType, setWorkerType] = useState("all");
-
+  const [selectedDay, setSelectedDay] = useState(dayjs().date());
   const [rubberDialogOpen, setRubberDialogOpen] = useState(false);
 
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -225,6 +226,24 @@ const toggleAttendance = (worker, day) => {
 
 };
 
+  const setAttendanceValue = (worker, day, newValue) => {
+
+    const date = dayjs(
+        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    ).format("YYYY-MM-DD");
+
+    const key =
+        worker.worker_type === "rubber"
+            ? `rubber-${worker.worker_id}-${date}`
+            : `${worker.worker_type}-${worker.worker_id}-${date}`;
+
+    setAttendance(prev => ({
+        ...prev,
+        [key]: newValue
+    }));
+
+};
+
 // Open Dialog Boox for Rubber Tappers 
 const openRubberDialog = (worker, date) => {
 
@@ -389,12 +408,23 @@ const finalizeAttendance = async () => {
 };
 
 // Filtered Workers
-const filteredWorkers =
-    workerType === "all"
-        ? workers
-        : workers.filter(
-            worker => worker.worker_type === workerType
-        );
+const filteredWorkers = workers.filter((worker) => {
+
+    const matchesType =
+        workerType === "all" ||
+        worker.worker_type === workerType;
+
+    const matchesSearch =
+        worker.name
+            .toLowerCase()
+            .includes(search.toLowerCase()) ||
+
+        String(worker.epf_no || "")
+            .includes(search);
+
+    return matchesType && matchesSearch;
+
+});
 const isMobile = useMediaQuery("(max-width:900px)");
 
   return (
@@ -940,17 +970,178 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
         <ResponsiveCard>
 
-            <Typography
-                variant="h6"
-                fontWeight="bold"
-                mb={2}
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
             >
-                📱 Mobile Attendance
+                <MobileButton
+                    color="secondary"
+                    fullWidth={false}
+                    onClick={() =>
+                        setSelectedDay((d) => Math.max(1, d - 1))
+                    }
+                >
+                    ◀
+                </MobileButton>
+
+                <Typography fontWeight="bold">
+                    {dayjs(
+                        `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
+                    ).format("DD MMM YYYY")}
+                </Typography>
+
+                <MobileButton
+                    color="secondary"
+                    fullWidth={false}
+                    onClick={() =>
+                        setSelectedDay((d) =>
+                            Math.min(daysInMonth, d + 1)
+                        )
+                    }
+                >
+                    ▶
+                </MobileButton>
+            </Stack>
+
+            <MobileInput
+                label="Search Worker"
+                placeholder="Search by Name or EPF"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                sx={{ mb: 2 }}
+            />
+
+            <Typography
+                sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    color:
+                        isFinalized
+                            ? "#ef4444"
+                            : isEditing
+                            ? "#22c55e"
+                            : "#f59e0b"
+                }}
+            >
+                {isFinalized
+                    ? "🔒 Attendance Finalized"
+                    : isEditing
+                    ? "🟢 Editing Mode"
+                    : "🟡 Saved (Read Only)"}
             </Typography>
 
-            <Typography>
-                Mobile version coming...
-            </Typography>
+            {filteredWorkers.map((worker) => {
+
+                const date = dayjs(
+                    `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
+                ).format("YYYY-MM-DD");
+
+                const attendanceKey =
+                    worker.worker_type === "rubber"
+                        ? `rubber-${worker.worker_id}-${date}`
+                        : `${worker.worker_type}-${worker.worker_id}-${date}`;
+
+                const value = attendance[attendanceKey] || 0;
+
+                return (
+
+                    <ResponsiveCard
+                        key={`${worker.worker_type}-${worker.worker_id}`}
+                        sx={{ mb: 2 }}
+                    >
+
+                        <Typography fontWeight="bold">
+                            {worker.name}
+                        </Typography>
+
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                        >
+                            EPF : {worker.epf_no || "-"}
+                        </Typography>
+
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                        >
+                            {worker.worker_type === "plantation"
+                                ? "🌱 Plantation Worker"
+                                : worker.worker_type === "rubber"
+                                ? "🌳 Rubber Tapper"
+                                : "👷 Casual Worker"}
+                        </Typography>
+
+                        <Typography
+                            sx={{
+                                mt: 1,
+                                fontWeight: "bold",
+                                color:
+                                    value === 1
+                                        ? "#22c55e"
+                                        : value === 0.5
+                                        ? "#3b82f6"
+                                        : value === 1.5
+                                        ? "#f59e0b"
+                                        : "#ef4444"
+                            }}
+                        >
+                            {value === 1
+                                ? "✅ Present"
+                                : value === 0.5
+                                ? "🔵 Half Day"
+                                : value === 1.5
+                                ? "🟠 Sunday Work"
+                                : "❌ Absent"}
+                        </Typography>
+
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ mt: 2 }}
+                        >
+
+                            <MobileButton
+                                color="primary"
+                                fullWidth
+                                disabled={!isEditing || isFinalized}
+                                onClick={() => {
+                                    if (worker.worker_type === "rubber") {
+                                        openRubberDialog(worker, date);
+                                    } else {
+                                        setAttendanceValue(worker, selectedDay, 1);
+                                    }
+                                }}                            >
+                                Present
+                            </MobileButton>
+
+                            <MobileButton
+                                color="warning"
+                                fullWidth
+                                disabled={!isEditing || isFinalized}
+                                onClick={() => setAttendanceValue(worker, selectedDay, 0.5)}
+                            >
+                                Half
+                            </MobileButton>
+
+                            <MobileButton
+                                color="danger"
+                                fullWidth
+                                disabled={!isEditing || isFinalized}
+                                onClick={() => setAttendanceValue(worker, selectedDay, 0)}
+                            >
+                                Absent
+                            </MobileButton>
+
+                        </Stack>
+
+                    </ResponsiveCard>
+
+                );
+
+            })}
 
         </ResponsiveCard>
 
