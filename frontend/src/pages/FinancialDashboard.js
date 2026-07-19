@@ -71,7 +71,7 @@ export default function FinancialDashboard({
 ];
   useEffect(() => {
     fetchDashboard();
-  }, [selectedMonth]);
+  }, [selectedMonth, plantation]);
 
   const fetchDashboard = async () => {
 

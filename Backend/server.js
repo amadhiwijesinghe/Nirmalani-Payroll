@@ -1773,7 +1773,40 @@ app.get(
 
     const sql = `
     SELECT
-    SUM(rta.total_earning) AS total
+    COALESCE(
+    SUM(
+    CASE
+
+        /* Permanent Workers */
+        WHEN rt.worker_category = 'Permanent' THEN
+
+            CASE
+                WHEN rta.kg < 2.5 THEN 0
+
+                WHEN rta.kg <= 7 THEN
+                    (1550 * rta.attendance_value) + rta.allowance
+
+                ELSE
+                    (1550 * rta.attendance_value)
+                    + ((rta.kg - 7) * 250)
+                    + rta.allowance
+            END
+
+        /* Temporary Workers */
+        ELSE
+            (rta.kg * 250) + rta.allowance
+
+    END
+    ),0) AS total
+
+    FROM rubber_attendance_register rta
+
+    JOIN rubber_tappers rt
+    ON rt.id = rta.worker_id
+
+    WHERE
+    DATE_FORMAT(rta.attendance_date,'%Y-%m') = ?
+    AND rt.plantation = ?
 
     FROM rubber_attendance_register rta
 
