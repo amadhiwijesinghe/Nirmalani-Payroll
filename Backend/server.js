@@ -853,16 +853,27 @@ app.get("/payroll-settings", (req, res) => {
   const { plantation } = req.query;
 
   const sql = `
-    SELECT daily_rate
+    SELECT
+        daily_rate,
+        temporary_rate,
+        rubber_bonus_rate,
+        rubber_minimum_kg,
+        rubber_bonus_start_kg
     FROM payroll_settings
     WHERE plantation = ?
-  `;
+`;
 
   db.query(sql, [plantation], (err, result) => {
     if (err) return res.status(500).json(err);
 
-    if (result.length === 0) {
-      return res.json({ daily_rate: 1550 });
+   if (result.length === 0) {
+      return res.json({
+          daily_rate: 1550,
+          temporary_rate: 300,
+          rubber_bonus_rate: 250,
+          rubber_minimum_kg: 2.5,
+          rubber_bonus_start_kg: 7
+      });
     }
 
     res.json(result[0]);
@@ -870,26 +881,53 @@ app.get("/payroll-settings", (req, res) => {
 
 });
 
-// Update Daily Rate
+// Update Payroll Settings
 app.put("/payroll-settings", (req, res) => {
 
-  const { plantation, daily_rate } = req.body;
+  const {
+    plantation,
+    daily_rate,
+    temporary_rate,
+    rubber_bonus_rate,
+    rubber_minimum_kg,
+    rubber_bonus_start_kg
+  } = req.body;
 
   const sql = `
     UPDATE payroll_settings
-    SET daily_rate = ?
+    SET
+      daily_rate = ?,
+      temporary_rate = ?,
+      rubber_bonus_rate = ?,
+      rubber_minimum_kg = ?,
+      rubber_bonus_start_kg = ?
     WHERE plantation = ?
   `;
 
-  db.query(sql, [daily_rate, plantation], (err) => {
+  db.query(
+    sql,
+    [
+      daily_rate,
+      temporary_rate,
+      rubber_bonus_rate,
+      rubber_minimum_kg,
+      rubber_bonus_start_kg,
+      plantation
+    ],
+    (err) => {
 
-    if (err) return res.status(500).json(err);
+      if (err) {
+        console.log(err);
+        return res.status(500).json(err);
+      }
 
-    res.json({
-      success: true
-    });
+      res.json({
+        success: true,
+        message: "Payroll settings updated."
+      });
 
-  });
+    }
+  );
 
 });
 
@@ -1794,7 +1832,7 @@ app.get(
 
         /* Temporary Workers */
         ELSE
-            (rta.kg * 250) + rta.allowance
+            (rta.kg * 300) + rta.allowance
 
     END
     ),0) AS total

@@ -65,6 +65,11 @@ export default function PlantationWorkers({
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
   const [dailyRate, setDailyRate] = useState(1550);
+  const [temporaryRate, setTemporaryRate] = useState(300);
+  const [rubberBonusRate, setRubberBonusRate] = useState(250);
+  const [rubberMinimumKg, setRubberMinimumKg] = useState(2.5);
+  const [rubberBonusStartKg, setRubberBonusStartKg] = useState(7);
+
   const [editingRate, setEditingRate] = useState(false);
 
   const [allowanceWorker, setAllowanceWorker] = useState("");
@@ -108,6 +113,10 @@ const fetchDailyRate = async () => {
     );
 
     setDailyRate(res.data.daily_rate);
+    setTemporaryRate(res.data.temporary_rate);
+    setRubberBonusRate(res.data.rubber_bonus_rate);
+    setRubberMinimumKg(res.data.rubber_minimum_kg);
+    setRubberBonusStartKg(res.data.rubber_bonus_start_kg);
 
   } catch (err) {
 
@@ -169,11 +178,12 @@ const saveDailyRate = async () => {
   try {
 
     await axios.put(`${API}/payroll-settings`, {
-
       plantation,
-
-      daily_rate: dailyRate
-
+      daily_rate: Number(dailyRate),
+      temporary_rate: Number(temporaryRate),
+      rubber_bonus_rate: Number(rubberBonusRate),
+      rubber_minimum_kg: Number(rubberMinimumKg),
+      rubber_bonus_start_kg: Number(rubberBonusStartKg)
     });
 
     Swal.fire({
@@ -182,7 +192,7 @@ const saveDailyRate = async () => {
 
       title: "Success",
 
-      text: "Daily Rate Updated"
+      text: "Payroll Settings Updated"
 
     });
 
@@ -1172,6 +1182,46 @@ const reportMonth = new Date(filterMonth + "-01")
                 fullWidth
                 value={dailyRate}
                 onChange={(e) => setDailyRate(e.target.value)}
+                disabled={!editingRate}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <MobileInput
+                label="Temporary Rate"
+                fullWidth
+                value={temporaryRate}
+                onChange={(e) => setTemporaryRate(e.target.value)}
+                disabled={!editingRate}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <MobileInput
+                label="Rubber Bonus Rate"
+                fullWidth
+                value={rubberBonusRate}
+                onChange={(e) => setRubberBonusRate(e.target.value)}
+                disabled={!editingRate}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <MobileInput
+                label="Minimum KG"
+                fullWidth
+                value={rubberMinimumKg}
+                onChange={(e) => setRubberMinimumKg(e.target.value)}
+                disabled={!editingRate}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <MobileInput
+                label="Bonus Starts From KG"
+                fullWidth
+                value={rubberBonusStartKg}
+                onChange={(e) => setRubberBonusStartKg(e.target.value)}
                 disabled={!editingRate}
               />
             </Grid>

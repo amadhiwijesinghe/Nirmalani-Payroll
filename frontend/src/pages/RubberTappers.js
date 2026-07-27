@@ -62,6 +62,10 @@ export default function RubberTappers({
 
   const [workerCategory, setWorkerCategory] = useState("Temporary");
   const [epfNo, setEpfNo] = useState("");
+  const [temporaryRate, setTemporaryRate] = useState(300);
+  const [rubberBonusRate, setRubberBonusRate] = useState(250);
+  const [rubberMinimumKg, setRubberMinimumKg] = useState(2.5);
+  const [rubberBonusStartKg, setRubberBonusStartKg] = useState(7);
   const [openPayroll, setOpenPayroll] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
   const [tableSearch, setTableSearch] = useState("");
@@ -71,7 +75,7 @@ export default function RubberTappers({
 
     fetchWorkers();
     fetchData();
-
+    fetchPayrollSettings();
     fetchDispatchData();
     fetchCollectionData();
 
@@ -93,6 +97,21 @@ const fetchData = async () => {
     setData(res.data);
   } catch (err) {
     console.error(err);
+  }
+};
+
+const fetchPayrollSettings = async () => {
+  try {
+    const res = await axios.get(
+      `${API}/payroll-settings?plantation=${plantation}`
+    );
+
+    setTemporaryRate(res.data.temporary_rate);
+    setRubberBonusRate(res.data.rubber_bonus_rate);
+    setRubberMinimumKg(res.data.rubber_minimum_kg);
+    setRubberBonusStartKg(res.data.rubber_bonus_start_kg);
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -381,27 +400,27 @@ const groupedData = Object.values(
 
           worker.averageKg = averageKg;
 
-          if (averageKg < 2.5) {
+          if (averageKg < rubberMinimumKg) {
 
-              gross = 0;
+            gross = 0;
 
           }
-          else if (averageKg <= 7) {
+          else if (averageKg <= rubberBonusStartKg) {
 
               gross =
-                worker.worked_days * Number(worker.rate);
+                  worker.worked_days * Number(worker.rate);
 
           }
           else {
 
               const bonus =
-                  (averageKg - 7) * 250;
+                  (averageKg - rubberBonusStartKg) * rubberBonusRate;
 
               worker.bonus = bonus;
 
               gross =
-                (worker.worked_days * Number(worker.rate))
-                + bonus;
+                  (worker.worked_days * Number(worker.rate))
+                  + bonus;
 
           }
 
@@ -411,7 +430,7 @@ const groupedData = Object.values(
       else {
 
           gross =
-              worker.kg * worker.rate;
+            worker.kg * temporaryRate;
 
       }
 
