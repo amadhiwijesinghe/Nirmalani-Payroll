@@ -1,11 +1,16 @@
 import {
-  AppBar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
   Toolbar,
   Typography,
-  IconButton,
   Box,
-  Button
-} from '@mui/material';
+  IconButton,
+  Button,
+  useMediaQuery
+} from "@mui/material";
 
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -64,13 +69,14 @@ export default function Topbar({
           }}
           sx={{
               ml: "auto",
-              fontSize: "0.7rem",
-              px: 1.5,
-              py: 0.5,
-              minWidth: "unset"
+              bgcolor: "#22c55e",
+              color: "#fff",
+              textTransform: "none",
+              fontSize: "0.65rem",
+              minWidth: 90
           }}
       >
-          Switch Plantation
+          Switch
       </Button>
 
         <IconButton
