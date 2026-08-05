@@ -54,7 +54,12 @@ function App() {
       >
 
         {/* SIDEBAR */}
-        <Sidebar setPage={setPage} currentPage={page} plantation={plantation}/>
+       <Sidebar
+        setPage={setPage}
+        currentPage={page}
+        plantation={plantation}
+        setPlantation={setPlantation}
+      />
 
         {/* MAIN AREA */}
        <Box

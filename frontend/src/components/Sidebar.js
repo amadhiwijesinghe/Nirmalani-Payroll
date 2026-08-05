@@ -31,7 +31,12 @@ import GrassIcon from '@mui/icons-material/Grass';
 
 const drawerWidth = 240;
 
-export default function Sidebar({ setPage, currentPage, plantation }) {
+export default function Sidebar({
+    setPage,
+    currentPage,
+    plantation,
+    setPlantation
+}) {
 
   const isMobile = useMediaQuery("(max-width:900px)");
 
