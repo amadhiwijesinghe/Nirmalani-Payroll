@@ -9,6 +9,7 @@ import {
   Typography,
   Box,
   IconButton,
+  Button,
   useMediaQuery
 } from '@mui/material';
 
@@ -105,6 +106,35 @@ export default function Sidebar({
         } ⚡
       </Typography>
 
+      <Button
+        size="small"
+        variant="contained"
+        onClick={() => {
+          if (plantation === "nirmalani") {
+            setPlantation("ingurupaththala");
+            setPage("ingurupaththala");
+          } else {
+            setPlantation("nirmalani");
+            setPage("employees");
+          }
+        }}
+        sx={{
+          ml: "auto",
+          background: "#22c55e",
+          color: "#fff",
+          fontWeight: 700,
+          textTransform: "none",
+          fontSize: "0.7rem",
+          minWidth: 80,
+          borderRadius: 2,
+          "&:hover": {
+            background: "#16a34a"
+          }
+        }}
+      >
+        Switch
+      </Button>
+
     </Box>
 
     <List>
@@ -180,43 +210,70 @@ return (
 
     {/* MOBILE TOP BAR */}
     {isMobile && (
+  <Box
+    sx={{
+      height: 60,
+      display: "flex",
+      alignItems: "center",
+      px: 2,
+      background:
+        "linear-gradient(180deg, #0f172a, #020617)",
+      position: "sticky",
+      top: 0,
+      zIndex: 1200
+    }}
+  >
 
-      <Box
-        sx={{
-          height: 60,
-          display: "flex",
-          alignItems: "center",
-          px: 2,
-          background:
-            "linear-gradient(180deg, #0f172a, #020617)",
+    <IconButton
+      onClick={handleDrawerToggle}
+      sx={{ color: "#fff" }}
+    >
+      <MenuIcon />
+    </IconButton>
 
-          position: "sticky",
-          top: 0,
-          zIndex: 1200
-        }}
-      >
+    <Typography
+      sx={{
+        color: "#fff",
+        ml: 2,
+        fontWeight: 700
+      }}
+    >
+      {plantation === "nirmalani"
+        ? "Nirmalani Payroll"
+        : "Ingurupaththala Payroll"}
+    </Typography>
 
-        <IconButton
-          onClick={handleDrawerToggle}
-          sx={{ color: "#fff" }}
-        >
-          <MenuIcon />
-        </IconButton>
+    <Button
+      size="small"
+      variant="contained"
+      onClick={() => {
+        if (plantation === "nirmalani") {
+          setPlantation("ingurupaththala");
+          setPage("employees");
+        } else {
+          setPlantation("nirmalani");
+          setPage("employees");
+        }
+      }}
+      sx={{
+        ml: "auto",
+        background: "#22c55e",
+        color: "#fff",
+        fontWeight: 700,
+        textTransform: "none",
+        fontSize: "0.7rem",
+        minWidth: 75,
+        borderRadius: 2,
+        "&:hover": {
+          background: "#16a34a"
+        }
+      }}
+    >
+      Switch
+    </Button>
 
-        <Typography
-          sx={{
-            color: "#fff",
-            ml: 2,
-            fontWeight: 700
-          }}
-        >
-          {plantation === "nirmalani"
-            ? "Nirmalani Payroll"
-            : "Ingurupaththala Payroll"}
-        </Typography>
-
-      </Box>
-    )}
+  </Box>
+)}
 
     {/* SIDEBAR */}
     <Drawer

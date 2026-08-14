@@ -51,34 +51,21 @@ export default function Topbar({
         </Typography>
 
         <Button
-          size="small"
           variant="contained"
           onClick={() => {
-
-              if (plantation === "nirmalani") {
-
-                  setPlantation("ingurupaththala");
-                  setPage("ingurupaththala");
-
-              } else {
-
-                  setPlantation("nirmalani");
-                  setPage("employees");
-
-              }
-
+            if (plantation === "nirmalani") {
+              setPlantation("ingurupaththala");
+              setPage("ingurupaththala");
+            } else {
+              setPlantation("nirmalani");
+              setPage("employees");
+            }
           }}
-          sx={{
-              ml: "auto",
-              bgcolor: "#22c55e",
-              color: "#fff",
-              textTransform: "none",
-              fontSize: "0.65rem",
-              minWidth: 90
-          }}
-      >
-          Switch
-      </Button>
+        >
+          {plantation === "nirmalani"
+            ? "🌿 Switch to Ingurupaththala"
+            : "⚡ Switch to Nirmalani"}
+        </Button>
 
         <IconButton
           onClick={toggleDarkMode}
