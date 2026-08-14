@@ -28,7 +28,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ParkIcon from '@mui/icons-material/Park';
 import GroupWorkIcon from '@mui/icons-material/GroupWork'; 
 import GrassIcon from '@mui/icons-material/Grass';
-
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const drawerWidth = 240;
 
@@ -49,6 +49,7 @@ export default function Sidebar({
   };
 
   const menu = [
+    { label: "Dashboard", value: "dashboard", icon: <DashboardIcon /> },
     { label: "Employees", value: "employees", icon: <PeopleIcon /> },
     { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
     { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
@@ -112,10 +113,10 @@ export default function Sidebar({
         onClick={() => {
           if (plantation === "nirmalani") {
             setPlantation("ingurupaththala");
-            setPage("ingurupaththala");
+            setPage("dashboard");
           } else {
             setPlantation("nirmalani");
-            setPage("employees");
+            setPage("dashboard");
           }
         }}
         sx={{

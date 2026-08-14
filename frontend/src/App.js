@@ -26,9 +26,10 @@ import CinnamonCollection from './pages/CinnamonCollection';
 import CoconutCollection from './pages/CoconutCollection';
 import PaddyCollection from './pages/PaddyCollection';
 import AttendanceRegister from "./pages/AttendanceRegister";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
-  const [page, setPage] = useState("employees");
+  const [page, setPage] = useState("dashboard");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const isMobile = useMediaQuery("(max-width:900px)");
@@ -109,6 +110,18 @@ function App() {
           >
 
             <AnimatePresence mode="wait">
+
+              {page === "dashboard" && (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Dashboard plantation={plantation} />
+                </motion.div>
+              )}
 
               {page === "employees" && (
                 <motion.div
