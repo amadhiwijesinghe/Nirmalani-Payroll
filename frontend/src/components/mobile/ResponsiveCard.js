@@ -8,7 +8,7 @@ export default function ResponsiveCard({ children, sx = {} }) {
           xs: 2,
           sm: 3
         },
-        mb: 3,
+
         borderRadius: 4,
 
         background: "rgba(255,255,255,0.05)",

@@ -1,5 +1,4 @@
 import { Typography, Box } from "@mui/material";
-import { red } from "@mui/material/colors";
 
 export default function MobileHeader({
   title,
