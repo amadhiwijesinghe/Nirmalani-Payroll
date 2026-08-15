@@ -4,9 +4,13 @@ export default function ResponsiveCard({ children, sx = {} }) {
   return (
     <Paper
       sx={{
+        width: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
+
         p: {
           xs: 2,
-          sm: 3
+          sm: 3,
         },
 
         borderRadius: 4,
@@ -19,7 +23,9 @@ export default function ResponsiveCard({ children, sx = {} }) {
 
         boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
 
-        ...sx
+        overflow: "hidden",
+
+        ...sx,
       }}
     >
       {children}

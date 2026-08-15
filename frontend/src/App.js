@@ -63,18 +63,16 @@ function App() {
       />
 
         {/* MAIN AREA */}
-       <Box
-        sx={{
-          display: "flex",
-          flexDirection: {
-            xs: "column",
-            md: "row"
-          },
-          width: "100%",
-          minHeight: "100vh",
-          overflow: "hidden"
-        }}
-      >
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden"
+          }}
+        >
 
           {/* TOPBAR */}
           {!isMobile && (
@@ -92,22 +90,29 @@ function App() {
 
           {/* CONTENT */}
          <Box
-            sx={{
-              flex: 1,
-              overflow: "auto",
-              px: {
-                xs: 1,
-                sm: 2,
-                md: 3
-              },
-              py: {
-                xs: 1,
-                sm: 2
-              },
-              background:
-                "linear-gradient(135deg,#020617,#0f172a)"
-            }}
-          >
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+
+            px: {
+              xs: 1,
+              sm: 2,
+              md: 3
+            },
+
+            py: {
+              xs: 1,
+              sm: 2,
+              md: 3
+            },
+
+            background:
+              "linear-gradient(135deg,#020617,#0f172a)"
+          }}
+        >
 
             <AnimatePresence mode="wait">
 

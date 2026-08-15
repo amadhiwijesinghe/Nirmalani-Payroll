@@ -444,30 +444,29 @@ export default function Dashboard({ plantation }) {
       {/* FINANCIAL CARDS */}
       {/* ================================= */}
 
-      <Grid
-        container
-        spacing={3}
+      <Box
         sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, minmax(0, 1fr))",
+            md: "repeat(3, minmax(0, 1fr))"
+          },
+          gap: 3,
+          width: "100%",
           alignItems: "stretch"
         }}
       >
 
         {/* INCOME */}
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          sx={{
-            display: "flex"
-          }}
-        >
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
               minHeight: 190,
               height: "100%",
+              boxSizing: "border-box",
               mb: 0,
               borderLeft:
                 "5px solid #22c55e",
@@ -547,12 +546,12 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
 
         {/* EXPENDITURE */}
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
@@ -636,12 +635,12 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
 
         {/* NET PROFIT */}
 
-        <Grid item xs={12} sm={12} md={4}>
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
@@ -745,9 +744,9 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
-      </Grid>
+      </Box>
 
 
       {/* ================================= */}
@@ -779,24 +778,23 @@ export default function Dashboard({ plantation }) {
       </Box>
 
 
-      <Grid
-        container
-        spacing={3}
+      <Box
         sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, minmax(0, 1fr))",
+            md: "repeat(3, minmax(0, 1fr))"
+          },
+          gap: 3,
+          width: "100%",
           alignItems: "stretch"
         }}
       >
 
         {/* PLANTATION */}
 
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            display: "flex"
-          }}
-        >
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
@@ -890,12 +888,12 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
 
         {/* CASUAL */}
 
-        <Grid item xs={12} md={4}>
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
@@ -989,12 +987,12 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
 
         {/* RUBBER */}
 
-        <Grid item xs={12} md={4}>
+        <Box sx={{ minWidth: 0 }}>
 
           <ResponsiveCard
             sx={{
@@ -1088,9 +1086,9 @@ export default function Dashboard({ plantation }) {
 
           </ResponsiveCard>
 
-        </Grid>
+        </Box>
 
-      </Grid>
+      </Box>
 
 
       {/* ================================= */}
