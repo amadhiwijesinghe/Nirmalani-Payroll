@@ -3494,52 +3494,65 @@ app.get("/casual-allowance", (req, res) => {
 
 });
 
-// CASUAL WORKERS PAYROLL DATA
+// ================= CASUAL WORKERS PAYROLL DATA =================
+
 app.get("/casual-payroll-data", (req, res) => {
 
     const plantation = req.query.plantation;
 
     const sql = `
+        SELECT
+            cw.id AS worker_id,
+            cw.name,
 
-    SELECT
+            DATE_FORMAT(
+                ar.attendance_date,
+                '%Y-%m'
+            ) AS month,
 
-        cw.id AS worker_id,
+            SUM(ar.attendance_value) AS worked_days,
 
-        cw.name,
+            ps.daily_rate,
 
-        DATE_FORMAT(car.attendance_date,'%Y-%m') AS month,
+            COALESCE(
+                MAX(ca.allowance),
+                0
+            ) AS allowance
 
-        SUM(car.attendance_value) AS worked_days,
+        FROM casual_workers cw
 
-        ps.daily_rate,
+        JOIN attendance_register ar
+            ON ar.worker_id = cw.id
 
-        COALESCE(MAX(ca.allowance),0) AS allowance
+        JOIN payroll_settings ps
+            ON ps.plantation = cw.plantation
 
-    FROM casual_workers cw
+        LEFT JOIN casual_allowance ca
+            ON ca.worker_id = cw.id
+            AND ca.month =
+                DATE_FORMAT(
+                    ar.attendance_date,
+                    '%Y-%m'
+                )
 
-    JOIN casual_attendance_register car
-    ON car.worker_id = cw.id
+        WHERE
+            cw.plantation = ?
 
-    JOIN payroll_settings ps
-    ON ps.plantation = cw.plantation
+            AND ar.worker_type = 'casual'
 
-    LEFT JOIN casual_allowance ca
-    ON ca.worker_id = cw.id
-    AND ca.month = DATE_FORMAT(car.attendance_date,'%Y-%m')
+            AND ar.is_present = 1
 
-    WHERE
+        GROUP BY
+            cw.id,
+            cw.name,
+            DATE_FORMAT(
+                ar.attendance_date,
+                '%Y-%m'
+            ),
+            ps.daily_rate
 
-        cw.plantation = ?
-
-    GROUP BY
-
-        cw.id,
-        cw.name,
-        DATE_FORMAT(car.attendance_date,'%Y-%m'),
-        ps.daily_rate
-
-    ORDER BY cw.name
-
+        ORDER BY
+            cw.name
     `;
 
     db.query(
@@ -3548,12 +3561,21 @@ app.get("/casual-payroll-data", (req, res) => {
         (err, result) => {
 
             if (err) {
-                console.log(err);
+
+                console.log(
+                    "CASUAL PAYROLL DATA ERROR:",
+                    err
+                );
+
                 return res.status(500).json(err);
             }
 
-            res.json(result);
+            console.log(
+                "CASUAL PAYROLL DATA:",
+                result
+            );
 
+            res.json(result);
         }
     );
 
