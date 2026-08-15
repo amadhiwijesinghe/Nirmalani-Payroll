@@ -3707,29 +3707,54 @@ app.get("/dashboard/casual-summary/:month", (req, res) => {
 
     const sql = `
         SELECT
-            COALESCE(SUM(ca.total_earning),0) AS total
+            COALESCE(
+                SUM(
+                    ar.attendance_value * ps.daily_rate
+                ),
+                0
+            ) AS total
 
-        FROM casual_worker_attendance ca
+        FROM casual_workers cw
 
-        JOIN casual_workers cw
-            ON cw.id = ca.worker_id
+        JOIN attendance_register ar
+            ON ar.worker_id = cw.id
 
-        WHERE ca.month = ?
-        AND cw.plantation = ?
+        JOIN payroll_settings ps
+            ON ps.plantation = cw.plantation
+
+        WHERE cw.plantation = ?
+
+        AND ar.worker_type = 'casual'
+
+        AND ar.is_present = 1
+
+        AND DATE_FORMAT(
+            ar.attendance_date,
+            '%Y-%m'
+        ) = ?
     `;
 
-    db.query(sql, [month, plantation], (err, result) => {
+    db.query(
+        sql,
+        [plantation, month],
+        (err, result) => {
 
-        if (err) {
-          console.log("CASUAL SUMMARY ERROR:", err);
-          return res.status(500).json(err);
-      }
+            if (err) {
+                console.log(
+                    "CASUAL SUMMARY ERROR:",
+                    err
+                );
 
-        res.json({
-            totalRequired: Number(result[0].total || 0)
-        });
+                return res.status(500).json(err);
+            }
 
-    });
+            res.json({
+                totalRequired:
+                    Number(result[0].total || 0)
+            });
+
+        }
+    );
 
 });
 
