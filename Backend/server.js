@@ -1799,85 +1799,84 @@ app.get("/rubber-weekly-report", (req, res) => {
 //   );
 // });
 
-// SUMMARY
-app.get(
-  "/dashboard/rubber-summary/:month",
-  (req, res) => {
+// ================= RUBBER TAPPERS DASHBOARD SUMMARY =================
 
-    const month =
-      req.params.month;
+app.get("/dashboard/rubber-summary/:month", (req, res) => {
 
-    const plantation = req.query.plantation;
+  const month = req.params.month;
+  const plantation = req.query.plantation;
 
-    const sql = `
+  const sql = `
     SELECT
-    COALESCE(
-    SUM(
-    CASE
+      COALESCE(
+        SUM(
+          CASE
 
-        /* Permanent Workers */
-        WHEN rt.worker_category = 'Permanent' THEN
+            /* Permanent Workers */
+            WHEN rt.worker_category = 'Permanent' THEN
 
-            CASE
+              CASE
+
+                /* Below 2.5 KG = No salary */
                 WHEN rta.kg < 2.5 THEN 0
 
+                /* 2.5 KG - 7 KG */
                 WHEN rta.kg <= 7 THEN
-                    (1550 * rta.attendance_value) + rta.allowance
+                  1550 * rta.attendance_value
 
+                /* Above 7 KG */
                 ELSE
-                    (1550 * rta.attendance_value)
-                    + ((rta.kg - 7) * 250)
-                    + rta.allowance
-            END
+                  (1550 * rta.attendance_value)
+                  + ((rta.kg - 7) * 250)
 
-        /* Temporary Workers */
-        ELSE
-            (rta.kg * 300) + rta.allowance
+              END
 
-    END
-    ),0) AS total
+            /* Temporary Workers */
+            ELSE
+              rta.kg * 300
 
-    FROM rubber_attendance_register rta
-
-    JOIN rubber_tappers rt
-    ON rt.id = rta.worker_id
-
-    WHERE
-    DATE_FORMAT(rta.attendance_date,'%Y-%m') = ?
-    AND rt.plantation = ?
+          END
+        ),
+        0
+      ) AS total
 
     FROM rubber_attendance_register rta
 
     JOIN rubber_tappers rt
-    ON rt.id = rta.worker_id
+      ON rt.id = rta.worker_id
 
     WHERE
-    DATE_FORMAT(rta.date,'%Y-%m') = ?
-    AND rt.plantation = ?
-        `;
+      DATE_FORMAT(rta.attendance_date, '%Y-%m') = ?
 
-    db.query(
-      sql,
-      [month, plantation],
-      (err, result) => {
+      AND rt.plantation = ?
+  `;
 
-        if (err) {
-          return res
-            .status(500)
-            .json(err);
-        }
+  db.query(
+    sql,
+    [month, plantation],
+    (err, result) => {
 
-        res.json({
-          totalRequired:
-            Number(
-              result[0].total || 0
-            )
-        });
+      if (err) {
 
+        console.log(
+          "RUBBER DASHBOARD ERROR:",
+          err
+        );
+
+        return res
+          .status(500)
+          .json(err);
       }
-    );
-  }
-);
+
+      res.json({
+        totalRequired:
+          Number(result[0]?.total || 0)
+      });
+
+    }
+  );
+
+});
 
 // ================= FULL SYSTEM PDF REPORT =================
 
