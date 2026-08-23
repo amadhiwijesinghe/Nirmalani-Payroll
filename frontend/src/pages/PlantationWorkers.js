@@ -705,8 +705,14 @@ const printWeeklyReport = async () => {
 
       <body>
 
-      <h2>
+      <h1 style="text-align:center; margin-bottom:5px;">
         ${plantationTitle}
+      </h1>
+
+      <h2 style="text-align:center; margin-top:5px;">
+        ${plantation === "nirmalani"
+          ? "NIRMALANI WEEKLY REPORT"
+          : "INGURUPATHTHALA WEEKLY REPORT"}
       </h2>
 
       <p>
@@ -881,11 +887,13 @@ const reportMonth = new Date(filterMonth + "-01")
         <div style="text-align:center; margin-bottom:25px;">
 
         <h1 style="margin:0;font-size:28px;">
-        ${plantationName}
+          ${plantationName}
         </h1>
 
         <h2 style="margin:5px 0 20px 0;">
-        MONTHLY PAYROLL REPORT
+          ${plantation === "nirmalani"
+            ? "NIRMALANI MONTHLY REPORT"
+            : "INGURUPATHTHALA MONTHLY REPORT"}
         </h2>
 
         </div>
