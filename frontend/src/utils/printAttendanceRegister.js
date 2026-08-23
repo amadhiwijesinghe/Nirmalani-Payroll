@@ -20,8 +20,13 @@ export default function printAttendanceRegister({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
 
+    const plantationName =
+        plantation === "nirmalani"
+            ? "NIRMALANI PLANTATION"
+            : "INGURUPATHTHALA PLANTATION";
+
     doc.text(
-        "NIRMALANI PLANTATION",
+        plantationName,
         148,
         15,
         { align: "center" }
@@ -257,7 +262,7 @@ export default function printAttendanceRegister({
         currentY
     );
     doc.save(
-        `Attendance Register ${month}-${year}.pdf`
+        `${plantationName} Attendance Register ${month}-${year}.pdf`
     );
 
 }
