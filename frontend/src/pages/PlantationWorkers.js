@@ -844,7 +844,11 @@ const reportMonth = new Date(filterMonth + "-01")
 
       <head>
 
-        <title>Nirmalani Plantation Monthly Report</title>
+        <title>
+          ${plantation === "nirmalani"
+            ? "Nirmalani Plantation Monthly Report"
+            : "Ingurupaththala Plantation Monthly Report"}
+        </title>
 
         <style>
 
