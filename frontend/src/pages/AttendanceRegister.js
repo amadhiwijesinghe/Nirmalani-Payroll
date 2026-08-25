@@ -64,6 +64,8 @@ export default function AttendanceRegister({ plantation }) {
     total: 0
   });
 
+  const [machineAttendanceData, setMachineAttendanceData] = useState({});
+
   const [rubberAttendance, setRubberAttendance] = useState({
     attendance_value:1,
     liter:"",
@@ -153,6 +155,17 @@ const loadAttendance = async () => {
             }
         );
 
+        const machineRes = await axios.get(
+            `${API}/machine-labour-attendance`,
+            {
+                params: {
+                    plantation,
+                    month,
+                    year
+                }
+            }
+        );
+
         rubberRes.data.forEach(row => {
 
             const date = dayjs(row.attendance_date)
@@ -166,7 +179,27 @@ const loadAttendance = async () => {
 
         });
 
+        const machineObject = {};
+
+    machineRes.data.forEach(row => {
+
+        const date = dayjs(row.attendance_date)
+            .format("YYYY-MM-DD");
+
+        const key =
+            `machine-${row.worker_id}-${date}`;
+
+        machineObject[key] = {
+            tanks: Number(row.tanks) || 0,
+            rate: Number(row.rate) || 0,
+            total: Number(row.total) || 0
+        };
+
+    });
+
         setAttendance(attendanceObject);
+
+        setMachineAttendanceData(machineObject);
 
     } catch (err) {
 
@@ -277,11 +310,29 @@ const openMachineDialog = (worker, date) => {
 
     setSelectedDate(date);
 
-    setMachineAttendance({
-        tanks: "",
-        rate: "",
-        total: 0
-    });
+    const key =
+        `machine-${worker.worker_id}-${date}`;
+
+    const existing =
+        machineAttendanceData[key];
+
+    if (existing) {
+
+        setMachineAttendance({
+            tanks: existing.tanks,
+            rate: existing.rate,
+            total: existing.total
+        });
+
+    } else {
+
+        setMachineAttendance({
+            tanks: "",
+            rate: "",
+            total: 0
+        });
+
+    }
 
     setMachineDialogOpen(true);
 
@@ -367,6 +418,92 @@ const saveRubberAttendance = async () => {
         console.log(err);
 
         alert(err.response?.data?.message || "Error");
+
+    }
+
+};
+
+// ===============================
+// SAVE MACHINE LABOUR ATTENDANCE
+// ===============================
+
+const saveMachineAttendance = async () => {
+
+    if (!selectedWorker) {
+        return;
+    }
+
+    const tanks =
+        Number(machineAttendance.tanks) || 0;
+
+    const rate =
+        Number(machineAttendance.rate) || 0;
+
+    if (tanks <= 0) {
+
+        alert("Please enter the number of tanks.");
+
+        return;
+
+    }
+
+    if (rate <= 0) {
+
+        alert("Please enter the rate per tank.");
+
+        return;
+
+    }
+
+    try {
+
+        await axios.post(
+            `${API}/machine-labour-attendance`,
+            {
+                worker_id:
+                    selectedWorker.worker_id,
+
+                plantation,
+
+                attendance_date:
+                    selectedDate,
+
+                tanks,
+
+                rate
+            }
+        );
+
+
+        // Close dialog
+
+        setMachineDialogOpen(false);
+
+
+        // Reset values
+
+        setMachineAttendance({
+            tanks: "",
+            rate: "",
+            total: 0
+        });
+
+
+        // Reload attendance data
+
+        await loadAttendance();
+
+
+    } catch (error) {
+
+        console.error(
+            "Machine Labour Attendance Save Error:",
+            error.response?.data || error
+        );
+
+        alert(
+            "Failed to save Machine Labour attendance."
+        );
 
     }
 
@@ -817,22 +954,49 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
             {filteredWorkers.map((worker) => {
 
-              const totalPresent = Array.from(
-                { length: daysInMonth },
-                (_, i) => {
+              const totalPresent =
+    worker.worker_type === "machine"
 
-                    const date = dayjs(
-                        `${year}-${String(month).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`
-                    ).format("YYYY-MM-DD");
+        ? Array.from(
+            { length: daysInMonth },
+            (_, i) => {
 
-                    return Number(
-                        attendance[
-                            `${worker.worker_type}-${worker.worker_id}-${date}`
-                        ] || 0
-                    );
+                const date = dayjs(
+                    `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+                ).format("YYYY-MM-DD");
 
-                }
-            ).reduce((sum, value) => sum + value, 0);
+                const key =
+                    `machine-${worker.worker_id}-${date}`;
+
+                return Number(
+                    machineAttendanceData[key]?.total || 0
+                );
+
+            }
+        ).reduce(
+            (sum, value) => sum + value,
+            0
+        )
+
+        : Array.from(
+            { length: daysInMonth },
+            (_, i) => {
+
+                const date = dayjs(
+                    `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+                ).format("YYYY-MM-DD");
+
+                return Number(
+                    attendance[
+                        `${worker.worker_type}-${worker.worker_id}-${date}`
+                    ] || 0
+                );
+
+            }
+        ).reduce(
+            (sum, value) => sum + value,
+            0
+        );
 
               return (
 
@@ -891,6 +1055,11 @@ const isMobile = useMediaQuery("(max-width:900px)");
                 const isFuture = currentDate.isAfter(dayjs(), "day");
                 const value = attendance[attendanceKey] || 0;
 
+                const machineData =
+                    worker.worker_type === "machine"
+                        ? machineAttendanceData[attendanceKey]
+                        : null;
+
                 return (
 
                     <TableCell
@@ -939,41 +1108,68 @@ const isMobile = useMediaQuery("(max-width:900px)");
                       }}
                     >
 
-                       {value > 0 && (
+                       {worker.worker_type === "machine" ? (
 
-                            <Box
-                                sx={{
-                                    width: 22,
-                                    height: 22,
-                                    bgcolor:
-                                        value === 1.5
-                                            ? "#ff9800"
-                                            : value === 0.5
-                                            ? "#2196f3"
-                                            : "#4CAF50",
+                            machineData && (
 
-                                    borderRadius: "6px",
+                                <Box
+                                    sx={{
+                                        width: 38,
+                                        height: 28,
+                                        bgcolor: "#3b82f6",
+                                        borderRadius: "6px",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        margin: "auto",
+                                        color: "#fff",
+                                        fontWeight: "bold",
+                                        fontSize: 12
+                                    }}
+                                >
+                                    {machineData.tanks}
+                                </Box>
 
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
+                            )
 
-                                    margin: "auto",
+                        ) : (
 
-                                    color: "#fff",
+                            value > 0 && (
 
-                                    fontWeight: "bold",
-                                    fontSize: 12
-                                }}
-                            >
+                                <Box
+                                    sx={{
+                                        width: 22,
+                                        height: 22,
+                                        bgcolor:
+                                            value === 1.5
+                                                ? "#ff9800"
+                                                : value === 0.5
+                                                ? "#2196f3"
+                                                : "#4CAF50",
 
-                                {value === 1
-                                    ? "✓"
-                                    : value === 0.5
-                                    ? "½"
-                                    : "1½"}
+                                        borderRadius: "6px",
 
-                            </Box>
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+
+                                        margin: "auto",
+
+                                        color: "#fff",
+                                        fontWeight: "bold",
+                                        fontSize: 12
+                                    }}
+                                >
+
+                                    {value === 1
+                                        ? "✓"
+                                        : value === 0.5
+                                        ? "½"
+                                        : "1½"}
+
+                                </Box>
+
+                            )
 
                         )}
 
@@ -1083,7 +1279,18 @@ const isMobile = useMediaQuery("(max-width:900px)");
                         ? `rubber-${worker.worker_id}-${date}`
                         : `${worker.worker_type}-${worker.worker_id}-${date}`;
 
+                const currentDate = dayjs(date);
+
+                const isSaturday = currentDate.day() === 6;
+                const isSunday = currentDate.day() === 0;
+                const isFuture = currentDate.isAfter(dayjs(), "day");
+
                 const value = attendance[attendanceKey] || 0;
+
+                const machineData =
+                    worker.worker_type === "machine"
+                        ? machineAttendanceData[attendanceKey]
+                        : null;
 
                 return (
 
@@ -1119,7 +1326,9 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                 mt: 1,
                                 fontWeight: "bold",
                                 color:
-                                    value === 1
+                                    worker.worker_type === "machine"
+                                        ? "#3b82f6"
+                                        : value === 1
                                         ? "#22c55e"
                                         : value === 0.5
                                         ? "#3b82f6"
@@ -1128,7 +1337,11 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                         : "#ef4444"
                             }}
                         >
-                            {value === 1
+                            {worker.worker_type === "machine"
+                                ? machineData
+                                    ? `🚜 ${machineData.tanks} Tanks — Rs. ${Number(machineData.total).toLocaleString()}`
+                                    : "No Work"
+                                : value === 1
                                 ? "✅ Present"
                                 : value === 0.5
                                 ? "🔵 Half Day"
@@ -1149,25 +1362,25 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                 disabled={!isEditing || isFinalized}
                                 onClick={() => {
 
-                                    if (worker.worker_type === "rubber") {
+                                if (worker.worker_type === "rubber") {
 
-                                        openRubberDialog(worker, date);
+                                    openRubberDialog(worker, date);
 
-                                    } else if (worker.worker_type === "machine") {
+                                } else if (worker.worker_type === "machine") {
 
-                                        openMachineDialog(worker, date);
+                                    openMachineDialog(worker, date);
 
-                                    } else {
+                                } else {
 
-                                        setAttendanceValue(
-                                            worker,
-                                            selectedDay,
-                                            1
-                                        );
+                                    setAttendanceValue(
+                                        worker,
+                                        selectedDay,
+                                        1
+                                    );
 
-                                    }
+                                }
 
-                                }}                           >
+                            }}                           >
                                 Present
                             </MobileButton>
 
@@ -1357,7 +1570,137 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
         </DialogActions>
 
+        </Dialog>
+
+    {/* MACHINE LABOUR DIALOG */}
+
+    <Dialog
+        open={machineDialogOpen}
+        onClose={() => setMachineDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+    >
+
+        <DialogTitle>
+            🚜 Machine Labour Attendance
+        </DialogTitle>
+
+        <DialogContent>
+
+            <Stack spacing={2} sx={{ mt: 1 }}>
+
+                <Typography>
+                    <b>Worker :</b> {selectedWorker?.name}
+                </Typography>
+
+                <Typography>
+                    <b>Date :</b> {selectedDate}
+                </Typography>
+
+
+                <MobileInput
+                    label="Tanks Used"
+                    type="number"
+                    value={machineAttendance.tanks}
+                    onChange={(e) => {
+
+                        const tanks =
+                            Number(e.target.value) || 0;
+
+                        const rate =
+                            Number(machineAttendance.rate) || 0;
+
+                        setMachineAttendance({
+                            ...machineAttendance,
+                            tanks,
+                            total: tanks * rate
+                        });
+
+                    }}
+                />
+
+
+                <MobileInput
+                    label="Rate per Tank"
+                    type="number"
+                    value={machineAttendance.rate}
+                    onChange={(e) => {
+
+                        const rate =
+                            Number(e.target.value) || 0;
+
+                        const tanks =
+                            Number(machineAttendance.tanks) || 0;
+
+                        setMachineAttendance({
+                            ...machineAttendance,
+                            rate,
+                            total: tanks * rate
+                        });
+
+                    }}
+                />
+
+
+                <Paper
+                    sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        background:
+                            "rgba(34,197,94,0.10)"
+                    }}
+                >
+
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                    >
+                        Total Labour Cost
+                    </Typography>
+
+                    <Typography
+                        variant="h5"
+                        fontWeight={800}
+                        sx={{ mt: 0.5 }}
+                    >
+                        Rs.{" "}
+                        {Number(
+                            machineAttendance.total || 0
+                        ).toLocaleString()}
+                    </Typography>
+
+                </Paper>
+
+            </Stack>
+
+        </DialogContent>
+
+
+        <DialogActions>
+
+            <MobileButton
+                color="secondary"
+                fullWidth={false}
+                onClick={() =>
+                    setMachineDialogOpen(false)
+                }
+            >
+                Cancel
+            </MobileButton>
+
+
+            <MobileButton
+                color="primary"
+                fullWidth={false}
+                onClick={saveMachineAttendance}
+            >
+                Save
+            </MobileButton>
+
+        </DialogActions>
+
     </Dialog>
+
 
     </MobilePage>
   );
