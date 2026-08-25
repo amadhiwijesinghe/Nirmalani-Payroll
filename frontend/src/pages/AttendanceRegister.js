@@ -54,10 +54,15 @@ export default function AttendanceRegister({ plantation }) {
   const [workerType, setWorkerType] = useState("all");
   const [selectedDay, setSelectedDay] = useState(dayjs().date());
   const [rubberDialogOpen, setRubberDialogOpen] = useState(false);
-
   const [selectedWorker, setSelectedWorker] = useState(null);
-
   const [selectedDate, setSelectedDate] = useState("");
+  const [machineDialogOpen, setMachineDialogOpen] = useState(false);
+
+  const [machineAttendance, setMachineAttendance] = useState({
+    tanks: "",
+    rate: "",
+    total: 0
+  });
 
   const [rubberAttendance, setRubberAttendance] = useState({
     attendance_value:1,

@@ -3818,7 +3818,24 @@ app.get("/attendance-register/workers", async (req, res) => {
             FROM casual_workers
             WHERE plantation = ?
 
+            UNION ALL
+
+            SELECT
+                id AS worker_id,
+                name,
+                NULL AS epf_no,
+                'machine' AS worker_type
+            FROM machine_labour_workers
+            WHERE plantation = ?
+
             ORDER BY
+                CASE
+                    WHEN worker_type = 'plantation' THEN 1
+                    WHEN worker_type = 'casual' THEN 2
+                    WHEN worker_type = 'rubber' THEN 3
+                    WHEN worker_type = 'machine' THEN 4
+                    ELSE 5
+                END,
                 CASE
                     WHEN epf_no IS NULL THEN 1
                     ELSE 0
@@ -3829,6 +3846,7 @@ app.get("/attendance-register/workers", async (req, res) => {
             [
                 plantation,
                 plantation,
+                plantation,
                 plantation
             ]
         );
@@ -3837,7 +3855,7 @@ app.get("/attendance-register/workers", async (req, res) => {
 
     } catch (err) {
 
-        console.log(err);
+        console.log("ATTENDANCE WORKERS ERROR:", err);
 
         res.status(500).json(err);
 
@@ -5303,18 +5321,25 @@ app.get("/machine-labour-attendance", (req, res) => {
 
   const sql = `
     SELECT
-      id,
-      worker_id,
-      plantation,
-      attendance_date,
-      tanks,
-      rate,
-      total
-    FROM machine_labour_attendance
-    WHERE worker_id = ?
-      AND plantation = ?
-      AND DATE_FORMAT(attendance_date, '%Y-%m') = ?
-    ORDER BY attendance_date
+      mla.id,
+      mla.worker_id,
+      mlw.name,
+      mla.plantation,
+      mla.attendance_date,
+      mla.tanks,
+      mla.rate,
+      mla.total
+
+    FROM machine_labour_attendance mla
+
+    JOIN machine_labour_workers mlw
+      ON mlw.id = mla.worker_id
+
+    WHERE mla.worker_id = ?
+      AND mla.plantation = ?
+      AND DATE_FORMAT(mla.attendance_date, '%Y-%m') = ?
+
+    ORDER BY mla.attendance_date
   `;
 
   db.query(
@@ -5327,7 +5352,11 @@ app.get("/machine-labour-attendance", (req, res) => {
     (err, result) => {
 
       if (err) {
-        console.log("MACHINE LABOUR ATTENDANCE GET ERROR:", err);
+        console.log(
+          "MACHINE LABOUR ATTENDANCE GET ERROR:",
+          err
+        );
+
         return res.status(500).json(err);
       }
 
