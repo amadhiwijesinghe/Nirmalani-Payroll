@@ -267,6 +267,26 @@ const openRubberDialog = (worker, date) => {
 
 };
 
+// ===============================
+// OPEN MACHINE LABOUR DIALOG
+// ===============================
+
+const openMachineDialog = (worker, date) => {
+
+    setSelectedWorker(worker);
+
+    setSelectedDate(date);
+
+    setMachineAttendance({
+        tanks: "",
+        rate: "",
+        total: 0
+    });
+
+    setMachineDialogOpen(true);
+
+};
+
 // KG auto calculation
 const calculateKG = (liter, drc) => {
 
@@ -541,20 +561,24 @@ const isMobile = useMediaQuery("(max-width:900px)");
               onChange={(e) => setWorkerType(e.target.value)}
           >
               <MenuItem value="all">
-                  All Workers
+                All Workers
               </MenuItem>
 
-              <MenuItem value="plantation">
-                  Plantation Workers
-              </MenuItem>
+            <MenuItem value="plantation">
+                Plantation Workers
+            </MenuItem>
 
-              <MenuItem value="rubber">
-                  Rubber Tappers
-              </MenuItem>
+            <MenuItem value="rubber">
+                Rubber Tappers
+            </MenuItem>
 
-              <MenuItem value="casual">
-                  Casual Workers
-              </MenuItem>
+            <MenuItem value="casual">
+                Casual Workers
+            </MenuItem>
+
+            <MenuItem value="machine">
+                Machine Labour
+            </MenuItem>
 
           </Select>
 
@@ -873,15 +897,26 @@ const isMobile = useMediaQuery("(max-width:900px)");
                         key={i}
                         align="center"
                         onClick={() => {
+
                             if (!isEditing) return;
                             if (isFinalized) return;
                             if (isFuture) return;
+
                             if (worker.worker_type === "rubber") {
+
                                 openRubberDialog(worker, date);
+
+                            } else if (worker.worker_type === "machine") {
+
+                                openMachineDialog(worker, date);
+
                             } else {
+
                                 toggleAttendance(worker, i + 1);
+
                             }
-                            }}
+
+                        }}
                         sx={{
                           width: 60,
                           minWidth: 60,
@@ -1113,12 +1148,26 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                 fullWidth
                                 disabled={!isEditing || isFinalized}
                                 onClick={() => {
+
                                     if (worker.worker_type === "rubber") {
+
                                         openRubberDialog(worker, date);
+
+                                    } else if (worker.worker_type === "machine") {
+
+                                        openMachineDialog(worker, date);
+
                                     } else {
-                                        setAttendanceValue(worker, selectedDay, 1);
+
+                                        setAttendanceValue(
+                                            worker,
+                                            selectedDay,
+                                            1
+                                        );
+
                                     }
-                                }}                            >
+
+                                }}                           >
                                 Present
                             </MobileButton>
 
