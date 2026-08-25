@@ -47,7 +47,7 @@ export default function Topbar({
         >
           {plantation === "nirmalani"
             ? "⚡ Nirmalani Plantation Payroll System"
-            : "🌿 Ingurupaththala Plantation Payroll System"}
+            : "🌿 Common Plantation Payroll System"}
         </Typography>
 
         <Button
@@ -63,7 +63,7 @@ export default function Topbar({
           }}
         >
           {plantation === "nirmalani"
-            ? "🌿 Switch to Ingurupaththala"
+            ? "🌿 Switch to Common"
             : "⚡ Switch to Nirmalani"}
         </Button>
 

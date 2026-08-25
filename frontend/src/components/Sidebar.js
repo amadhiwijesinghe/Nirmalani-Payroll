@@ -104,7 +104,7 @@ export default function Sidebar({
       >
         ⚡ {
           plantation === "ingurupaththala"
-            ? "Ingurupaththala Plantation Payroll System"
+            ? "Common Plantation Payroll System"
             : "Nirmalani Plantation Payroll System"
         } ⚡
       </Typography>
@@ -243,7 +243,7 @@ return (
     >
       {plantation === "nirmalani"
         ? "Nirmalani Payroll"
-        : "Ingurupaththala Payroll"}
+        : "Common Payroll"}
     </Typography>
 
     <Button

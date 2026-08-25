@@ -262,16 +262,16 @@ function App() {
               )}
 
               {page === "machinelabour" && (
-                <motion.div
-                  key="machinelabour"
-                  initial={{ opacity: 0, x: 80 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -80 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <MachineLabours plantation={plantation} />
-                </motion.div>
-              )}
+              <motion.div
+                key="machinelabour"
+                initial={{ opacity: 0, x: 80 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -80 }}
+                transition={{ duration: 0.4 }}
+              >
+                <MachineLabours plantation={plantation} />
+              </motion.div>
+            )}
 
               {page === "income" && (
                 <motion.div
