@@ -18,6 +18,7 @@ import RubberTappers from './pages/RubberTappers';
 import TeaCollection from './pages/TeaCollection';
 import RubberDispatch from './pages/RubberDistpatch';
 import CasualWorkers from './pages/CasualWorkers';
+import MachineLabours from './pages/MachineLabours';
 import Income from "./pages/Income";
 import Expenditure from "./pages/Expenditure";
 import FinancialDashboard from "./pages/FinancialDashboard";
@@ -257,6 +258,18 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                  <CasualWorkers plantation={plantation} />
+                </motion.div>
+              )}
+
+              {page === "machinelabour" && (
+                <motion.div
+                  key="machinelabour"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <MachineLabours plantation={plantation} />
                 </motion.div>
               )}
 

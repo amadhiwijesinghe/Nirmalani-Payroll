@@ -29,6 +29,7 @@ import ParkIcon from '@mui/icons-material/Park';
 import GroupWorkIcon from '@mui/icons-material/GroupWork'; 
 import GrassIcon from '@mui/icons-material/Grass';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import PropaneTankIcon from '@mui/icons-material/PropaneTank';
 
 const drawerWidth = 240;
 
@@ -56,6 +57,7 @@ export default function Sidebar({
     { label: "Attendance Register", value: "attendanceregister", icon: <EventIcon />},
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},
+    { label: "Machine Labour", value: "machinelabour", icon: <PropaneTankIcon />},
     { label: "Tea Collection", value:"teacollection", icon: <YardIcon />},
     { label: "Cinnamon Collection", value:"cinnamoncollection", icon: <ParkIcon />},
       ...(plantation === "ingurupaththala"

@@ -5106,6 +5106,314 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
 });
 
+// ================= MACHINE LABOUR =================
+
+// GET MACHINE LABOUR WORKERS
+app.get("/machine-labours", (req, res) => {
+
+  const { plantation } = req.query;
+
+  db.query(
+    `
+      SELECT *
+      FROM machine_labour_workers
+      WHERE plantation = ?
+      ORDER BY name
+    `,
+    [plantation],
+    (err, result) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR GET ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
+
+// ADD MACHINE LABOUR WORKER
+app.post("/machine-labours", (req, res) => {
+
+  const {
+    name,
+    plantation
+  } = req.body;
+
+  if (!name || !plantation) {
+    return res.status(400).json({
+      message: "Name and plantation are required"
+    });
+  }
+
+  db.query(
+    `
+      INSERT INTO machine_labour_workers
+      (
+        name,
+        plantation
+      )
+      VALUES (?, ?)
+    `,
+    [
+      name,
+      plantation
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR ADD ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Machine Labour worker added",
+        id: result.insertId
+      });
+
+    }
+  );
+
+});
+
+
+// DELETE MACHINE LABOUR WORKER
+app.delete("/machine-labours/:id", (req, res) => {
+
+  const workerId = req.params.id;
+
+  // First delete attendance
+  db.query(
+    `
+      DELETE FROM machine_labour_attendance
+      WHERE worker_id = ?
+    `,
+    [workerId],
+    (err) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR ATTENDANCE DELETE ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      // Then delete worker
+      db.query(
+        `
+          DELETE FROM machine_labour_workers
+          WHERE id = ?
+        `,
+        [workerId],
+        (err2) => {
+
+          if (err2) {
+            console.log("MACHINE LABOUR DELETE ERROR:", err2);
+            return res.status(500).json(err2);
+          }
+
+          res.json({
+            success: true,
+            message: "Machine Labour worker deleted"
+          });
+
+        }
+      );
+
+    }
+  );
+
+});
+
+
+// SAVE MACHINE LABOUR ATTENDANCE
+app.post("/machine-labour-attendance", (req, res) => {
+
+  const {
+    worker_id,
+    plantation,
+    attendance_date,
+    tanks,
+    rate
+  } = req.body;
+
+  const tanksValue = Number(tanks || 0);
+  const rateValue = Number(rate || 0);
+
+  const total = tanksValue * rateValue;
+
+  const sql = `
+    INSERT INTO machine_labour_attendance
+    (
+      worker_id,
+      plantation,
+      attendance_date,
+      tanks,
+      rate,
+      total
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+
+    ON DUPLICATE KEY UPDATE
+
+      tanks = VALUES(tanks),
+      rate = VALUES(rate),
+      total = VALUES(total)
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      plantation,
+      attendance_date,
+      tanksValue,
+      rateValue,
+      total
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR ATTENDANCE SAVE ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        total
+      });
+
+    }
+  );
+
+});
+
+
+// GET MACHINE LABOUR ATTENDANCE FOR MONTH
+app.get("/machine-labour-attendance", (req, res) => {
+
+  const {
+    worker_id,
+    month,
+    plantation
+  } = req.query;
+
+  const sql = `
+    SELECT
+      id,
+      worker_id,
+      plantation,
+      attendance_date,
+      tanks,
+      rate,
+      total
+    FROM machine_labour_attendance
+    WHERE worker_id = ?
+      AND plantation = ?
+      AND DATE_FORMAT(attendance_date, '%Y-%m') = ?
+    ORDER BY attendance_date
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      plantation,
+      month
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR ATTENDANCE GET ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+
+    }
+  );
+
+});
+
+
+// DELETE MACHINE LABOUR ATTENDANCE
+app.delete("/machine-labour-attendance/:id", (req, res) => {
+
+  const id = req.params.id;
+
+  db.query(
+    `
+      DELETE FROM machine_labour_attendance
+      WHERE id = ?
+    `,
+    [id],
+    (err) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR ATTENDANCE DELETE ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Machine Labour attendance deleted"
+      });
+
+    }
+  );
+
+});
+
+
+// MACHINE LABOUR MONTHLY SUMMARY
+app.get("/machine-labour-summary/:month", (req, res) => {
+
+  const {
+    plantation
+  } = req.query;
+
+  const month = req.params.month;
+
+  const sql = `
+    SELECT
+      COALESCE(
+        SUM(mla.total),
+        0
+      ) AS total
+    FROM machine_labour_attendance mla
+    WHERE mla.plantation = ?
+      AND DATE_FORMAT(
+        mla.attendance_date,
+        '%Y-%m'
+      ) = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      plantation,
+      month
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log("MACHINE LABOUR SUMMARY ERROR:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        totalRequired:
+          Number(result[0]?.total || 0)
+      });
+
+    }
+  );
+
+});
+
 // ================= SERVER =================
 
 const PORT = process.env.PORT || 5000;
