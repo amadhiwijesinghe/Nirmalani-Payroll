@@ -29,8 +29,11 @@ export default function CinnamonCollection({
   const [workers, setWorkers] = useState([]);
   const [data, setData] = useState([]);
 
+  const [workerName, setWorkerName] = useState("");
+  const [editingWorkerId, setEditingWorkerId] = useState(null);
+  const [editWorkerName, setEditWorkerName] = useState("");
+
   const [workerId, setWorkerId] = useState("");
-  const [selectedEpf, setSelectedEpf] = useState("");
 
   const [date, setDate] = useState("");
   const [kg, setKg] = useState("");
@@ -60,15 +63,137 @@ export default function CinnamonCollection({
 
     }, [plantation]);
 
-  // FETCH WORKERS
-  const fetchWorkers = async () => {
+// FETCH CINNAMON WORKERS
+const fetchWorkers = async () => {
 
-    const res = await axios.get(
-      `${API}/plantation-workers?plantation=${plantation}`
-    );
+    try {
 
-    setWorkers(res.data);
-  };
+        const res = await axios.get(
+            `${API}/cinnamon-workers?plantation=${plantation}`
+        );
+
+        setWorkers(res.data || []);
+
+    } catch (err) {
+
+        console.error(
+            "Cinnamon Workers Load Error:",
+            err.response?.data || err
+        );
+
+    }
+
+};
+
+// ADD CINNAMON WORKER
+const addWorker = async () => {
+
+    if (!workerName.trim()) {
+
+        alert("Please enter worker name");
+
+        return;
+
+    }
+
+    try {
+
+        await axios.post(
+            `${API}/cinnamon-workers`,
+            {
+                name: workerName.trim(),
+                plantation
+            }
+        );
+
+        setWorkerName("");
+
+        fetchWorkers();
+
+        alert("✅ Cinnamon Worker Added");
+
+    } catch (err) {
+
+        console.error(
+            "Cinnamon Worker Add Error:",
+            err.response?.data || err
+        );
+
+        alert("Failed to add worker");
+
+    }
+
+};
+
+// UPDATE CINNAMON WORKER
+const updateWorker = async (id) => {
+
+    if (!editWorkerName.trim()) {
+
+        alert("Please enter worker name");
+
+        return;
+
+    }
+
+    try {
+
+        await axios.put(
+            `${API}/cinnamon-workers/${id}`,
+            {
+                name: editWorkerName.trim()
+            }
+        );
+
+        setEditingWorkerId(null);
+        setEditWorkerName("");
+
+        fetchWorkers();
+
+    } catch (err) {
+
+        console.error(
+            "Cinnamon Worker Update Error:",
+            err.response?.data || err
+        );
+
+        alert("Failed to update worker");
+
+    }
+
+};
+
+// DELETE CINNAMON WORKER
+const deleteWorker = async (id) => {
+
+    if (
+        !window.confirm(
+            "Are you sure you want to delete this Cinnamon Worker?"
+        )
+    ) {
+        return;
+    }
+
+    try {
+
+        await axios.delete(
+            `${API}/cinnamon-workers/${id}`
+        );
+
+        fetchWorkers();
+
+    } catch (err) {
+
+        console.error(
+            "Cinnamon Worker Delete Error:",
+            err.response?.data || err
+        );
+
+        alert("Failed to delete worker");
+
+    }
+
+};
 
   // FETCH DATA
   const fetchData = async () => {
@@ -304,7 +429,6 @@ export default function CinnamonCollection({
         return `
         <tr>
             <td>${row.name}</td>
-            <td>${row.epf_no}</td>
             <td>${row.date.split("T")[0]}</td>
             <td>${row.kg}</td>
         </tr>
@@ -377,8 +501,12 @@ export default function CinnamonCollection({
         <body>
 
             <h2>
-            Nirmalani Plantation
-            </h2>
+              ${
+                  plantation === "nirmalani"
+                      ? "Nirmalani Plantation"
+                      : "Common Plantation"
+              }
+          </h2>
 
             <h3>
             Cinnamon Collection Report
@@ -406,7 +534,6 @@ export default function CinnamonCollection({
 
                 <tr>
                 <th>Name</th>
-                <th>EPF</th>
                 <th>Date</th>
                 <th>KG</th>
                 </tr>
@@ -507,7 +634,6 @@ export default function CinnamonCollection({
     return `
       <tr>
         <td>${row.name}</td>
-        <td>${row.epf_no}</td>
         <td>
           ${new Date(row.date)
             .toISOString()
@@ -598,7 +724,11 @@ export default function CinnamonCollection({
       <body>
 
         <h2>
-          Nirmalani Plantation
+          ${
+              plantation === "nirmalani"
+                ? "Nirmalani Plantation"
+                : "Common Plantation"
+              }
         </h2>
 
         <h3>
@@ -617,7 +747,6 @@ export default function CinnamonCollection({
 
             <tr>
               <th>Name</th>
-              <th>EPF No</th>
               <th>Date</th>
               <th>KG Plucked</th>
             </tr>
@@ -708,6 +837,210 @@ export default function CinnamonCollection({
         🌿 Cinnamon Collection
       </Typography>
 
+      {/* ================= CINNAMON WORKERS ================= */}
+
+        <Paper
+            sx={{
+                p: 3,
+                mb: 4,
+                borderRadius: 5,
+                background: "rgba(255,255,255,0.05)"
+            }}
+        >
+
+            <Typography
+                variant="h6"
+                sx={{
+                    mb: 2,
+                    color: "#fff",
+                    fontWeight: "bold"
+                }}
+            >
+                👥 Cinnamon Workers
+            </Typography>
+
+
+            {/* ADD WORKER */}
+
+            <Grid
+                container
+                spacing={2}
+                sx={{ mb: 3 }}
+            >
+
+                <Grid item xs={12} md={8}>
+
+                    <TextField
+                        label="Worker Name"
+                        fullWidth
+                        value={workerName}
+                        onChange={(e) =>
+                            setWorkerName(e.target.value)
+                        }
+                        sx={{
+                            input: {
+                                color: "#fff"
+                            },
+                            label: {
+                                color: "#aaa"
+                            }
+                        }}
+                    />
+
+                </Grid>
+
+
+                <Grid item xs={12} md={4}>
+
+                    <Button
+                        fullWidth
+                        onClick={addWorker}
+                        sx={{
+                            height: "100%",
+                            background:
+                                "linear-gradient(135deg,#22c55e,#4ade80)",
+                            color: "#000",
+                            borderRadius: 3,
+                            fontWeight: "bold"
+                        }}
+                    >
+                        + Add Worker
+                    </Button>
+
+                </Grid>
+
+            </Grid>
+
+
+            {/* WORKER LIST */}
+
+            <Table>
+
+                <TableHead>
+
+                    <TableRow>
+
+                        <TableCell sx={{ color: "#aaa" }}>
+                            #
+                        </TableCell>
+
+                        <TableCell sx={{ color: "#aaa" }}>
+                            Name
+                        </TableCell>
+
+                        <TableCell
+                            sx={{ color: "#aaa" }}
+                            align="right"
+                        >
+                            Actions
+                        </TableCell>
+
+                    </TableRow>
+
+                </TableHead>
+
+
+                <TableBody>
+
+                    {workers.map((worker, index) => (
+
+                        <TableRow key={worker.id}>
+
+                            <TableCell sx={{ color: "#fff" }}>
+                                {index + 1}
+                            </TableCell>
+
+
+                            <TableCell sx={{ color: "#fff" }}>
+
+                                {editingWorkerId === worker.id ? (
+
+                                    <TextField
+                                        size="small"
+                                        value={editWorkerName}
+                                        onChange={(e) =>
+                                            setEditWorkerName(
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+
+                                ) : (
+
+                                    worker.name
+
+                                )}
+
+                            </TableCell>
+
+
+                            <TableCell align="right">
+
+                                {editingWorkerId === worker.id ? (
+
+                                    <Button
+                                        onClick={() =>
+                                            updateWorker(worker.id)
+                                        }
+                                        sx={{
+                                            background: "#22c55e",
+                                            color: "#000",
+                                            mr: 1
+                                        }}
+                                    >
+                                        Save
+                                    </Button>
+
+                                ) : (
+
+                                    <Button
+                                        onClick={() => {
+
+                                            setEditingWorkerId(
+                                                worker.id
+                                            );
+
+                                            setEditWorkerName(
+                                                worker.name
+                                            );
+
+                                        }}
+                                        sx={{
+                                            background: "#facc15",
+                                            color: "#000",
+                                            mr: 1
+                                        }}
+                                    >
+                                        Edit
+                                    </Button>
+
+                                )}
+
+
+                                <Button
+                                    onClick={() =>
+                                        deleteWorker(worker.id)
+                                    }
+                                    sx={{
+                                        background: "#ef4444",
+                                        color: "#fff"
+                                    }}
+                                >
+                                    Delete
+                                </Button>
+
+                            </TableCell>
+
+                        </TableRow>
+
+                    ))}
+
+                </TableBody>
+
+            </Table>
+
+        </Paper>
+
       {/* FORM */}
       <Paper
         sx={{
@@ -734,20 +1067,8 @@ export default function CinnamonCollection({
               <Select
                 value={workerId}
                 onChange={(e) => {
-
-                  const id = e.target.value;
-
-                  setWorkerId(id);
-
-                  const selected =
-                    workers.find(
-                      w => w.id === id
-                    );
-
-                  setSelectedEpf(
-                    selected?.epf_no || ""
-                  );
-                }}
+                  setWorkerId(e.target.value);
+              }}
                 sx={{
                   color: "#fff",
                   width: 250
@@ -771,28 +1092,6 @@ export default function CinnamonCollection({
               </Select>
 
             </FormControl>
-
-          </Grid>
-
-          {/* EPF */}
-          <Grid item xs={12} md={2}>
-
-            <TextField
-              label="EPF"
-              fullWidth
-              value={selectedEpf}
-              InputProps={{
-                readOnly: true
-              }}
-              sx={{
-                input: {
-                  color: "#fff"
-                },
-                label: {
-                  color: "#aaa"
-                }
-              }}
-            />
 
           </Grid>
 
@@ -1096,10 +1395,6 @@ export default function CinnamonCollection({
               </TableCell>
 
               <TableCell sx={{ color: "#aaa" }}>
-                EPF
-              </TableCell>
-
-              <TableCell sx={{ color: "#aaa" }}>
                 Date
               </TableCell>
 
@@ -1132,12 +1427,6 @@ export default function CinnamonCollection({
                     sx={{ color: "#fff" }}
                   >
                     {row.name}
-                  </TableCell>
-
-                  <TableCell
-                    sx={{ color: "#fff" }}
-                  >
-                    {row.epf_no}
                   </TableCell>
 
                   <TableCell
