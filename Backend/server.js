@@ -2406,37 +2406,45 @@ app.delete("/cinnamon-workers/:id", (req, res) => {
     );
 });
 
+// ================= CINNAMON COLLECTION =================
+
 // ADD CINNAMON COLLECTION
 app.post("/cinnamon-collection", (req, res) => {
 
   const {
     worker_id,
     date,
-    kg,
+    sticks,
     plantation
   } = req.body;
 
-  db.query(
-    `
+  if (!worker_id || !date || sticks === undefined || !plantation) {
+    return res.status(400).json({
+      message: "Worker, date, sticks and plantation are required"
+    });
+  }
+
+  const sql = `
     INSERT INTO cinnamon_collection
     (
       worker_id,
       date,
-      kg,
-      plantation
+      sticks
     )
-    VALUES (?, ?, ?, ?)
-    `,
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(
+    sql,
     [
       worker_id,
       date,
-      kg,
-      plantation
+      sticks
     ],
     (err, result) => {
 
       if (err) {
-        console.log(err);
+        console.log("Cinnamon Collection Add Error:", err);
         return res.status(500).json(err);
       }
 
@@ -2444,100 +2452,121 @@ app.post("/cinnamon-collection", (req, res) => {
         success: true,
         message: "Cinnamon Collection Saved"
       });
+
     }
   );
+
 });
+
 
 // GET CINNAMON COLLECTION
 app.get("/cinnamon-collection", (req, res) => {
 
-  const plantation =
-    req.query.plantation;
+  const plantation = req.query.plantation;
 
-  db.query(
-    `
+  const sql = `
     SELECT
       cc.id,
       cc.worker_id,
       cc.date,
-      cc.kg,
-      pw.name,
-      pw.epf_no
+      cc.sticks,
+      cw.name
 
     FROM cinnamon_collection cc
 
-    JOIN plantation_workers pw
-      ON pw.id = cc.worker_id
+    JOIN cinnamon_workers cw
+      ON cw.id = cc.worker_id
 
-    WHERE pw.plantation = ?
+    WHERE cw.plantation = ?
 
     ORDER BY cc.date DESC
-    `,
+  `;
+
+  db.query(
+    sql,
     [plantation],
     (err, result) => {
 
       if (err) {
-        console.log(err);
+        console.log("Cinnamon Collection Load Error:", err);
         return res.status(500).json(err);
       }
 
       res.json(result);
+
     }
   );
+
 });
+
 
 // UPDATE CINNAMON COLLECTION
 app.put("/cinnamon-collection/:id", (req, res) => {
 
-  const { kg } = req.body;
+  const {
+    date,
+    sticks
+  } = req.body;
+
+  const sql = `
+    UPDATE cinnamon_collection
+    SET
+      date = ?,
+      sticks = ?
+    WHERE id = ?
+  `;
 
   db.query(
-    `
-    UPDATE cinnamon_collection
-    SET kg = ?
-    WHERE id = ?
-    `,
+    sql,
     [
-      kg,
+      date,
+      sticks,
       req.params.id
     ],
     (err, result) => {
 
       if (err) {
-        console.log(err);
+        console.log("Cinnamon Collection Update Error:", err);
         return res.status(500).json(err);
       }
 
       res.json({
         success: true,
-        message: "Updated"
+        message: "Cinnamon Collection Updated"
       });
+
     }
   );
+
 });
+
 
 // DELETE CINNAMON COLLECTION
 app.delete("/cinnamon-collection/:id", (req, res) => {
 
-  db.query(
-    `
+  const sql = `
     DELETE FROM cinnamon_collection
     WHERE id = ?
-    `,
+  `;
+
+  db.query(
+    sql,
     [req.params.id],
     (err, result) => {
 
       if (err) {
-        console.log(err);
+        console.log("Cinnamon Collection Delete Error:", err);
         return res.status(500).json(err);
       }
 
       res.json({
         success: true,
-        message: "Deleted"
+        message: "Cinnamon Collection Deleted"
       });
+
     }
   );
+
 });
 
 // කෝට උර

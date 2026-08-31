@@ -36,32 +36,20 @@ export default function CinnamonCollection({
   const [workerId, setWorkerId] = useState("");
 
   const [date, setDate] = useState("");
-  const [kg, setKg] = useState("");
+  const [sticks, setSticks] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [editKg, setEditKg] = useState("");
+  const [editSticks, setEditSticks] = useState("");
 
   const [filterMonth, setFilterMonth] = useState("");
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
-
-  const [kotaDate, setKotaDate] = useState("");
-  const [kotaQty, setKotaQty] = useState("");
-
-  const [depositDate, setDepositDate] = useState("");
-  const [depositQty, setDepositQty] = useState("");
-
-  const [kotaData, setKotaData] = useState([]);
-  const [depositData, setDepositData] = useState([]);
 
   useEffect(() => {
 
     fetchWorkers();
     fetchData();
 
-    fetchKotaUra();
-    fetchDeposit();
-
-    }, [plantation]);
+  }, [plantation]);
 
 // FETCH CINNAMON WORKERS
 const fetchWorkers = async () => {
@@ -205,130 +193,50 @@ const deleteWorker = async (id) => {
     setData(res.data);
   };
 
-  //FETCH KOTA URA
-  const fetchKotaUra = async () => {
-
-    const res = await axios.get(
-        `${API}/cinnamon-kota-ura?plantation=${plantation}`
-    );
-
-    setKotaData(res.data);
-  };
-
-  // FETCH CINNAMON DEPOSIT
-  const fetchDeposit = async () => {
-
-    const res = await axios.get(
-        `${API}/cinnamon-deposit?plantation=${plantation}`
-    );
-
-    setDepositData(res.data);
-    };
 
 
   // SAVE CINNAMON COLLECTION
-  const saveCinnamonCollection = async () => {
+const saveCinnamonCollection = async () => {
 
-    if (!workerId || !date || !kg) {
+  if (!workerId || !date || !sticks) {
+    alert("Fill all fields");
+    return;
+  }
 
-      alert("Fill all fields");
+  try {
 
-      return;
-    }
+    await axios.post(
+      `${API}/cinnamon-collection`,
+      {
+        worker_id: workerId,
+        date,
+        sticks,
+        plantation
+      }
+    );
 
-    try {
+    alert("✅ Cinnamon Collection Saved");
 
-      await axios.post(
-        `${API}/cinnamon-collection`,
-        {
-          worker_id: workerId,
-          date,
-          kg
-        }
-      );
+    setWorkerId("");
+    setDate("");
+    setSticks("");
 
-      alert("✅ Cinnamon Collection Saved");
+    fetchData();
 
-      setDate("");
-      setKg("");
+  } catch (err) {
 
-      fetchData();
+    console.error(
+      "Cinnamon Collection Save Error:",
+      err.response?.data || err
+    );
 
-    } catch (err) {
+    alert(
+      err.response?.data?.message ||
+      "Error saving"
+    );
+  }
+};
 
-      console.error(err);
-
-      alert("Error saving");
-    }
-  };
-
-  // SAVE KOTA URA
-    const saveKotaUra = async () => {
-
-        if (!kotaDate || !kotaQty) {
-            alert("Fill all fields");
-            return;
-        }
-
-        try {
-
-            await axios.post(
-            `${API}/cinnamon-kota-ura`,
-            {
-                date: kotaDate,
-                quantity: kotaQty,
-                plantation
-            }
-            );
-
-            alert("✅ කෝට උර Saved");
-
-            setKotaDate("");
-            setKotaQty("");
-
-            fetchKotaUra();
-
-        } catch (err) {
-
-            console.error(err);
-
-            alert("Error saving");
-        }
-    };
-
-    // SAVE DEPOSIT
-    const saveDeposit = async () => {
-
-    if (!depositDate || !depositQty) {
-        alert("Fill all fields");
-        return;
-    }
-
-    try {
-
-        await axios.post(
-        `${API}/cinnamon-deposit`,
-        {
-            date: depositDate,
-            quantity: depositQty,
-            plantation
-        }
-        );
-
-        alert("✅ Deposit Saved");
-
-        setDepositDate("");
-        setDepositQty("");
-
-        fetchDeposit();
-
-    } catch (err) {
-
-        console.error(err);
-
-        alert("Error saving");
-    }
-    };
 
   // DELETE
   const deleteCollection = async (id) => {
@@ -354,46 +262,49 @@ const deleteWorker = async (id) => {
   };
 
   // UPDATE KG
-    const updateKg = async (id) => {
+const updateSticks = async (id) => {
 
-    if (!editKg) {
-        alert("Enter KG");
-        return;
-    }
+  if (!editSticks) {
+    alert("Enter quantity of sticks");
+    return;
+  }
 
-    try {
+  try {
 
-        await axios.put(
-        `${API}/cinnamon-collection/${id}`,
-        {
-            kg: editKg
-        }
-        );
+    await axios.put(
+      `${API}/cinnamon-collection/${id}`,
+      {
+        sticks: editSticks
+      }
+    );
 
-        alert("✅ Updated");
+    alert("✅ Updated");
 
-        setEditingId(null);
-        setEditKg("");
+    setEditingId(null);
+    setEditSticks("");
 
-        fetchData();
+    fetchData();
 
-    } catch (err) {
+  } catch (err) {
 
-        console.error(err);
+    console.error(
+      "Cinnamon Collection Update Error:",
+      err.response?.data || err
+    );
 
-        alert("Update failed");
-    }
-    };
+    alert("Update failed");
+  }
+};
 
 // TOTAL KG
-  const totalKg = data
+  const totalSticks = data
     .filter(
       row =>
         !filterMonth ||
         row.date.substring(0, 7) === filterMonth
     )
     .reduce(
-      (acc, row) => acc + Number(row.kg),
+      (acc, row) => acc + Number(row.sticks),
       0
     );
 
@@ -424,7 +335,7 @@ const deleteWorker = async (id) => {
 
     const tableRows = rows.map(row => {
 
-        total += Number(row.kg);
+        total += Number(row.sticks);
 
         return `
         <tr>
@@ -629,7 +540,7 @@ const deleteWorker = async (id) => {
 
   const tableRows = rows.map((row) => {
 
-    total += Number(row.kg);
+    total += Number(row.sticks);
 
     return `
       <tr>
@@ -1114,28 +1025,28 @@ const deleteWorker = async (id) => {
 
           </Grid>
 
-          {/* KG */}
-          <Grid item xs={12} md={2}>
+          {/* QUANTITY OF STICKS */}
+            <Grid item xs={12} md={3}>
 
-            <TextField
-              label="KG"
-              type="number"
-              fullWidth
-              value={kg}
-              onChange={(e) =>
-                setKg(e.target.value)
-              }
-              sx={{
-                input: {
-                  color: "#fff"
-                },
-                label: {
-                  color: "#aaa"
+              <TextField
+                label="Quantity of Sticks"
+                type="number"
+                fullWidth
+                value={sticks}
+                onChange={(e) =>
+                  setSticks(e.target.value)
                 }
-              }}
-            />
+                sx={{
+                  input: {
+                    color: "#fff"
+                  },
+                  label: {
+                    color: "#aaa"
+                  }
+                }}
+              />
 
-          </Grid>
+            </Grid>
 
           {/* BUTTON */}
           <Grid item xs={12} md={3}>
@@ -1160,113 +1071,6 @@ const deleteWorker = async (id) => {
         </Grid>
 
       </Paper>
-
-      <Paper sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)"
-        }}
-      >
-
-        <Typography variant="h6" sx={{mb:2}}>
-            කෝට උර
-        </Typography>
-
-        <Grid container spacing={2}>
-
-            <Grid item xs={4}>
-            <TextField
-                type="date"
-                fullWidth
-                value={kotaDate}
-                onChange={(e)=>
-                setKotaDate(e.target.value)
-                }
-            />
-            </Grid>
-
-            <Grid item xs={4}>
-            <TextField
-                label="Quantity"
-                type="number"
-                fullWidth
-                value={kotaQty}
-                onChange={(e)=>
-                setKotaQty(e.target.value)
-                }
-            />
-            </Grid>
-
-            <Grid item xs={4}>
-            <Button onClick={saveKotaUra} sx={{
-                height: "100%",
-                background:
-                  "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                borderRadius: 3,
-                fontWeight: "bold"
-            }}>
-                Save
-            </Button>
-            </Grid>
-
-        </Grid>
-
-        </Paper>
-
-        <Paper sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)"
-        }}>
-
-            <Typography variant="h6" sx={{mb: 2}}>
-                තැන්පත් කිරීම
-            </Typography>
-
-            <Grid container spacing={2}>
-
-                <Grid item xs={4}>
-                <TextField
-                    type="date"
-                    fullWidth
-                    value={depositDate}
-                    onChange={(e)=>
-                    setDepositDate(e.target.value)
-                    }
-                />
-                </Grid>
-
-                <Grid item xs={4}>
-                <TextField
-                    label="Quantity"
-                    type="number"
-                    fullWidth
-                    value={depositQty}
-                    onChange={(e)=>
-                    setDepositQty(e.target.value)
-                    }
-                />
-                </Grid>
-
-                <Grid item xs={4}>
-                <Button onClick={saveDeposit} sx={{
-                height: "100%",
-                background:
-                  "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                borderRadius: 3,
-                fontWeight: "bold"
-                }}>
-                    Save
-                </Button>
-                </Grid>
-
-            </Grid>
-
-            </Paper>
 
       {/* TABLE */}
       <Paper
@@ -1399,7 +1203,7 @@ const deleteWorker = async (id) => {
               </TableCell>
 
               <TableCell sx={{ color: "#aaa" }}>
-                KG
+                Sticks
               </TableCell>
 
               <TableCell sx={{ color: "#aaa" }}>
@@ -1453,9 +1257,9 @@ const deleteWorker = async (id) => {
                         <TextField
                             size="small"
                             type="number"
-                            value={editKg}
+                            value={editSticks}
                             onChange={(e) =>
-                            setEditKg(e.target.value)
+                            setEditSticks(e.target.value)
                             }
                             sx={{
                             width: 100,
@@ -1467,7 +1271,7 @@ const deleteWorker = async (id) => {
 
                         <Button
                             onClick={() =>
-                            updateKg(row.id)
+                            updateSticks(row.id)
                             }
                             sx={{
                             background: "#22c55e",
@@ -1481,7 +1285,7 @@ const deleteWorker = async (id) => {
 
                     ) : (
 
-                        row.kg
+                        row.sticks
 
                     )}
 
@@ -1495,7 +1299,7 @@ const deleteWorker = async (id) => {
 
                         setEditingId(row.id);
 
-                        setEditKg(row.kg);
+                        setEditSticks(row.sticks);
                         }}
                         sx={{
                         background: "#facc15",
@@ -1534,7 +1338,7 @@ const deleteWorker = async (id) => {
                   fontWeight: "bold"
                 }}
               >
-                TOTAL KG
+                TOTAL STICKS
               </TableCell>
 
               <TableCell
@@ -1543,7 +1347,7 @@ const deleteWorker = async (id) => {
                   fontWeight: "bold"
                 }}
               >
-                {totalKg.toFixed(2)}
+                {totalSticks.toFixed(2)}
               </TableCell>
 
             </TableRow>
