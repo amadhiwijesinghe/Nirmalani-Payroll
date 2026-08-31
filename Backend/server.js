@@ -2284,7 +2284,127 @@ app.get("/tea-distribution",(req,res)=>{
 
 });
 
-// ================ CINAMMON =====================
+// ================= CINNAMON WORKERS =================
+
+// GET CINNAMON WORKERS
+app.get("/cinnamon-workers", (req, res) => {
+
+    const { plantation } = req.query;
+
+    const sql = `
+        SELECT *
+        FROM cinnamon_workers
+        WHERE plantation = ?
+        ORDER BY name
+    `;
+
+    db.query(sql, [plantation], (err, result) => {
+
+        if (err) {
+            console.log("Cinnamon Worker Load Error:", err);
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
+    });
+});
+
+// ADD CINNAMON WORKER
+app.post("/cinnamon-workers", (req, res) => {
+
+    const { name, plantation } = req.body;
+
+    if (!name || !plantation) {
+        return res.status(400).json({
+            message: "Name and plantation are required"
+        });
+    }
+
+    const sql = `
+        INSERT INTO cinnamon_workers
+        (name, plantation)
+        VALUES (?, ?)
+    `;
+
+    db.query(
+        sql,
+        [name.trim(), plantation],
+        (err, result) => {
+
+            if (err) {
+                console.log("Cinnamon Worker Add Error:", err);
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                success: true,
+                id: result.insertId,
+                message: "Cinnamon Worker added"
+            });
+        }
+    );
+});
+
+// UPDATE CINNAMON WORKER
+app.put("/cinnamon-workers/:id", (req, res) => {
+
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({
+            message: "Worker name is required"
+        });
+    }
+
+    const sql = `
+        UPDATE cinnamon_workers
+        SET name = ?
+        WHERE id = ?
+    `;
+
+    db.query(
+        sql,
+        [name.trim(), req.params.id],
+        (err, result) => {
+
+            if (err) {
+                console.log("Cinnamon Worker Update Error:", err);
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                success: true,
+                message: "Cinnamon Worker updated"
+            });
+        }
+    );
+});
+
+// DELETE CINNAMON WORKER
+app.delete("/cinnamon-workers/:id", (req, res) => {
+
+    const sql = `
+        DELETE FROM cinnamon_workers
+        WHERE id = ?
+    `;
+
+    db.query(
+        sql,
+        [req.params.id],
+        (err, result) => {
+
+            if (err) {
+                console.log("Cinnamon Worker Delete Error:", err);
+                return res.status(500).json(err);
+            }
+
+            res.json({
+                success: true,
+                message: "Cinnamon Worker deleted"
+            });
+        }
+    );
+});
 
 // ADD CINNAMON COLLECTION
 app.post("/cinnamon-collection", (req, res) => {
