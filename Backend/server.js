@@ -2099,39 +2099,51 @@ app.get("/full-system-report/:month", async (req, res) => {
 
 // ADD TEA COLLECTION
 app.post("/tea-collection", (req, res) => {
+  const { worker_id, date, kg, plantation } = req.body;
 
-  const {
-    worker_id,
-    date,
-    kg
-  } = req.body;
+  if (!date || kg === undefined || !plantation) {
+    return res.status(400).json({
+      message: "Date, KG and plantation are required"
+    });
+  }
+
+  // Ingurupaththala needs a worker
+  if (plantation === "ingurupaththala" && !worker_id) {
+    return res.status(400).json({
+      message: "Worker, date and KG are required for Ingurupaththala"
+    });
+  }
+
+  const workerValue =
+    plantation === "nirmalani" ? null : worker_id;
 
   const sql = `
     INSERT INTO tea_collection
     (
       worker_id,
       date,
-      kg
+      kg,
+      plantation
     )
-    VALUES (?, ?, ?)
+    VALUES (?, ?, ?, ?)
   `;
 
   db.query(
     sql,
-    [
-      worker_id,
-      date,
-      kg
-    ],
+    [workerValue, date, kg, plantation],
     (err, result) => {
-
       if (err) {
-        console.log(err);
-        return res.status(500).json(err);
+        console.log("Tea Collection Add Error:", err);
+
+        return res.status(500).json({
+          message: "Error saving tea collection",
+          error: err
+        });
       }
 
       res.json({
         success: true,
+        id: result.insertId,
         message: "Tea collection saved"
       });
     }
@@ -2141,13 +2153,14 @@ app.post("/tea-collection", (req, res) => {
 // GET TEA COLLECTION
 app.get("/tea-collection", (req, res) => {
 
+  const { plantation } = req.query;
+
   const sql = `
     SELECT
       tc.id,
       tc.worker_id,
       tc.date,
       tc.kg,
-
       pw.name,
       pw.epf_no
 
@@ -2157,19 +2170,21 @@ app.get("/tea-collection", (req, res) => {
       ON pw.id = tc.worker_id
 
     WHERE pw.plantation = ?
-    
-    ORDER BY tc.date DESC
-  ` [req.query.plantation];
 
-  db.query(sql, [req.query.plantation], (err, result) => {
+    ORDER BY tc.date DESC
+  `;
+
+  db.query(sql, [plantation], (err, result) => {
 
     if (err) {
-      console.log(err);
+      console.log("Tea Collection Load Error:", err);
       return res.status(500).json(err);
     }
 
     res.json(result);
+
   });
+
 });
 
 // UPDATE TEA COLLECTION

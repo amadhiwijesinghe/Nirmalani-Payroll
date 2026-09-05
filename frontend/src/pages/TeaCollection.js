@@ -66,12 +66,28 @@ export default function TeaCollection({
   // FETCH DATA
   const fetchData = async () => {
 
+  try {
+
     const res = await axios.get(
       `${API}/tea-collection?plantation=${plantation}`
     );
 
-    setData(res.data);
-  };
+    console.log("Tea Collection Data:", res.data);
+
+    setData(res.data || []);
+
+  } catch (err) {
+
+    console.error(
+      "Tea Collection Load Error:",
+      err.response?.data || err
+    );
+
+    setData([]);
+
+  }
+
+};
 
   //FETCH DISTRIBUTION
   const fetchDistribution = async () => {
@@ -92,12 +108,13 @@ export default function TeaCollection({
   };
 
   // SAVE TEA COLLECTION
-  const saveTeaCollection = async () => {
+const saveTeaCollection = async () => {
 
-    if (!workerId || !date || !kg) {
+  // NIRMALANI
+  if (plantation === "nirmalani") {
 
-      alert("Fill all fields");
-
+    if (!date || !kg) {
+      alert("Please enter Date and KG");
       return;
     }
 
@@ -106,7 +123,6 @@ export default function TeaCollection({
       await axios.post(
         `${API}/tea-collection`,
         {
-          worker_id: workerId,
           date,
           kg,
           plantation
@@ -122,11 +138,58 @@ export default function TeaCollection({
 
     } catch (err) {
 
-      console.error(err);
+      console.error(
+        "Nirmalani Tea Save Error:",
+        err.response?.data || err
+      );
 
-      alert("Error saving");
+      alert(
+        err.response?.data?.message ||
+        "Error saving tea collection"
+      );
     }
-  };
+
+    return;
+  }
+
+
+  // INGURUPATHTHALA
+  if (!workerId || !date || !kg) {
+
+    alert("Fill all fields");
+
+    return;
+  }
+
+  try {
+
+    await axios.post(
+      `${API}/tea-collection`,
+      {
+        worker_id: workerId,
+        date,
+        kg,
+        plantation
+      }
+    );
+
+    alert("✅ Tea Collection Saved");
+
+    setDate("");
+    setKg("");
+
+    fetchData();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      err.response?.data?.message ||
+      "Error saving"
+    );
+  }
+};
 
   const saveDistribution = async () => {
 
@@ -720,159 +783,173 @@ export default function TeaCollection({
         🍃 Tea Collection
       </Typography>
 
-      {/* FORM */}
-      <Paper
+     {/* FORM */}
+<Paper
+  sx={{
+    p: 3,
+    mb: 4,
+    borderRadius: 5,
+    background: "rgba(255,255,255,0.05)"
+  }}
+>
+  <Grid container spacing={2}>
+
+    {/* INGURUPATHTHALA ONLY - WORKER */}
+    {plantation === "ingurupaththala" && (
+      <Grid item xs={12} md={3}>
+
+        <FormControl fullWidth>
+
+          <InputLabel sx={{ color: "#aaa" }}>
+            Worker
+          </InputLabel>
+
+          <Select
+            value={workerId}
+            onChange={(e) => {
+
+              const id = e.target.value;
+
+              setWorkerId(id);
+
+              const selected =
+                workers.find(
+                  w => w.id === id
+                );
+
+              setSelectedEpf(
+                selected?.epf_no || ""
+              );
+
+            }}
+            sx={{
+              color: "#fff",
+              width: 250
+            }}
+          >
+
+            <MenuItem value="">
+              Select Worker
+            </MenuItem>
+
+            {workers.map((w) => (
+
+              <MenuItem
+                key={w.id}
+                value={w.id}
+              >
+                {w.name}
+              </MenuItem>
+
+            ))}
+
+          </Select>
+
+        </FormControl>
+
+      </Grid>
+    )}
+
+    {/* INGURUPATHTHALA ONLY - EPF */}
+    {plantation === "ingurupaththala" && (
+      <Grid item xs={12} md={2}>
+
+        <TextField
+          label="EPF"
+          fullWidth
+          value={selectedEpf}
+          InputProps={{
+            readOnly: true
+          }}
+          sx={{
+            input: {
+              color: "#fff"
+            },
+            label: {
+              color: "#aaa"
+            }
+          }}
+        />
+
+      </Grid>
+    )}
+
+    {/* DATE */}
+    <Grid
+      item
+      xs={12}
+      md={plantation === "nirmalani" ? 4 : 2}
+    >
+
+      <TextField
+        type="date"
+        fullWidth
+        value={date}
+        onChange={(e) =>
+          setDate(e.target.value)
+        }
         sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 5,
-          background: "rgba(255,255,255,0.05)"
+          input: {
+            color: "#fff"
+          }
+        }}
+      />
+
+    </Grid>
+
+    {/* KG */}
+    <Grid
+      item
+      xs={12}
+      md={plantation === "nirmalani" ? 4 : 2}
+    >
+
+      <TextField
+        label="KG"
+        type="number"
+        fullWidth
+        value={kg}
+        onChange={(e) =>
+          setKg(e.target.value)
+        }
+        sx={{
+          input: {
+            color: "#fff"
+          },
+          label: {
+            color: "#aaa"
+          }
+        }}
+      />
+
+    </Grid>
+
+    {/* SAVE BUTTON */}
+    <Grid
+      item
+      xs={12}
+      md={plantation === "nirmalani" ? 4 : 3}
+    >
+
+      <Button
+        fullWidth
+        onClick={saveTeaCollection}
+        sx={{
+          height: "100%",
+          background:
+            "linear-gradient(135deg,#22c55e,#4ade80)",
+          color: "#000",
+          borderRadius: 3,
+          fontWeight: "bold"
         }}
       >
+        Save
+      </Button>
 
-        <Grid container spacing={2}>
+    </Grid>
 
-          {/* WORKER */}
-          <Grid item xs={12} md={3}>
-
-            <FormControl fullWidth>
-
-              <InputLabel
-                sx={{ color: "#aaa" }}
-              >
-                Worker
-              </InputLabel>
-
-              <Select
-                value={workerId}
-                onChange={(e) => {
-
-                  const id = e.target.value;
-
-                  setWorkerId(id);
-
-                  const selected =
-                    workers.find(
-                      w => w.id === id
-                    );
-
-                  setSelectedEpf(
-                    selected?.epf_no || ""
-                  );
-                }}
-                sx={{
-                  color: "#fff",
-                  width: 250
-                }}
-              >
-
-                <MenuItem value="">
-                  Select Worker
-                </MenuItem>
-
-                {workers.map((w) => (
-
-                  <MenuItem
-                    key={w.id}
-                    value={w.id}
-                  >
-                    {w.name}
-                  </MenuItem>
-                ))}
-
-              </Select>
-
-            </FormControl>
-
-          </Grid>
-
-          {/* EPF */}
-          <Grid item xs={12} md={2}>
-
-            <TextField
-              label="EPF"
-              fullWidth
-              value={selectedEpf}
-              InputProps={{
-                readOnly: true
-              }}
-              sx={{
-                input: {
-                  color: "#fff"
-                },
-                label: {
-                  color: "#aaa"
-                }
-              }}
-            />
-
-          </Grid>
-
-          {/* DATE */}
-          <Grid item xs={12} md={2}>
-
-            <TextField
-              type="date"
-              fullWidth
-              value={date}
-              onChange={(e) =>
-                setDate(e.target.value)
-              }
-              sx={{
-                input: {
-                  color: "#fff"
-                }
-              }}
-            />
-
-          </Grid>
-
-          {/* KG */}
-          <Grid item xs={12} md={2}>
-
-            <TextField
-              label="KG"
-              type="number"
-              fullWidth
-              value={kg}
-              onChange={(e) =>
-                setKg(e.target.value)
-              }
-              sx={{
-                input: {
-                  color: "#fff"
-                },
-                label: {
-                  color: "#aaa"
-                }
-              }}
-            />
-
-          </Grid>
-
-          {/* BUTTON */}
-          <Grid item xs={12} md={3}>
-
-            <Button
-              fullWidth
-              onClick={saveTeaCollection}
-              sx={{
-                height: "100%",
-                background:
-                  "linear-gradient(135deg,#22c55e,#4ade80)",
-                color: "#000",
-                borderRadius: 3,
-                fontWeight: "bold"
-              }}
-            >
-              Save
-            </Button>
-
-          </Grid>
-
-        </Grid>
-
-      </Paper>
+  </Grid>
+</Paper>
 
       {plantation === "ingurupaththala" && (
         <>
