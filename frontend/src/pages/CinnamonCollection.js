@@ -44,12 +44,28 @@ export default function CinnamonCollection({
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
 
+  // CINNAMON WAREHOUSE
+const [warehouseData, setWarehouseData] = useState([]);
+
+const [warehouseWorkerId, setWarehouseWorkerId] = useState("");
+const [warehouseDate, setWarehouseDate] = useState("");
+const [warehouseWeight, setWarehouseWeight] = useState("");
+const [warehouseBundles, setWarehouseBundles] = useState("");
+const [warehouseSticksPerBundle, setWarehouseSticksPerBundle] = useState("");
+
+const [editingWarehouseId, setEditingWarehouseId] = useState(null);
+const [editWarehouseDate, setEditWarehouseDate] = useState("");
+const [editWarehouseWeight, setEditWarehouseWeight] = useState("");
+const [editWarehouseBundles, setEditWarehouseBundles] = useState("");
+const [editWarehouseSticksPerBundle, setEditWarehouseSticksPerBundle] = useState("");
+
   useEffect(() => {
 
-    fetchWorkers();
-    fetchData();
+  fetchWorkers();
+  fetchData();
+  fetchWarehouseData();
 
-  }, [plantation]);
+}, [plantation]);
 
 // FETCH CINNAMON WORKERS
 const fetchWorkers = async () => {
@@ -193,7 +209,134 @@ const deleteWorker = async (id) => {
     setData(res.data);
   };
 
+// ================= CINNAMON WAREHOUSE =================
 
+// FETCH WAREHOUSE DATA
+const fetchWarehouseData = async () => {
+  try {
+    const res = await axios.get(
+      `${API}/cinnamon-warehouse?plantation=${plantation}`
+    );
+
+    setWarehouseData(res.data || []);
+
+  } catch (err) {
+    console.error(
+      "Cinnamon Warehouse Load Error:",
+      err.response?.data || err
+    );
+  }
+};
+
+
+// SAVE WAREHOUSE
+const saveWarehouse = async () => {
+
+  if (!warehouseWorkerId || !warehouseDate) {
+    alert("Please select worker and date");
+    return;
+  }
+
+  try {
+
+    await axios.post(
+      `${API}/cinnamon-warehouse`,
+      {
+        worker_id: warehouseWorkerId,
+        plantation,
+        transaction_date: warehouseDate,
+        weight: warehouseWeight || 0,
+        bundles: warehouseBundles || 0,
+        sticks_per_bundle: warehouseSticksPerBundle || 0
+      }
+    );
+
+    alert("✅ Cinnamon Warehouse Saved");
+
+    setWarehouseWorkerId("");
+    setWarehouseDate("");
+    setWarehouseWeight("");
+    setWarehouseBundles("");
+    setWarehouseSticksPerBundle("");
+
+    fetchWarehouseData();
+
+  } catch (err) {
+
+    console.error(
+      "Cinnamon Warehouse Save Error:",
+      err.response?.data || err
+    );
+
+    alert(
+      err.response?.data?.message ||
+      "Error saving warehouse entry"
+    );
+  }
+};
+
+
+// DELETE WAREHOUSE
+const deleteWarehouse = async (id) => {
+
+  if (!window.confirm("Delete warehouse entry?")) {
+    return;
+  }
+
+  try {
+
+    await axios.delete(
+      `${API}/cinnamon-warehouse/${id}`
+    );
+
+    alert("Deleted");
+
+    fetchWarehouseData();
+
+  } catch (err) {
+
+    console.error(
+      "Cinnamon Warehouse Delete Error:",
+      err.response?.data || err
+    );
+
+    alert("Delete failed");
+  }
+};
+
+
+// UPDATE WAREHOUSE
+const updateWarehouse = async (id) => {
+
+  try {
+
+    await axios.put(
+      `${API}/cinnamon-warehouse/${id}`,
+      {
+        transaction_date: editWarehouseDate,
+        weight: editWarehouseWeight || 0,
+        bundles: editWarehouseBundles || 0,
+        sticks_per_bundle:
+          editWarehouseSticksPerBundle || 0
+      }
+    );
+
+    alert("✅ Warehouse Updated");
+
+    setEditingWarehouseId(null);
+
+    fetchWarehouseData();
+
+  } catch (err) {
+
+    console.error(
+      "Cinnamon Warehouse Update Error:",
+      err.response?.data || err
+    );
+
+    alert("Update failed");
+  }
+};
 
   // SAVE CINNAMON COLLECTION
 const saveCinnamonCollection = async () => {
@@ -1263,6 +1406,481 @@ const updateSticks = async (id) => {
               </TableCell>
 
             </TableRow>
+
+          </TableBody>
+
+        </Table>
+
+      </Paper>
+
+      {/* ================= CINNAMON WAREHOUSE ================= */}
+
+      <Paper
+        sx={{
+          p: 3,
+          mt: 4,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 3,
+            color: "#fff",
+            fontWeight: "bold"
+          }}
+        >
+          🏭 Cinnamon Warehouse
+        </Typography>
+
+        <Grid container spacing={2}>
+
+          {/* WORKER */}
+          <Grid item xs={12} md={3}>
+
+            <FormControl fullWidth>
+
+              <InputLabel sx={{ color: "#aaa" }}>
+                Worker
+              </InputLabel>
+
+              <Select
+                value={warehouseWorkerId}
+                onChange={(e) =>
+                  setWarehouseWorkerId(e.target.value)
+                }
+                sx={{
+                  color: "#fff"
+                }}
+              >
+
+                <MenuItem value="">
+                  Select Worker
+                </MenuItem>
+
+                {workers.map((worker) => (
+
+                  <MenuItem
+                    key={worker.id}
+                    value={worker.id}
+                  >
+                    {worker.name}
+                  </MenuItem>
+
+                ))}
+
+              </Select>
+
+            </FormControl>
+
+          </Grid>
+
+
+          {/* DATE */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              type="date"
+              fullWidth
+              value={warehouseDate}
+              onChange={(e) =>
+                setWarehouseDate(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                }
+              }}
+            />
+
+          </Grid>
+
+
+          {/* WEIGHT */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              label="Weight"
+              type="number"
+              fullWidth
+              value={warehouseWeight}
+              onChange={(e) =>
+                setWarehouseWeight(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                },
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
+
+          </Grid>
+
+
+          {/* BUNDLES */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              label="Bundles"
+              type="number"
+              fullWidth
+              value={warehouseBundles}
+              onChange={(e) =>
+                setWarehouseBundles(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                },
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
+
+          </Grid>
+
+
+          {/* STICKS PER BUNDLE */}
+          <Grid item xs={12} md={2}>
+
+            <TextField
+              label="Sticks / Bundle"
+              type="number"
+              fullWidth
+              value={warehouseSticksPerBundle}
+              onChange={(e) =>
+                setWarehouseSticksPerBundle(e.target.value)
+              }
+              sx={{
+                input: {
+                  color: "#fff"
+                },
+                label: {
+                  color: "#aaa"
+                }
+              }}
+            />
+
+          </Grid>
+
+
+          {/* SAVE */}
+          <Grid item xs={12} md={1}>
+
+            <Button
+              fullWidth
+              onClick={saveWarehouse}
+              sx={{
+                height: "100%",
+                minHeight: "56px",
+                background:
+                  "linear-gradient(135deg,#22c55e,#4ade80)",
+                color: "#000",
+                borderRadius: 3,
+                fontWeight: "bold"
+              }}
+            >
+              Save
+            </Button>
+
+          </Grid>
+
+        </Grid>
+
+      </Paper>
+
+      {/* ================= WAREHOUSE RECORDS ================= */}
+
+      <Paper
+        sx={{
+          p: 2,
+          mt: 3,
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.05)"
+        }}
+      >
+
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            color: "#fff",
+            fontWeight: "bold"
+          }}
+        >
+          📦 Warehouse Records
+        </Typography>
+
+        <Table>
+
+          <TableHead>
+
+            <TableRow>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                #
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Worker
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Date
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Weight
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Bundles
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Sticks / Bundle
+              </TableCell>
+
+              <TableCell sx={{ color: "#aaa" }}>
+                Actions
+              </TableCell>
+
+            </TableRow>
+
+          </TableHead>
+
+
+          <TableBody>
+
+            {warehouseData.map((row, index) => (
+
+              <TableRow key={row.id}>
+
+                {/* NUMBER */}
+                <TableCell sx={{ color: "#fff" }}>
+                  {index + 1}
+                </TableCell>
+
+
+                {/* WORKER */}
+                <TableCell sx={{ color: "#fff" }}>
+                  {row.name}
+                </TableCell>
+
+
+                {/* DATE */}
+                <TableCell sx={{ color: "#fff" }}>
+
+                  {editingWarehouseId === row.id ? (
+
+                    <TextField
+                      type="date"
+                      size="small"
+                      value={editWarehouseDate}
+                      onChange={(e) =>
+                        setEditWarehouseDate(e.target.value)
+                      }
+                      sx={{
+                        input: {
+                          color: "#fff"
+                        }
+                      }}
+                    />
+
+                  ) : (
+
+                    new Date(row.transaction_date)
+                      .toISOString()
+                      .split("T")[0]
+
+                  )}
+
+                </TableCell>
+
+
+                {/* WEIGHT */}
+                <TableCell sx={{ color: "#fff" }}>
+
+                  {editingWarehouseId === row.id ? (
+
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={editWarehouseWeight}
+                      onChange={(e) =>
+                        setEditWarehouseWeight(e.target.value)
+                      }
+                      sx={{
+                        width: 100,
+                        input: {
+                          color: "#fff"
+                        }
+                      }}
+                    />
+
+                  ) : (
+
+                    row.weight
+
+                  )}
+
+                </TableCell>
+
+
+                {/* BUNDLES */}
+                <TableCell sx={{ color: "#fff" }}>
+
+                  {editingWarehouseId === row.id ? (
+
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={editWarehouseBundles}
+                      onChange={(e) =>
+                        setEditWarehouseBundles(e.target.value)
+                      }
+                      sx={{
+                        width: 100,
+                        input: {
+                          color: "#fff"
+                        }
+                      }}
+                    />
+
+                  ) : (
+
+                    row.bundles
+
+                  )}
+
+                </TableCell>
+
+
+                {/* STICKS PER BUNDLE */}
+                <TableCell sx={{ color: "#22c55e" }}>
+
+                  {editingWarehouseId === row.id ? (
+
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={editWarehouseSticksPerBundle}
+                      onChange={(e) =>
+                        setEditWarehouseSticksPerBundle(
+                          e.target.value
+                        )
+                      }
+                      sx={{
+                        width: 120,
+                        input: {
+                          color: "#fff"
+                        }
+                      }}
+                    />
+
+                  ) : (
+
+                    row.sticks_per_bundle
+
+                  )}
+
+                </TableCell>
+
+
+                {/* ACTIONS */}
+                <TableCell>
+
+                  {editingWarehouseId === row.id ? (
+
+                    <>
+                      <Button
+                        onClick={() =>
+                          updateWarehouse(row.id)
+                        }
+                        sx={{
+                          background: "#22c55e",
+                          color: "#000",
+                          mr: 1
+                        }}
+                      >
+                        Save
+                      </Button>
+
+                      <Button
+                        onClick={() => {
+                          setEditingWarehouseId(null);
+                        }}
+                        sx={{
+                          background: "#94a3b8",
+                          color: "#000",
+                          mr: 1
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+
+                  ) : (
+
+                    <Button
+                      onClick={() => {
+
+                        setEditingWarehouseId(row.id);
+
+                        setEditWarehouseDate(
+                          new Date(row.transaction_date)
+                            .toISOString()
+                            .split("T")[0]
+                        );
+
+                        setEditWarehouseWeight(
+                          row.weight || ""
+                        );
+
+                        setEditWarehouseBundles(
+                          row.bundles || ""
+                        );
+
+                        setEditWarehouseSticksPerBundle(
+                          row.sticks_per_bundle || ""
+                        );
+
+                      }}
+                      sx={{
+                        background: "#facc15",
+                        color: "#000",
+                        mr: 1
+                      }}
+                    >
+                      Edit
+                    </Button>
+
+                  )}
+
+
+                  <Button
+                    onClick={() =>
+                      deleteWarehouse(row.id)
+                    }
+                    sx={{
+                      background: "#ef4444",
+                      color: "#fff"
+                    }}
+                  >
+                    Delete
+                  </Button>
+
+                </TableCell>
+
+              </TableRow>
+
+            ))}
 
           </TableBody>
 

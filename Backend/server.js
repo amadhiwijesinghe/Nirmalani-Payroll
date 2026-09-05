@@ -2579,6 +2579,192 @@ app.delete("/cinnamon-collection/:id", (req, res) => {
 
 });
 
+// ================= CINNAMON WAREHOUSE =================
+
+// GET CINNAMON WAREHOUSE
+app.get("/cinnamon-warehouse", (req, res) => {
+
+  const { plantation } = req.query;
+
+  const sql = `
+    SELECT
+      cw.id,
+      cw.worker_id,
+      cw.plantation,
+      cw.transaction_date,
+      cw.weight,
+      cw.bundles,
+      cw.sticks_per_bundle,
+      cworker.name
+    FROM cinnamon_warehouse cw
+    JOIN cinnamon_workers cworker
+      ON cworker.id = cw.worker_id
+    WHERE cw.plantation = ?
+    ORDER BY cw.transaction_date DESC, cworker.name
+  `;
+
+  db.query(sql, [plantation], (err, result) => {
+
+    if (err) {
+      console.log("Cinnamon Warehouse Load Error:", err);
+      return res.status(500).json(err);
+    }
+
+    res.json(result);
+
+  });
+
+});
+
+
+// ADD CINNAMON WAREHOUSE
+app.post("/cinnamon-warehouse", (req, res) => {
+
+  const {
+    worker_id,
+    plantation,
+    transaction_date,
+    weight,
+    bundles,
+    sticks_per_bundle
+  } = req.body;
+
+  if (
+    !worker_id ||
+    !plantation ||
+    !transaction_date
+  ) {
+    return res.status(400).json({
+      message: "Worker, plantation and date are required"
+    });
+  }
+
+  const sql = `
+    INSERT INTO cinnamon_warehouse
+    (
+      worker_id,
+      plantation,
+      transaction_date,
+      weight,
+      bundles,
+      sticks_per_bundle
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      worker_id,
+      plantation,
+      transaction_date,
+      weight || 0,
+      bundles || 0,
+      sticks_per_bundle || 0
+    ],
+    (err, result) => {
+
+      if (err) {
+
+        console.log("Cinnamon Warehouse Add Error:", err);
+
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(400).json({
+            message:
+              "This warehouse entry already exists for this worker and date."
+          });
+        }
+
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        id: result.insertId,
+        message: "Cinnamon Warehouse Saved"
+      });
+
+    }
+  );
+
+});
+
+
+// UPDATE CINNAMON WAREHOUSE
+app.put("/cinnamon-warehouse/:id", (req, res) => {
+
+  const {
+    transaction_date,
+    weight,
+    bundles,
+    sticks_per_bundle
+  } = req.body;
+
+  const sql = `
+    UPDATE cinnamon_warehouse
+    SET
+      transaction_date = ?,
+      weight = ?,
+      bundles = ?,
+      sticks_per_bundle = ?
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      transaction_date,
+      weight || 0,
+      bundles || 0,
+      sticks_per_bundle || 0,
+      req.params.id
+    ],
+    (err, result) => {
+
+      if (err) {
+        console.log("Cinnamon Warehouse Update Error:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Cinnamon Warehouse updated"
+      });
+
+    }
+  );
+
+});
+
+
+// DELETE CINNAMON WAREHOUSE
+app.delete("/cinnamon-warehouse/:id", (req, res) => {
+
+  const sql = `
+    DELETE FROM cinnamon_warehouse
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [req.params.id],
+    (err, result) => {
+
+      if (err) {
+        console.log("Cinnamon Warehouse Delete Error:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Cinnamon Warehouse deleted"
+      });
+
+    }
+  );
+
+});
+
 // කෝට උර
 // ADD KOTA URA
 app.post("/cinnamon-kota-ura", (req, res) => {
