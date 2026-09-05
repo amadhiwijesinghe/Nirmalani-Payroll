@@ -308,20 +308,6 @@ const updateSticks = async (id) => {
       0
     );
 
-  const totalKota =
-    kotaData.reduce(
-        (sum,row)=>
-        sum + Number(row.quantity || 0),
-        0
-    );
-
-    const totalDeposit =
-    depositData.reduce(
-        (sum,row)=>
-        sum + Number(row.quantity || 0),
-        0
-    );
-
         // PRINT MONTLY AND WEEKLY REPORTS
     const printMonthlyReport = () => {
 
@@ -341,7 +327,7 @@ const updateSticks = async (id) => {
         <tr>
             <td>${row.name}</td>
             <td>${row.date.split("T")[0]}</td>
-            <td>${row.kg}</td>
+            <td>${row.sticks}</td>
         </tr>
         `;
     }).join("");
@@ -351,32 +337,12 @@ const updateSticks = async (id) => {
             rows.map(row => row.worker_id)
         ).size;
 
-    const monthlyKota =
-        kotaData.filter(
-            row =>
-            row.date.substring(0,7) === filterMonth
-        );
-
-        const kotaCount =
-        monthlyKota.length;
-
-    const monthlyDeposit =
-        depositData.filter(
-            row =>
-            row.date.substring(0,7) === filterMonth
-        );
-
-        const depositCount =
-        monthlyDeposit.length;
-
     const html = `
         <html>
 
         <head>
 
-            <title>
-            Tea Collection Report
-            </title>
+            <title>Cinnamon Collection Report</title>
 
             <style>
 
@@ -446,7 +412,7 @@ const updateSticks = async (id) => {
                 <tr>
                 <th>Name</th>
                 <th>Date</th>
-                <th>KG</th>
+                <th>Sticks</th>
                 </tr>
 
             </thead>
@@ -457,7 +423,7 @@ const updateSticks = async (id) => {
 
                 <tr>
                 <td colspan="3">
-                    <b>TOTAL KG</b>
+                    <b>TOTAL STICKS</b>
                 </td>
 
                 <td>
@@ -475,22 +441,12 @@ const updateSticks = async (id) => {
 
             <p>
             රැස් කරගත් මුළු කුරුඳු ප්‍රමාණය:
-            <b>${total.toFixed(2)} KG</b>
+            <b>${total.toFixed(2)} sticks</b>
             </p>
 
             <p>
             වැඩ කල සේවකයන් ගණන:
             <b>${workerCount}</b>
-            </p>
-
-            <p>
-            මුළු කෝට උර:
-            <b>${kotaCount}</b>
-            </p>
-
-            <p>
-            මුළු තැන්පත් කිරීම්:
-            <b>${depositCount}</b>
             </p>
 
             <script>
@@ -550,7 +506,7 @@ const updateSticks = async (id) => {
             .toISOString()
             .split("T")[0]}
         </td>
-        <td>${row.kg}</td>
+        <td>${row.sticks}</td>
       </tr>
     `;
   }).join("");
@@ -560,46 +516,12 @@ const updateSticks = async (id) => {
         rows.map(row => row.worker_id)
     ).size;
 
-  const weeklyKota =
-    kotaData.filter(row => {
-
-        const d =
-        new Date(row.date);
-
-        return (
-        d >= new Date(weekStart) &&
-        d <= new Date(weekEnd)
-        );
-
-    });
-
-  const kotaCount =
-    weeklyKota.length;
-
-  const weeklyDeposit =
-    depositData.filter(row => {
-
-        const d =
-        new Date(row.date);
-
-        return (
-        d >= new Date(weekStart) &&
-        d <= new Date(weekEnd)
-        );
-
-    });
-
-  const depositCount =
-    weeklyDeposit.length;
-
   const html = `
     <html>
 
       <head>
 
-        <title>
-          Weekly Tea Report
-        </title>
+        <title>Weekly Cinnamon Collection Report</title>
 
         <style>
 
@@ -659,7 +581,7 @@ const updateSticks = async (id) => {
             <tr>
               <th>Name</th>
               <th>Date</th>
-              <th>KG Plucked</th>
+              <th>Sticks Plucked</th>
             </tr>
 
           </thead>
@@ -671,7 +593,7 @@ const updateSticks = async (id) => {
             <tr>
 
               <td colspan="3">
-                <b>Total KG</b>
+                <b>Total Sticks</b>
               </td>
 
               <td>
@@ -690,22 +612,12 @@ const updateSticks = async (id) => {
 
         <p>
         රැස් කරගත් මුළු කුරුඳු ප්‍රමාණය:
-        <b>${total.toFixed(2)} KG</b>
+        <b>${total.toFixed(2)} sticks</b>
         </p>
 
         <p>
         වැඩ කල සේවකයන් ගණන:
         <b>${workerCount}</b>
-        </p>
-
-        <p>
-        මුළු කෝට උර:
-        <b>${kotaCount}</b>
-        </p>
-
-        <p>
-        මුළු තැන්පත් කිරීම්:
-        <b>${depositCount}</b>
         </p>
 
         <script>
