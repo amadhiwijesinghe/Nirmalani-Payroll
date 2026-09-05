@@ -1255,13 +1255,12 @@ const saveTeaCollection = async () => {
 
             <TableRow>
 
-              <TableCell sx={{ color: "#aaa" }}>
-                Name
-              </TableCell>
-
-              <TableCell sx={{ color: "#aaa" }}>
-                EPF
-              </TableCell>
+              {plantation === "ingurupaththala" && (
+                <>
+                  <TableCell>Name</TableCell>
+                  <TableCell>EPF</TableCell>
+                </>
+              )}
 
               <TableCell sx={{ color: "#aaa" }}>
                 Date
@@ -1292,17 +1291,12 @@ const saveTeaCollection = async () => {
 
                 <TableRow key={row.id}>
 
-                  <TableCell
-                    sx={{ color: "#fff" }}
-                  >
-                    {row.name}
-                  </TableCell>
-
-                  <TableCell
-                    sx={{ color: "#fff" }}
-                  >
-                    {row.epf_no}
-                  </TableCell>
+                  {plantation === "ingurupaththala" && (
+                    <>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.epf_no}</TableCell>
+                    </>
+                  )}
 
                   <TableCell
                     sx={{ color: "#fff" }}
