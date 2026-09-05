@@ -2444,7 +2444,17 @@ app.post("/cinnamon-collection", (req, res) => {
     (err, result) => {
 
       if (err) {
+
         console.log("Cinnamon Collection Add Error:", err);
+
+        if (err.code === "ER_DUP_ENTRY") {
+
+          return res.status(400).json({
+            message: "This worker already has a collection entry for this date. Please edit the existing entry."
+          });
+
+        }
+
         return res.status(500).json(err);
       }
 
