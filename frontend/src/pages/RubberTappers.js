@@ -28,6 +28,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   Divider,
   Stack
 } from "@mui/material";
@@ -71,6 +72,7 @@ export default function RubberTappers({
   const [tableSearch, setTableSearch] = useState("");
   const [allowanceWorker, setAllowanceWorker] = useState("");
   const [allowanceAmount, setAllowanceAmount] = useState("");
+  const [cashNoteWorker, setCashNoteWorker] = useState(null);
   useEffect(() => {
 
     fetchWorkers();
@@ -314,6 +316,42 @@ const calculate = (
   };
 };
 
+// ================= CASH NOTE BREAKDOWN =================
+
+const calculateNotes = (amount) => {
+
+  let remaining = Math.floor(Number(amount || 0));
+
+  const notes = {
+    5000: Math.floor(remaining / 5000)
+  };
+
+  remaining = remaining % 5000;
+
+  notes[1000] = Math.floor(remaining / 1000);
+  remaining = remaining % 1000;
+
+  notes[500] = Math.floor(remaining / 500);
+  remaining = remaining % 500;
+
+  notes[100] = Math.floor(remaining / 100);
+  remaining = remaining % 100;
+
+  notes[50] = Math.floor(remaining / 50);
+  remaining = remaining % 50;
+
+  notes[20] = Math.floor(remaining / 20);
+  remaining = remaining % 20;
+
+  notes[10] = Math.floor(remaining / 10);
+  remaining = remaining % 10;
+
+  return {
+    ...notes,
+    remainder: remaining
+  };
+};
+
 const calculateKG = (
   literValue,
   brcValue
@@ -499,6 +537,8 @@ const totals = groupedData
         (sum, row) => sum + Number(row.netSalary || 0),
         0
     );
+
+    const overallCashNotes = calculateNotes(totalRequired);
 
   const gross = Number(selectedPayroll?.calculated_total || 0);
 
@@ -1545,6 +1585,110 @@ const printMonthlyReport = () => {
               />
 
             </Box>
+        {/* ================= OVERALL CASH NOTES SUMMARY ================= */}
+
+        <ResponsiveCard>
+
+        <Typography
+          sx={{
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: 18,
+            mb: 2
+          }}
+        >
+          💵 Cash Notes Summary
+        </Typography>
+
+        <Typography
+          sx={{
+            color: "#22c55e",
+            fontWeight: 800,
+            fontSize: 20,
+            mb: 2
+          }}
+        >
+          Total Cash: Rs. {Number(totalRequired).toFixed(2)}
+        </Typography>
+
+        {[
+          5000,
+          1000,
+          500,
+          100,
+          50,
+          20,
+          10
+        ].map((denomination) => {
+
+          const count = overallCashNotes[denomination];
+
+          if (count === 0) return null;
+
+          return (
+            <Box
+              key={denomination}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                p: 1.2,
+                mb: 1,
+                borderRadius: 2,
+                background: "rgba(255,255,255,0.06)"
+              }}
+            >
+
+              <Typography sx={{ color: "#fff", fontWeight: 600 }}>
+                Rs. {denomination}
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  color: "#fbbf24"
+                }}
+              >
+                × {count}
+              </Typography>
+
+              <Typography sx={{ color: "#fff", fontWeight: 600 }}>
+                Rs. {(denomination * count).toFixed(2)}
+              </Typography>
+
+            </Box>
+          );
+        })}
+
+        {overallCashNotes.remainder > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mt: 2,
+              p: 1.2,
+              borderRadius: 2,
+              background: "rgba(239,68,68,0.12)"
+            }}
+          >
+
+            <Typography sx={{ color: "#fff", fontWeight: 700 }}>
+              Remaining Amount
+            </Typography>
+
+            <Typography
+              sx={{
+                fontWeight: 800,
+                color: "#f87171"
+              }}
+            >
+              Rs. {overallCashNotes.remainder.toFixed(2)}
+            </Typography>
+
+          </Box>
+        )}
+
+      </ResponsiveCard>
         <ResponsiveTable>
         <Table>
           <TableHead>
@@ -1618,6 +1762,19 @@ const printMonthlyReport = () => {
                     }}
                 >
                     View
+                </MobileButton>
+
+                <MobileButton
+                  color="warning"
+                  fullWidth={false}
+                  onClick={() =>
+                    setCashNoteWorker({
+                      name: row.name,
+                      amount: row.netSalary
+                    })
+                  }
+                >
+                  💵 Cash
                 </MobileButton>
 
                 </TableCell>
@@ -1714,6 +1871,177 @@ const printMonthlyReport = () => {
           maxWidth="sm"
           fullWidth
       >
+
+        {/* ================= CASH NOTE BREAKDOWN DIALOG ================= */}
+
+        <Dialog
+          open={Boolean(cashNoteWorker)}
+          onClose={() => setCashNoteWorker(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>
+            💵 Cash Breakdown
+          </DialogTitle>
+
+          <DialogContent>
+
+            {cashNoteWorker && (() => {
+
+              const notes = calculateNotes(cashNoteWorker.amount);
+
+              const denominations = [
+                5000,
+                1000,
+                500,
+                100,
+                50,
+                20,
+                10
+              ];
+
+              return (
+                <Box>
+
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: 18,
+                      mb: 1
+                    }}
+                  >
+                    {cashNoteWorker.name}
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      color: "#22c55e",
+                      fontWeight: 800,
+                      fontSize: 20,
+                      mb: 2
+                    }}
+                  >
+                    Rs. {Number(cashNoteWorker.amount).toFixed(2)}
+                  </Typography>
+
+                  {denominations.map((denomination) => {
+
+                    const count = notes[denomination];
+
+                    if (count === 0) return null;
+
+                    return (
+                      <Box
+                        key={denomination}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          p: 1.2,
+                          mb: 1,
+                          borderRadius: 2,
+                          background: "rgba(255,255,255,0.06)"
+                        }}
+                      >
+
+                        <Typography sx={{ fontWeight: 600 }}>
+                          Rs. {denomination}
+                        </Typography>
+
+                        <Typography
+                          sx={{
+                            fontWeight: 800,
+                            color: "#fbbf24"
+                          }}
+                        >
+                          × {count}
+                        </Typography>
+
+                        <Typography sx={{ fontWeight: 600 }}>
+                          Rs. {(denomination * count).toFixed(2)}
+                        </Typography>
+
+                      </Box>
+                    );
+                  })}
+
+                  {notes.remainder > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mt: 2,
+                        p: 1.2,
+                        borderRadius: 2,
+                        background: "rgba(239,68,68,0.12)"
+                      }}
+                    >
+
+                      <Typography sx={{ fontWeight: 700 }}>
+                        Remaining Amount
+                      </Typography>
+
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: "#f87171"
+                        }}
+                      >
+                        Rs. {notes.remainder.toFixed(2)}
+                      </Typography>
+
+                    </Box>
+                  )}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mt: 2,
+                      pt: 2,
+                      borderTop: "1px solid rgba(255,255,255,0.2)"
+                    }}
+                  >
+
+                    <Typography sx={{ fontWeight: 800 }}>
+                      Cash Notes Total
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        fontWeight: 800,
+                        color: "#22c55e"
+                      }}
+                    >
+                      Rs.{" "}
+                      {(
+                        Number(cashNoteWorker.amount) -
+                        notes.remainder
+                      ).toFixed(2)}
+                    </Typography>
+
+                  </Box>
+
+                </Box>
+              );
+
+            })()}
+
+          </DialogContent>
+
+          <DialogActions>
+
+    <MobileButton
+      color="secondary"
+      fullWidth={false}
+      onClick={() => setCashNoteWorker(null)}
+    >
+      Close
+    </MobileButton>
+
+  </DialogActions>
+
+</Dialog>
 
           <DialogTitle>
 
