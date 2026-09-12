@@ -11,7 +11,8 @@ import {
   MenuItem,
   Button,
   Stack,
-  Divider
+  Divider,
+  TextField
 } from "@mui/material";
 
 import PrintIcon from "@mui/icons-material/Print";
@@ -21,12 +22,19 @@ const API = "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Reports({ plantation }) {
   const [reportType, setReportType] = useState("plantation");
+  const [reportPeriod, setReportPeriod] = useState("monthly");
+
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
   const [month, setMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
 
   // =========================
   // LOAD PLANTATION PAYROLL
@@ -54,6 +62,43 @@ export default function Reports({ plantation }) {
       setLoading(false);
     }
   };
+
+  const fetchWeeklyPlantationData = async () => {
+    if (!weekStart || !weekEnd) {
+        alert("Please select week start and week end.");
+        return false;
+    }
+
+    try {
+        setWeeklyLoading(true);
+
+        const res = await axios.get(
+        `${API}/plantation-weekly-report`,
+        {
+            params: {
+            weekStart,
+            weekEnd,
+            plantation
+            }
+        }
+        );
+
+        setWeeklyData(res.data || []);
+
+        return true;
+    } catch (error) {
+        console.error(
+        "Error loading weekly plantation report:",
+        error
+        );
+
+        alert("Error loading weekly plantation report.");
+
+        return false;
+    } finally {
+        setWeeklyLoading(false);
+    }
+    };
 
   // =========================
   // PAYROLL CALCULATION
@@ -565,6 +610,27 @@ export default function Reports({ plantation }) {
             </FormControl>
 
             <FormControl fullWidth>
+                <InputLabel>Report Period</InputLabel>
+
+                <Select
+                    value={reportPeriod}
+                    label="Report Period"
+                    onChange={(e) =>
+                    setReportPeriod(e.target.value)
+                    }
+                >
+                    <MenuItem value="monthly">
+                    Monthly
+                    </MenuItem>
+
+                    <MenuItem value="weekly">
+                    Weekly
+                    </MenuItem>
+                </Select>
+                </FormControl>
+
+            {reportPeriod === "monthly" && (
+                <FormControl fullWidth>
 
               <InputLabel>
                 Month
@@ -612,6 +678,37 @@ export default function Reports({ plantation }) {
               </Select>
 
             </FormControl>
+            )}
+
+            {reportPeriod === "weekly" && (
+                <>
+                    <TextField
+                    fullWidth
+                    label="Week Start"
+                    type="date"
+                    value={weekStart}
+                    onChange={(e) =>
+                        setWeekStart(e.target.value)
+                    }
+                    InputLabelProps={{
+                        shrink: true
+                    }}
+                    />
+
+                    <TextField
+                    fullWidth
+                    label="Week End"
+                    type="date"
+                    value={weekEnd}
+                    onChange={(e) =>
+                        setWeekEnd(e.target.value)
+                    }
+                    InputLabelProps={{
+                        shrink: true
+                    }}
+                    />
+                </>
+                )}
 
           </Stack>
 
@@ -672,6 +769,27 @@ export default function Reports({ plantation }) {
           >
             Report Preview
           </Typography>
+
+          {reportPeriod === "weekly" && (
+            <Button
+                variant="contained"
+                onClick={fetchWeeklyPlantationData}
+                disabled={weeklyLoading}
+                sx={{ mb: 2 }}
+            >
+                {weeklyLoading
+                ? "Loading Weekly Data..."
+                : "Load Weekly Report"}
+            </Button>
+            )}
+
+            {reportPeriod === "weekly" && (
+                <Typography color="text.secondary">
+                    {weeklyData.length > 0
+                    ? `${weeklyData.length} attendance record(s) found.`
+                    : "Select a week and click Load Weekly Report."}
+                </Typography>
+                )}
 
           <Typography
             color="text.secondary"
