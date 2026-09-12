@@ -77,7 +77,8 @@ export default function Sidebar({
     { label: "DPL Dispatch", value:"rubberdispatch", icon: <LocalShippingIcon />},
     { label: "Income", value: "income", icon: <TrendingUpIcon />},
     { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />},
-    { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />}
+    { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />},
+    { label: "Reports", value: "reports", icon: <ReceiptIcon /> }
 
   ];
 

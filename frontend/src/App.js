@@ -28,6 +28,7 @@ import CoconutCollection from './pages/CoconutCollection';
 import PaddyCollection from './pages/PaddyCollection';
 import AttendanceRegister from "./pages/AttendanceRegister";
 import Dashboard from "./pages/Dashboard";
+import Reports from "./pages/Reports"
 
 function App() {
   const [page, setPage] = useState("dashboard");
@@ -306,6 +307,18 @@ function App() {
                   transition={{ duration: 0.4 }}
                 >
                 <FinancialDashboard plantation={plantation} />
+                </motion.div>
+              )}
+
+              {page === "reports" && (
+                <motion.div
+                  key="reports"
+                  initial={{ opacity: 0, x: 80 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -80 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Reports plantation={plantation} />
                 </motion.div>
               )}
 
