@@ -39,6 +39,14 @@ export default function Reports({ plantation }) {
   const [allWorkersData, setAllWorkersData] = useState([]);
   const [allWorkersLoading, setAllWorkersLoading] = useState(false);
 
+  const [rubberData, setRubberData] = useState([]);
+  const [rubberLoading, setRubberLoading] = useState(false);
+
+  const [rubberTemporaryRate, setRubberTemporaryRate] = useState(300);
+  const [rubberBonusRate, setRubberBonusRate] = useState(250);
+  const [rubberMinimumKg, setRubberMinimumKg] = useState(2.5);
+  const [rubberBonusStartKg, setRubberBonusStartKg] = useState(7);
+
   // =========================
   // LOAD PLANTATION PAYROLL
   // =========================
@@ -50,6 +58,10 @@ export default function Reports({ plantation }) {
 
     if (reportType === "allworkers") {
         fetchAllWorkersData();
+    }
+
+    if (reportType === "rubbertappers") {
+        fetchRubberData();
     }
     }, [plantation, reportType, month]);
 
@@ -89,8 +101,92 @@ export default function Reports({ plantation }) {
         alert("Error loading all workers report.");
     } finally {
         setAllWorkersLoading(false);
-    }
+    }const fetchRubberData = async () => {
+  try {
+    setRubberLoading(true);
+
+    const res = await axios.get(
+      `${API}/rubber-payroll-data?plantation=${plantation}`
+    );
+
+    const settingsRes = await axios.get(
+      `${API}/payroll-settings?plantation=${plantation}`
+    );
+
+    const settings = settingsRes.data || {};
+
+    setRubberTemporaryRate(
+      Number(settings.temporary_rate || 300)
+    );
+
+    setRubberBonusRate(
+      Number(settings.rubber_bonus_rate || 250)
+    );
+
+    setRubberMinimumKg(
+      Number(settings.rubber_minimum_kg || 2.5)
+    );
+
+    setRubberBonusStartKg(
+      Number(settings.rubber_bonus_start_kg || 7)
+    );
+
+    setRubberData(res.data || []);
+  } catch (error) {
+    console.error(
+      "Error loading rubber tappers payroll:",
+      error
+    );
+
+    alert("Error loading rubber tappers payroll data.");
+  } finally {
+    setRubberLoading(false);
+  }
+};
     };
+
+    const fetchRubberData = async () => {
+        try {
+            setRubberLoading(true);
+
+            const res = await axios.get(
+            `${API}/rubber-payroll-data?plantation=${plantation}`
+            );
+
+            const settingsRes = await axios.get(
+            `${API}/payroll-settings?plantation=${plantation}`
+            );
+
+            const settings = settingsRes.data || {};
+
+            setRubberTemporaryRate(
+            Number(settings.temporary_rate || 300)
+            );
+
+            setRubberBonusRate(
+            Number(settings.rubber_bonus_rate || 250)
+            );
+
+            setRubberMinimumKg(
+            Number(settings.rubber_minimum_kg || 2.5)
+            );
+
+            setRubberBonusStartKg(
+            Number(settings.rubber_bonus_start_kg || 7)
+            );
+
+            setRubberData(res.data || []);
+        } catch (error) {
+            console.error(
+            "Error loading rubber tappers payroll:",
+            error
+            );
+
+            alert("Error loading rubber tappers payroll data.");
+        } finally {
+            setRubberLoading(false);
+        }
+        };
 
   const fetchWeeklyPlantationData = async () => {
     if (!weekStart || !weekEnd) {
@@ -177,6 +273,82 @@ export default function Reports({ plantation }) {
   };
 };
 
+    const calculateRubberSalary = (row) => {
+    const kg = Number(row.kg || 0);
+    const workedDays = Number(row.worked_days || 0);
+    const rate = Number(row.rate || 0);
+    const allowance = Number(row.allowance || 0);
+    const epfEnabled = Number(row.epf_enabled || 0);
+
+    let gross = 0;
+    let bonus = 0;
+    let averageKg = 0;
+
+    // Permanent Worker
+    if (row.worker_category === "Permanent") {
+        averageKg =
+        workedDays > 0
+            ? kg / workedDays
+            : 0;
+
+        if (averageKg < rubberMinimumKg) {
+        gross = 0;
+        } else if (averageKg <= rubberBonusStartKg) {
+        gross = workedDays * rate;
+        } else {
+        bonus =
+            (averageKg - rubberBonusStartKg) *
+            rubberBonusRate;
+
+        gross =
+            (workedDays * rate) +
+            bonus;
+        }
+    }
+
+    // Temporary Worker
+    else {
+        gross =
+        kg * rubberTemporaryRate;
+    }
+
+    const epf8 = epfEnabled === 1
+        ? gross * 0.08
+        : 0;
+
+    const epf12 = epfEnabled === 1
+        ? gross * 0.12
+        : 0;
+
+    const epf20 = epfEnabled === 1
+        ? gross * 0.20
+        : 0;
+
+    const etf = epfEnabled === 1
+        ? gross * 0.03
+        : 0;
+
+    const netSalary =
+        gross +
+        allowance -
+        epf8;
+
+    return {
+        kg,
+        workedDays,
+        rate,
+        allowance,
+        averageKg,
+        bonus,
+        gross,
+        epf8,
+        epf12,
+        epf20,
+        etf,
+        netSalary
+    };
+    };
+
   // =========================
   // GROUP DATA
   // =========================
@@ -206,6 +378,43 @@ export default function Reports({ plantation }) {
         Number(a.epf_no || 0) -
         Number(b.epf_no || 0)
     );
+
+    const rubberRows = Object.values(
+  rubberData.reduce((acc, row) => {
+    const key = `${row.worker_id}-${row.month}`;
+
+    if (!acc[key]) {
+      acc[key] = {
+        worker_id: row.worker_id,
+        name: row.name,
+        month: row.month,
+        rate: Number(row.rate || 0),
+        worker_category: row.worker_category,
+        epf_no: row.epf_no,
+        epf_enabled: Number(row.epf_enabled || 0),
+        kg: 0,
+        allowance: 0,
+        worked_days: 0
+      };
+    }
+
+    acc[key].kg += Number(row.kg || 0);
+    acc[key].allowance += Number(row.allowance || 0);
+    acc[key].worked_days += Number(row.worked_days || 0);
+
+    return acc;
+  }, {})
+)
+  .filter(
+    (row) =>
+      row.month === month &&
+      row.worked_days > 0
+  )
+  .sort(
+    (a, b) =>
+      Number(a.epf_no || 0) -
+      Number(b.epf_no || 0)
+  );
 
   // =========================
   // TOTALS
@@ -242,6 +451,33 @@ export default function Reports({ plantation }) {
       allowance: 0
     }
   );
+
+  const rubberTotals = rubberRows.reduce(
+    (acc, row) => {
+        const c = calculateRubberSalary(row);
+
+        acc.kg += c.kg;
+        acc.gross += c.gross;
+        acc.allowance += c.allowance;
+        acc.epf8 += c.epf8;
+        acc.epf12 += c.epf12;
+        acc.epf20 += c.epf20;
+        acc.etf += c.etf;
+        acc.netSalary += c.netSalary;
+
+        return acc;
+    },
+    {
+        kg: 0,
+        gross: 0,
+        allowance: 0,
+        epf8: 0,
+        epf12: 0,
+        epf20: 0,
+        etf: 0,
+        netSalary: 0
+    }
+    );
 
   const weeklyTotal = weeklyData.reduce(
     (total, row) => {
@@ -568,24 +804,6 @@ const generateReportHTML = () => {
           font-weight: bold;
         }
 
-        .signatures {
-          margin-top: 45px;
-          display: flex;
-          justify-content: space-between;
-          font-size: 11px;
-        }
-
-        .signature-box {
-          width: 220px;
-          text-align: center;
-        }
-
-        .signature-line {
-          border-top: 1px solid #000;
-          margin-top: 35px;
-          padding-top: 5px;
-        }
-
       </style>
 
     </head>
@@ -709,34 +927,6 @@ const generateReportHTML = () => {
 
         Net Salary / Cash Required:
         Rs. ${totals.balance.toFixed(2)}
-
-      </div>
-
-      <div class="signatures">
-
-        <div class="signature-box">
-
-          <div class="signature-line">
-            Prepared By
-          </div>
-
-        </div>
-
-        <div class="signature-box">
-
-          <div class="signature-line">
-            Checked By
-          </div>
-
-        </div>
-
-        <div class="signature-box">
-
-          <div class="signature-line">
-            Authorized By
-          </div>
-
-        </div>
 
       </div>
 
@@ -989,6 +1179,291 @@ const generateReportHTML = () => {
             return;
         }
 
+        if (
+            reportType === "rubbertappers" &&
+            reportPeriod === "monthly"
+        ) {
+            if (rubberRows.length === 0) {
+                alert(
+                    "No rubber tappers payroll data found for this month."
+                );
+                return;
+            }
+
+            const rowsHTML = rubberRows
+                .map((row) => {
+                    const c = calculateRubberSalary(row);
+
+                    return `
+                        <tr>
+                            <td>${row.epf_no || "-"}</td>
+                            <td class="name">${row.name || "-"}</td>
+                            <td>${row.worker_category || "-"}</td>
+                            <td>${c.workedDays}</td>
+                            <td>${c.kg.toFixed(2)}</td>
+                            <td>${c.rate.toFixed(2)}</td>
+                            <td>${c.gross.toFixed(2)}</td>
+                            <td>${c.allowance.toFixed(2)}</td>
+                            <td>${c.epf8.toFixed(2)}</td>
+                            <td>${c.epf12.toFixed(2)}</td>
+                            <td>${c.epf20.toFixed(2)}</td>
+                            <td>${c.etf.toFixed(2)}</td>
+                            <td>${c.netSalary.toFixed(2)}</td>
+                        </tr>
+                    `;
+                })
+                .join("");
+
+            const html = `
+                <!DOCTYPE html>
+                <html>
+
+                <head>
+
+                    <title>
+                        ${plantationName} Rubber Tappers Payroll Report
+                    </title>
+
+                    <style>
+
+                        @page {
+                            size: A4 landscape;
+                            margin: 12mm;
+                        }
+
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            color: #111;
+                            font-size: 11px;
+                        }
+
+                        .header {
+                            text-align: center;
+                            margin-bottom: 18px;
+                        }
+
+                        .plantation-name {
+                            font-size: 21px;
+                            font-weight: bold;
+                            margin-bottom: 5px;
+                        }
+
+                        .report-title {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 18px;
+                        }
+
+                        .details {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 18px;
+                        }
+
+                        .details td {
+                            padding: 5px 8px;
+                        }
+
+                        .details td.label {
+                            font-weight: bold;
+                            width: 80px;
+                        }
+
+                        table.report {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+
+                        table.report th,
+                        table.report td {
+                            border: 1px solid #000;
+                            padding: 5px 4px;
+                            font-size: 9px;
+                            text-align: center;
+                            white-space: nowrap;
+                        }
+
+                        table.report th {
+                            font-weight: bold;
+                        }
+
+                        table.report td.name {
+                            text-align: left;
+                        }
+
+                        table.report tr.total {
+                            font-weight: bold;
+                        }
+
+                        .grand-total {
+                            margin-top: 18px;
+                            text-align: right;
+                            font-size: 15px;
+                            font-weight: bold;
+                        }
+
+
+                    </style>
+
+                </head>
+
+                <body>
+
+                    <div class="header">
+
+                        <div class="plantation-name">
+                            ${plantationName}
+                        </div>
+
+                        <div class="report-title">
+                            MONTHLY RUBBER TAPPERS PAYROLL REPORT
+                        </div>
+
+                    </div>
+
+                    <table class="details">
+
+                        <tr>
+
+                            <td class="label">
+                                Plantation
+                            </td>
+
+                            <td>
+                                ${plantationName}
+                            </td>
+
+                            <td class="label">
+                                Period
+                            </td>
+
+                            <td>
+                                ${reportMonth}
+                            </td>
+
+                            <td class="label">
+                                Generated
+                            </td>
+
+                            <td>
+                                ${new Date().toLocaleDateString("en-GB")}
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                    <table class="report">
+
+                        <thead>
+
+                            <tr>
+                                <th>EPF No</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Days</th>
+                                <th>KG</th>
+                                <th>Rate</th>
+                                <th>Gross Salary</th>
+                                <th>Allowance</th>
+                                <th>EPF 8%</th>
+                                <th>EPF 12%</th>
+                                <th>Total EPF</th>
+                                <th>ETF</th>
+                                <th>Net Salary</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${rowsHTML}
+
+                            <tr class="total">
+
+                                <td colspan="4">
+                                    TOTAL
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.kg.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    -
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.gross.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.allowance.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf8.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf12.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf20.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.etf.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.netSalary.toFixed(2)}
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="grand-total">
+
+                        Net Salary / Cash Required:
+                        Rs. ${rubberTotals.netSalary.toFixed(2)}
+
+                    </div>
+
+                </body>
+
+                </html>
+            `;
+
+            const win = window.open(
+                "",
+                "_blank"
+            );
+
+            if (!win) {
+                alert(
+                    "Please allow pop-ups to print the report."
+                );
+                return;
+            }
+
+            win.document.write(html);
+            win.document.close();
+
+            setTimeout(() => {
+                win.focus();
+                win.print();
+            }, 500);
+
+            return;
+        }
+
           if (reportType === "plantation") {
             if (rows.length === 0) {
             alert("No plantation workers payroll data found for this month.");
@@ -1111,6 +1586,294 @@ const generateReportHTML = () => {
 
             document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+            return;
+        }
+
+        if (
+            reportType === "rubbertappers" &&
+            reportPeriod === "monthly"
+        ) {
+            if (rubberRows.length === 0) {
+                alert(
+                    "No rubber tappers payroll data found for this month."
+                );
+                return;
+            }
+
+            const rowsHTML = rubberRows
+                .map((row) => {
+                    const c = calculateRubberSalary(row);
+
+                    return `
+                        <tr>
+                            <td>${row.epf_no || "-"}</td>
+                            <td class="name">${row.name || "-"}</td>
+                            <td>${row.worker_category || "-"}</td>
+                            <td>${c.workedDays}</td>
+                            <td>${c.kg.toFixed(2)}</td>
+                            <td>${c.rate.toFixed(2)}</td>
+                            <td>${c.gross.toFixed(2)}</td>
+                            <td>${c.allowance.toFixed(2)}</td>
+                            <td>${c.epf8.toFixed(2)}</td>
+                            <td>${c.epf12.toFixed(2)}</td>
+                            <td>${c.epf20.toFixed(2)}</td>
+                            <td>${c.etf.toFixed(2)}</td>
+                            <td>${c.netSalary.toFixed(2)}</td>
+                        </tr>
+                    `;
+                })
+                .join("");
+
+            const html = `
+                <!DOCTYPE html>
+                <html>
+
+                <head>
+
+                    <title>
+                        ${plantationName} Rubber Tappers Payroll Report
+                    </title>
+
+                    <style>
+
+                        @page {
+                            size: A4 landscape;
+                            margin: 12mm;
+                        }
+
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            color: #111;
+                            font-size: 11px;
+                        }
+
+                        .header {
+                            text-align: center;
+                            margin-bottom: 18px;
+                        }
+
+                        .plantation-name {
+                            font-size: 21px;
+                            font-weight: bold;
+                            margin-bottom: 5px;
+                        }
+
+                        .report-title {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 18px;
+                        }
+
+                        .details {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 18px;
+                        }
+
+                        .details td {
+                            padding: 5px 8px;
+                        }
+
+                        .details td.label {
+                            font-weight: bold;
+                            width: 80px;
+                        }
+
+                        table.report {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+
+                        table.report th,
+                        table.report td {
+                            border: 1px solid #000;
+                            padding: 5px 4px;
+                            font-size: 9px;
+                            text-align: center;
+                            white-space: nowrap;
+                        }
+
+                        table.report th {
+                            font-weight: bold;
+                        }
+
+                        table.report td.name {
+                            text-align: left;
+                        }
+
+                        table.report tr.total {
+                            font-weight: bold;
+                        }
+
+                        .grand-total {
+                            margin-top: 18px;
+                            text-align: right;
+                            font-size: 15px;
+                            font-weight: bold;
+                        }
+
+                    </style>
+
+                </head>
+
+                <body>
+
+                    <div class="header">
+
+                        <div class="plantation-name">
+                            ${plantationName}
+                        </div>
+
+                        <div class="report-title">
+                            MONTHLY RUBBER TAPPERS PAYROLL REPORT
+                        </div>
+
+                    </div>
+
+                    <table class="details">
+
+                        <tr>
+
+                            <td class="label">
+                                Plantation
+                            </td>
+
+                            <td>
+                                ${plantationName}
+                            </td>
+
+                            <td class="label">
+                                Period
+                            </td>
+
+                            <td>
+                                ${reportMonth}
+                            </td>
+
+                            <td class="label">
+                                Generated
+                            </td>
+
+                            <td>
+                                ${new Date().toLocaleDateString("en-GB")}
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                    <table class="report">
+
+                        <thead>
+
+                            <tr>
+                                <th>EPF No</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Days</th>
+                                <th>KG</th>
+                                <th>Rate</th>
+                                <th>Gross Salary</th>
+                                <th>Allowance</th>
+                                <th>EPF 8%</th>
+                                <th>EPF 12%</th>
+                                <th>Total EPF</th>
+                                <th>ETF</th>
+                                <th>Net Salary</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${rowsHTML}
+
+                            <tr class="total">
+
+                                <td colspan="4">
+                                    TOTAL
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.kg.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    -
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.gross.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.allowance.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf8.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf12.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.epf20.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.etf.toFixed(2)}
+                                </td>
+
+                                <td>
+                                    ${rubberTotals.netSalary.toFixed(2)}
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="grand-total">
+
+                        Net Salary / Cash Required:
+                        Rs. ${rubberTotals.netSalary.toFixed(2)}
+
+                    </div>
+
+                </body>
+
+                </html>
+            `;
+
+            const blob = new Blob(
+                [html],
+                { type: "text/html" }
+            );
+
+            const url =
+                URL.createObjectURL(blob);
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+
+            link.download =
+                `${plantationName} Rubber Tappers Payroll ${month}.html`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
             document.body.removeChild(link);
 
             URL.revokeObjectURL(url);
@@ -1606,25 +2369,430 @@ const generateReportHTML = () => {
         </Typography>
         )}
     </>
-    ) : reportPeriod === "monthly" ? (
+) : reportType === "rubbertappers" &&
+    reportPeriod === "monthly" ? (
+
     <>
         <Typography color="text.secondary">
-        {loading
-            ? "Loading payroll data..."
-            : `${rows.length} worker(s) found for ${reportMonth}.`}
+            {rubberLoading
+                ? "Loading rubber tappers payroll data..."
+                : `${rubberRows.length} rubber tapper(s) found for ${reportMonth}.`}
         </Typography>
 
-        {!loading && rows.length > 0 && (
-        <Typography
-            sx={{
-            mt: 2,
-            fontWeight: "bold"
-            }}
-        >
-            Net Salary: Rs.{" "}
-            {totals.balance.toFixed(2)}
-        </Typography>
+        {!rubberLoading && rubberRows.length > 0 && (
+            <Box
+                sx={{
+                    mt: 3,
+                    overflowX: "auto"
+                }}
+            >
+                <table
+                    style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        fontSize: "13px"
+                    }}
+                >
+                    <thead>
+                        <tr>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                EPF No
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Name
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Category
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Days
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                KG
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Rate
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Gross Salary
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Allowance
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                EPF 8%
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                EPF 12%
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Total EPF
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                ETF
+                            </th>
+
+                            <th
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                Net Salary
+                            </th>
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {rubberRows.map((row, index) => {
+
+                            const c =
+                                calculateRubberSalary(row);
+
+                            return (
+                                <tr
+                                    key={`${row.worker_id}-${index}`}
+                                >
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "center"
+                                        }}
+                                    >
+                                        {row.epf_no || "-"}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px"
+                                        }}
+                                    >
+                                        {row.name || "-"}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "center"
+                                        }}
+                                    >
+                                        {row.worker_category || "-"}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "center"
+                                        }}
+                                    >
+                                        {c.workedDays}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        {c.kg.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.rate.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.gross.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.allowance.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.epf8.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.epf12.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.epf20.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        Rs. {c.etf.toFixed(2)}
+                                    </td>
+
+                                    <td
+                                        style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        <strong>
+                                            Rs. {c.netSalary.toFixed(2)}
+                                        </strong>
+                                    </td>
+
+                                </tr>
+                            );
+                        })}
+
+                        <tr>
+
+                            <td
+                                colSpan={4}
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                TOTAL
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                {rubberTotals.kg.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px"
+                                }}
+                            >
+                                -
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.gross.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.allowance.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.epf8.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.epf12.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.epf20.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.etf.toFixed(2)}
+                            </td>
+
+                            <td
+                                style={{
+                                    border: "1px solid #ccc",
+                                    padding: "8px",
+                                    textAlign: "right",
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Rs. {rubberTotals.netSalary.toFixed(2)}
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+                </table>
+            </Box>
         )}
+
+        {!rubberLoading &&
+            rubberRows.length > 0 && (
+                <Typography
+                    sx={{
+                        mt: 3,
+                        fontWeight: "bold",
+                        fontSize: "18px"
+                    }}
+                >
+                    Net Salary: Rs.{" "}
+                    {rubberTotals.netSalary.toFixed(2)}
+                </Typography>
+            )}
     </>
     ) : (
     <>
