@@ -36,15 +36,22 @@ export default function Reports({ plantation }) {
   const [weeklyData, setWeeklyData] = useState([]);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
 
+  const [allWorkersData, setAllWorkersData] = useState([]);
+  const [allWorkersLoading, setAllWorkersLoading] = useState(false);
+
   // =========================
   // LOAD PLANTATION PAYROLL
   // =========================
 
   useEffect(() => {
     if (reportType === "plantation") {
-      fetchPlantationData();
+        fetchPlantationData();
     }
-  }, [plantation, reportType]);
+
+    if (reportType === "allworkers") {
+        fetchAllWorkersData();
+    }
+    }, [plantation, reportType, month]);
 
   const fetchPlantationData = async () => {
     try {
@@ -62,6 +69,28 @@ export default function Reports({ plantation }) {
       setLoading(false);
     }
   };
+
+  const fetchAllWorkersData = async () => {
+    try {
+        setAllWorkersLoading(true);
+
+        const res = await axios.get(
+        `${API}/dashboard/all-worker-salary-report/${month}`,
+        {
+            params: {
+            plantation
+            }
+        }
+        );
+
+        setAllWorkersData(res.data || []);
+    } catch (error) {
+        console.error("Error loading all workers report:", error);
+        alert("Error loading all workers report.");
+    } finally {
+        setAllWorkersLoading(false);
+    }
+    };
 
   const fetchWeeklyPlantationData = async () => {
     if (!weekStart || !weekEnd) {
@@ -131,6 +160,23 @@ export default function Reports({ plantation }) {
     };
   };
 
+  const calculateAllWorkerSalary = (row) => {
+  const amount = Number(row.amount || 0);
+  const allowance = Number(row.allowance || 0);
+
+  const gross = amount + allowance;
+  const epf8 = gross * 0.08;
+  const netSalary = gross - epf8;
+
+  return {
+    amount,
+    allowance,
+    gross,
+    epf8,
+    netSalary
+  };
+};
+
   // =========================
   // GROUP DATA
   // =========================
@@ -197,6 +243,13 @@ export default function Reports({ plantation }) {
     }
   );
 
+  const weeklyTotal = weeklyData.reduce(
+    (total, row) => {
+        return total + Number(row.amount || 0);
+    },
+    0
+    );
+
   // =========================
   // PLANTATION NAME
   // =========================
@@ -221,311 +274,920 @@ export default function Reports({ plantation }) {
   // GENERATE REPORT HTML
   // =========================
 
-  const generateReportHTML = () => {
-    const rowsHTML = rows
-      .map((row) => {
-        const c = calculate(
-          row.amount || 0,
-          row.allowance || 0
-        );
+  const generateAllWorkersReportHTML = () => {
+    const totalNetSalary = allWorkersData.reduce((total, row) => {
+        const salary = calculateAllWorkerSalary(row);
+        return total + salary.netSalary;
+    }, 0);
+
+    const generatedDate = new Date().toLocaleDateString("en-GB");
+
+    const rowsHTML = allWorkersData
+        .map((row, index) => {
+        const salary = calculateAllWorkerSalary(row);
 
         return `
-          <tr>
+            <tr>
+            <td>${row.type || "-"}</td>
             <td>${row.epf_no || "-"}</td>
             <td>${row.name || "-"}</td>
-            <td>${row.days_worked || 0}</td>
-            <td>${Number(
-              row.rate_per_day || 0
-            ).toFixed(2)}</td>
-            <td>${c.amount.toFixed(2)}</td>
-            <td>${c.epf_8.toFixed(2)}</td>
-            <td>${c.total_deduction.toFixed(2)}</td>
-            <td>${c.epf_12.toFixed(2)}</td>
-            <td>${c.epf_20.toFixed(2)}</td>
-            <td>${c.etf.toFixed(2)}</td>
-            <td>${c.allowance.toFixed(2)}</td>
-            <td>${c.balance.toFixed(2)}</td>
-          </tr>
+            <td>${Number(row.days || 0).toFixed(1)}</td>
+            <td>${Number(row.rate || 0).toFixed(2)}</td>
+            <td>${salary.amount.toFixed(2)}</td>
+            <td>${salary.allowance.toFixed(2)}</td>
+            <td>${salary.netSalary.toFixed(2)}</td>
+            </tr>
         `;
-      })
-      .join("");
-
-    const grandTotal =
-      totals.balance +
-      totals.epf_20 +
-      totals.etf;
+        })
+        .join("");
 
     return `
-      <!DOCTYPE html>
-
-      <html>
-
-      <head>
-
-        <title>
-          ${plantationName} Monthly Payroll Report
-        </title>
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>All Workers Payroll Report</title>
 
         <style>
-
-          @page {
+            @page {
             size: A4 landscape;
             margin: 12mm;
-          }
+            }
 
-          body {
+            body {
             font-family: Arial, sans-serif;
-            padding: 20px;
-            color: #111;
-          }
-
-          h1 {
             margin: 0;
-            font-size: 28px;
-          }
+            color: #000;
+            font-size: 12px;
+            }
 
-          h2 {
-            margin: 5px 0 20px 0;
-          }
-
-          .header {
+            .header {
             text-align: center;
-            margin-bottom: 25px;
-          }
+            margin-bottom: 20px;
+            }
 
-          .details {
+            .plantation-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            }
+
+            .report-title {
+            font-size: 16px;
+            font-weight: bold;
+            }
+
+            .details {
             width: 100%;
             margin-bottom: 20px;
             border-collapse: collapse;
-          }
+            }
 
-          .details td {
-            border: none;
-            padding: 5px;
-          }
+            .details td {
+            padding: 5px 8px;
+            }
 
-          table.report {
+            .details td:first-child {
+            width: 100px;
+            font-weight: bold;
+            }
+
+            table.report-table {
             width: 100%;
             border-collapse: collapse;
-          }
+            margin-top: 10px;
+            }
 
-          table.report th,
-          table.report td {
+            .report-table th,
+            .report-table td {
             border: 1px solid #000;
-            padding: 5px;
-            font-size: 11px;
-            white-space: nowrap;
+            padding: 6px 5px;
             text-align: center;
-          }
+            }
 
-          table.report th {
+            .report-table th {
             font-weight: bold;
-          }
+            }
 
-          .total {
+            .report-table td:nth-child(3) {
+            text-align: left;
+            }
+
+            .total {
+            margin-top: 18px;
+            text-align: right;
+            font-size: 15px;
             font-weight: bold;
-          }
+            }
 
-          .grand-total {
-            margin-top: 20px;
-            font-size: 16px;
-            font-weight: bold;
-          }
-
+            .footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            }
         </style>
+        </head>
 
-      </head>
-
-      <body>
+        <body>
 
         <div class="header">
-
-          <h1>
+            <div class="plantation-name">
             ${plantationName}
-          </h1>
+            </div>
 
-          <h2>
-            MONTHLY PAYROLL REPORT
-          </h2>
-
+            <div class="report-title">
+            ALL WORKERS PAYROLL REPORT
+            </div>
         </div>
 
         <table class="details">
+            <tr>
+            <td>Plantation</td>
+            <td>${plantationName}</td>
+            </tr>
+
+            <tr>
+            <td>Period</td>
+            <td>${reportMonth}</td>
+            </tr>
+
+            <tr>
+            <td>Generated</td>
+            <td>${generatedDate}</td>
+            </tr>
+        </table>
+
+        <table class="report-table">
+            <thead>
+            <tr>
+                <th>Type</th>
+                <th>EPF No</th>
+                <th>Name</th>
+                <th>Days</th>
+                <th>Rate</th>
+                <th>Amount</th>
+                <th>Allowance</th>
+                <th>Net Salary</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            ${rowsHTML}
+            </tbody>
+        </table>
+
+        <div class="total">
+            Net Salary: Rs. ${totalNetSalary.toFixed(2)}
+        </div>
+
+        <div class="footer">
+            <div>Prepared By: ____________________</div>
+            <div>Authorized By: ____________________</div>
+        </div>
+
+        </body>
+        </html>
+    `;
+    };
+
+const generateReportHTML = () => {
+  const rowsHTML = rows
+    .map((row) => {
+      const c = calculate(
+        row.amount || 0,
+        row.allowance || 0
+      );
+
+      return `
+        <tr>
+          <td>${row.epf_no || "-"}</td>
+          <td class="name">${row.name || "-"}</td>
+          <td>${row.days_worked || 0}</td>
+          <td>${Number(row.rate_per_day || 0).toFixed(2)}</td>
+          <td>${c.amount.toFixed(2)}</td>
+          <td>${c.epf_8.toFixed(2)}</td>
+          <td>${c.total_deduction.toFixed(2)}</td>
+          <td>${c.epf_12.toFixed(2)}</td>
+          <td>${c.epf_20.toFixed(2)}</td>
+          <td>${c.etf.toFixed(2)}</td>
+          <td>${c.allowance.toFixed(2)}</td>
+          <td>${c.balance.toFixed(2)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+
+      <title>
+        ${plantationName} Monthly Payroll Report
+      </title>
+
+      <style>
+
+        @page {
+          size: A4 landscape;
+          margin: 12mm;
+        }
+
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          color: #111;
+          font-size: 12px;
+        }
+
+        .header {
+          text-align: center;
+          margin-bottom: 18px;
+        }
+
+        .plantation-name {
+          font-size: 21px;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+
+        .report-title {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 18px;
+        }
+
+        .details {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 18px;
+        }
+
+        .details td {
+          padding: 5px 8px;
+          border: none;
+        }
+
+        .details td.label {
+          font-weight: bold;
+          width: 80px;
+        }
+
+        table.report {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        table.report th,
+        table.report td {
+          border: 1px solid #000;
+          padding: 5px 4px;
+          font-size: 10px;
+          text-align: center;
+          white-space: nowrap;
+        }
+
+        table.report th {
+          font-weight: bold;
+        }
+
+        table.report td.name {
+          text-align: left;
+        }
+
+        table.report tr.total {
+          font-weight: bold;
+        }
+
+        .grand-total {
+          margin-top: 18px;
+          text-align: right;
+          font-size: 15px;
+          font-weight: bold;
+        }
+
+        .signatures {
+          margin-top: 45px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 11px;
+        }
+
+        .signature-box {
+          width: 220px;
+          text-align: center;
+        }
+
+        .signature-line {
+          border-top: 1px solid #000;
+          margin-top: 35px;
+          padding-top: 5px;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="header">
+
+        <div class="plantation-name">
+          ${plantationName}
+        </div>
+
+        <div class="report-title">
+          MONTHLY PAYROLL REPORT
+        </div>
+
+      </div>
+
+      <table class="details">
+
+        <tr>
+
+          <td class="label">
+            Plantation
+          </td>
+
+          <td>
+            ${plantationName}
+          </td>
+
+          <td class="label">
+            Period
+          </td>
+
+          <td>
+            ${reportMonth}
+          </td>
+
+          <td class="label">
+            Generated
+          </td>
+
+          <td>
+            ${new Date().toLocaleDateString("en-GB")}
+          </td>
+
+        </tr>
+
+      </table>
+
+      <table class="report">
+
+        <thead>
 
           <tr>
+            <th>EPF No</th>
+            <th>Name</th>
+            <th>Days</th>
+            <th>Rate</th>
+            <th>Amount</th>
+            <th>EPF 8%</th>
+            <th>Deduction</th>
+            <th>EPF 12%</th>
+            <th>EPF 20%</th>
+            <th>ETF</th>
+            <th>Allowance</th>
+            <th>Net Salary</th>
+          </tr>
 
-            <td>
-              <b>Plantation</b>
+        </thead>
+
+        <tbody>
+
+          ${rowsHTML}
+
+          <tr class="total">
+
+            <td colspan="4">
+              TOTAL
             </td>
 
             <td>
-              ${plantationName}
+              ${totals.amount.toFixed(2)}
             </td>
 
             <td>
-              <b>Month</b>
+              ${totals.epf_8.toFixed(2)}
             </td>
 
             <td>
-              ${reportMonth}
+              ${totals.total_deduction.toFixed(2)}
             </td>
 
             <td>
-              <b>Generated</b>
+              ${totals.epf_12.toFixed(2)}
             </td>
 
             <td>
-              ${new Date().toLocaleDateString()}
+              ${totals.epf_20.toFixed(2)}
+            </td>
+
+            <td>
+              ${totals.etf.toFixed(2)}
+            </td>
+
+            <td>
+              ${totals.allowance.toFixed(2)}
+            </td>
+
+            <td>
+              ${totals.balance.toFixed(2)}
             </td>
 
           </tr>
 
-        </table>
+        </tbody>
 
-        <table class="report">
+      </table>
 
-          <thead>
+      <div class="grand-total">
 
-            <tr>
+        Net Salary / Cash Required:
+        Rs. ${totals.balance.toFixed(2)}
 
-              <th>EPF No</th>
-              <th>Name</th>
-              <th>Days</th>
-              <th>Rate</th>
-              <th>Amount</th>
-              <th>EPF 8%</th>
-              <th>Deduction</th>
-              <th>EPF 12%</th>
-              <th>EPF 20%</th>
-              <th>ETF</th>
-              <th>Allowance</th>
-              <th>Net Salary</th>
+      </div>
 
-            </tr>
+      <div class="signatures">
 
-          </thead>
+        <div class="signature-box">
 
-          <tbody>
+          <div class="signature-line">
+            Prepared By
+          </div>
 
-            ${rowsHTML}
+        </div>
 
-            <tr class="total">
+        <div class="signature-box">
 
-              <td colspan="4">
-                TOTAL
-              </td>
+          <div class="signature-line">
+            Checked By
+          </div>
 
-              <td>
-                ${totals.amount.toFixed(2)}
-              </td>
+        </div>
 
-              <td>
-                ${totals.epf_8.toFixed(2)}
-              </td>
+        <div class="signature-box">
 
-              <td>
-                ${totals.total_deduction.toFixed(2)}
-              </td>
+          <div class="signature-line">
+            Authorized By
+          </div>
 
-              <td>
-                ${totals.epf_12.toFixed(2)}
-              </td>
+        </div>
 
-              <td>
-                ${totals.epf_20.toFixed(2)}
-              </td>
+      </div>
 
-              <td>
-                ${totals.etf.toFixed(2)}
-              </td>
+    </body>
 
-              <td>
-                ${totals.allowance.toFixed(2)}
-              </td>
+    </html>
+  `;
+};
 
-              <td>
-                ${totals.balance.toFixed(2)}
-              </td>
+  // =======================
+  // GENERATE WEEKLY REPORT
+  // =======================
+  const generateWeeklyReportHTML = () => {
+  const rowsHTML = weeklyData
+    .map((row) => {
+      return `
+        <tr>
+          <td>${row.epf_no || "-"}</td>
+          <td>${row.name || "-"}</td>
+          <td>
+            ${new Date(
+              row.attendance_date
+            ).toLocaleDateString()}
+          </td>
+          <td>
+            ${Number(
+              row.attendance_value || 0
+            ).toFixed(2)}
+          </td>
+          <td>
+            Rs. ${Number(
+              row.daily_rate || 0
+            ).toFixed(2)}
+          </td>
+          <td>
+            Rs. ${Number(
+              row.amount || 0
+            ).toFixed(2)}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 
-            </tr>
+  return `
+    <!DOCTYPE html>
 
-          </tbody>
+    <html>
 
-        </table>
+    <head>
 
-        <div class="grand-total">
+      <title>
+        ${plantationName} Weekly Payroll Report
+      </title>
 
-            Net Salary / Cash Required:
-            Rs. ${totals.balance.toFixed(2)}
+      <style>
 
-            </div>
+        @page {
+          size: A4 landscape;
+          margin: 12mm;
+        }
 
-      </body>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #111;
+        }
 
-      </html>
-    `;
-  };
+        h1 {
+          margin: 0;
+          font-size: 28px;
+        }
+
+        h2 {
+          margin: 5px 0 20px 0;
+        }
+
+        .header {
+          text-align: center;
+          margin-bottom: 25px;
+        }
+
+        .details {
+          width: 100%;
+          margin-bottom: 20px;
+          border-collapse: collapse;
+        }
+
+        .details td {
+          border: none;
+          padding: 5px;
+        }
+
+        table.report {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        table.report th,
+        table.report td {
+          border: 1px solid #000;
+          padding: 7px;
+          font-size: 12px;
+          white-space: nowrap;
+          text-align: center;
+        }
+
+        table.report th {
+          font-weight: bold;
+        }
+
+        .total {
+          font-weight: bold;
+        }
+
+        .grand-total {
+          margin-top: 20px;
+          font-size: 16px;
+          font-weight: bold;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="header">
+
+        <h1>
+          ${plantationName}
+        </h1>
+
+        <h2>
+          WEEKLY PAYROLL REPORT
+        </h2>
+
+      </div>
+
+      <table class="details">
+
+        <tr>
+
+          <td>
+            <b>Plantation</b>
+          </td>
+
+          <td>
+            ${plantationName}
+          </td>
+
+          <td>
+            <b>Week</b>
+          </td>
+
+          <td>
+            ${weekStart} to ${weekEnd}
+          </td>
+
+          <td>
+            <b>Generated</b>
+          </td>
+
+          <td>
+            ${new Date().toLocaleDateString()}
+          </td>
+
+        </tr>
+
+      </table>
+
+      <table class="report">
+
+        <thead>
+
+          <tr>
+
+            <th>EPF No</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Attendance</th>
+            <th>Rate</th>
+            <th>Amount</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${rowsHTML}
+
+          <tr class="total">
+
+            <td colspan="5">
+              TOTAL
+            </td>
+
+            <td>
+              Rs. ${weeklyTotal.toFixed(2)}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <div class="grand-total">
+
+        Weekly Total / Cash Required:
+        Rs. ${weeklyTotal.toFixed(2)}
+
+      </div>
+
+    </body>
+
+    </html>
+  `;
+};
 
   // =========================
   // PRINT
   // =========================
 
-  const handlePrint = () => {
+    const handlePrint = async () => {
+        if (reportType === "allworkers") {
+            if (allWorkersData.length === 0) {
+            alert("No all workers payroll data found for this month.");
+            return;
+            }
+
+            const html = generateAllWorkersReportHTML();
+
+            const win = window.open("", "_blank");
+
+            if (!win) {
+            alert("Please allow pop-ups to print the report.");
+            return;
+            }
+
+            win.document.write(html);
+            win.document.close();
+
+            win.onload = () => {
+            win.focus();
+            win.print();
+            };
+
+            return;
+        }
+
+          if (reportType === "plantation") {
+            if (rows.length === 0) {
+            alert("No plantation workers payroll data found for this month.");
+            return;
+            }
+
+            const html = generateReportHTML();
+
+            const blob = new Blob([html], {
+            type: "text/html"
+            });
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `Plantation_Workers_Payroll_${month}.html`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+            return;
+        }
+
+        if (reportPeriod === "weekly") {
+        if (!weekStart || !weekEnd) {
+        alert("Please select week start and week end.");
+        return;
+        }
+
+        const success = await fetchWeeklyPlantationData();
+
+        if (!success) {
+        return;
+        }
+
+        if (weeklyData.length === 0) {
+        alert("No attendance found for this week.");
+        return;
+        }
+
+        const html = generateWeeklyReportHTML();
+
+        const win = window.open(
+        "",
+        "_blank"
+        );
+
+        if (!win) {
+        alert(
+            "Please allow pop-ups in your browser."
+        );
+        return;
+        }
+
+        win.document.write(html);
+        win.document.close();
+
+        setTimeout(() => {
+        win.print();
+        }, 500);
+
+        return;
+    }
+
     if (rows.length === 0) {
-      alert("No payroll data found for this month.");
-      return;
+        alert(
+        "No payroll data found for this month."
+        );
+        return;
     }
 
     const html = generateReportHTML();
 
     const win = window.open(
-      "",
-      "_blank"
+        "",
+        "_blank"
     );
 
     if (!win) {
-      alert(
+        alert(
         "Please allow pop-ups in your browser."
-      );
-      return;
+        );
+        return;
     }
 
     win.document.write(html);
-
     win.document.close();
 
     setTimeout(() => {
-      win.print();
+        win.print();
     }, 500);
-  };
+    };
 
   // =========================
   // DOWNLOAD HTML
   // =========================
 
-  const handleDownload = () => {
+    const handleDownload = async () => {
+        if (reportType === "allworkers") {
+            if (allWorkersData.length === 0) {
+            alert("No all workers payroll data found for this month.");
+            return;
+            }
+
+            const html = generateAllWorkersReportHTML();
+
+            const blob = new Blob([html], {
+            type: "text/html"
+            });
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `All_Workers_Payroll_${month}.html`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+            return;
+        }
+
+        if (reportPeriod === "weekly") {
+        if (!weekStart || !weekEnd) {
+        alert("Please select week start and week end.");
+        return;
+        }
+
+        const success = await fetchWeeklyPlantationData();
+
+        if (!success) {
+        return;
+        }
+
+        if (weeklyData.length === 0) {
+        alert("No attendance found for this week.");
+        return;
+        }
+
+        const html = generateWeeklyReportHTML();
+
+        const blob = new Blob(
+        [html],
+        { type: "text/html" }
+        );
+
+        const url =
+        URL.createObjectURL(blob);
+
+        const link =
+        document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+        `${plantationName} Weekly Payroll ${weekStart} to ${weekEnd}.html`;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        return;
+    }
+
     if (rows.length === 0) {
-      alert("No payroll data found for this month.");
-      return;
+        alert(
+        "No payroll data found for this month."
+        );
+        return;
     }
 
     const html = generateReportHTML();
 
     const blob = new Blob(
-      [html],
-      { type: "text/html" }
+        [html],
+        { type: "text/html" }
     );
 
     const url =
-      URL.createObjectURL(blob);
+        URL.createObjectURL(blob);
 
     const link =
-      document.createElement("a");
+        document.createElement("a");
 
     link.href = url;
 
     link.download =
-      `${plantationName} Monthly Payroll ${month}.html`;
+        `${plantationName} Monthly Payroll ${month}.html`;
 
     document.body.appendChild(link);
 
@@ -534,7 +1196,7 @@ export default function Reports({ plantation }) {
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
-  };
+    };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -588,6 +1250,10 @@ export default function Reports({ plantation }) {
                   setReportType(e.target.value)
                 }
               >
+
+                <MenuItem value="allworkers">
+                  All Workers Payroll
+                </MenuItem>
 
                 <MenuItem value="plantation">
                   Plantation Workers Payroll
@@ -717,17 +1383,33 @@ export default function Reports({ plantation }) {
           <Typography sx={{ mb: 1 }}>
             <strong>Plantation:</strong>{" "}
             {plantationName}
-          </Typography>
+            </Typography>
 
-          <Typography sx={{ mb: 1 }}>
+            <Typography sx={{ mb: 1 }}>
             <strong>Report:</strong>{" "}
-            Plantation Workers Payroll
-          </Typography>
+            {reportType === "allworkers"
+                ? "All Workers Payroll"
+                : reportType === "plantation"
+                ? "Plantation Workers Payroll"
+                : reportType === "rubbertappers"
+                ? "Rubber Tappers Payroll"
+                : reportType === "casualworkers"
+                ? "Casual Workers Payroll"
+                : reportType === "attendance"
+                ? "Attendance Register"
+                : "Machine Labourers Payroll"}
+            </Typography>
 
-          <Typography sx={{ mb: 3 }}>
-            <strong>Month:</strong>{" "}
-            {reportMonth}
-          </Typography>
+            <Typography sx={{ mb: 3 }}>
+            <strong>
+                {reportPeriod === "weekly" ? "Week:" : "Month:"}
+            </strong>{" "}
+            {reportPeriod === "weekly"
+                ? weekStart && weekEnd
+                ? `${weekStart} - ${weekEnd}`
+                : "Not selected"
+                : reportMonth}
+            </Typography>
 
           <Stack
             direction="row"
@@ -758,63 +1440,368 @@ export default function Reports({ plantation }) {
 
       </Card>
 
-      <Card sx={{ mt: 3 }}>
+    <Card sx={{ mt: 3 }}>
+    <CardContent>
 
-        <CardContent>
+        <Typography
+        variant="h6"
+        fontWeight="bold"
+        gutterBottom
+        >
+        Report Preview
+        </Typography>
 
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            gutterBottom
-          >
-            Report Preview
-          </Typography>
+    {reportType === "allworkers" ? (
+    <>
+        <Typography color="text.secondary">
+        {allWorkersLoading
+            ? "Loading all workers data..."
+            : `${allWorkersData.length} worker(s) found for ${reportMonth}.`}
+        </Typography>
 
-          {reportPeriod === "weekly" && (
-            <Button
-                variant="contained"
-                onClick={fetchWeeklyPlantationData}
-                disabled={weeklyLoading}
-                sx={{ mb: 2 }}
+        {!allWorkersLoading && allWorkersData.length > 0 && (
+        <Box sx={{ mt: 3, overflowX: "auto" }}>
+            <table
+            style={{
+                width: "100%",
+                borderCollapse: "collapse"
+            }}
             >
-                {weeklyLoading
-                ? "Loading Weekly Data..."
-                : "Load Weekly Report"}
-            </Button>
-            )}
+            <thead>
+                <tr>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Type
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    EPF No
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Name
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Days
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Rate
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Amount
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Allowance
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    Net Salary
+                </th>
+                </tr>
+            </thead>
 
-            {reportPeriod === "weekly" && (
-                <Typography color="text.secondary">
-                    {weeklyData.length > 0
-                    ? `${weeklyData.length} attendance record(s) found.`
-                    : "Select a week and click Load Weekly Report."}
-                </Typography>
-                )}
+            <tbody>
+                {allWorkersData.map((row, index) => {
+                const salary = calculateAllWorkerSalary(row);
 
-          <Typography
-            color="text.secondary"
-          >
-            {loading
-              ? "Loading payroll data..."
-              : `${rows.length} worker(s) found for ${reportMonth}.`
-            }
-          </Typography>
+                return (
+                    <tr key={`${row.type}-${row.name}-${index}`}>
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {row.type}
+                    </td>
 
-          {!loading && rows.length > 0 && (
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {row.epf_no || "-"}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                        }}
+                    >
+                        {row.name || "-"}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {Number(row.days || 0).toFixed(1)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        {Number(row.rate || 0).toFixed(2)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        {salary.amount.toFixed(2)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        {salary.allowance.toFixed(2)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        {salary.netSalary.toFixed(2)}
+                    </td>
+                    </tr>
+                );
+                })}
+            </tbody>
+            </table>
+        </Box>
+        )}
+
+        {!allWorkersLoading && allWorkersData.length > 0 && (
+        <Typography
+            sx={{
+            mt: 3,
+            fontWeight: "bold",
+            fontSize: "18px"
+            }}
+        >
+            Net Salary: Rs.{" "}
+            {allWorkersData
+            .reduce((total, row) => {
+                const salary = calculateAllWorkerSalary(row);
+                return total + salary.netSalary;
+            }, 0)
+            .toFixed(2)}
+        </Typography>
+        )}
+    </>
+    ) : reportPeriod === "monthly" ? (
+    <>
+        <Typography color="text.secondary">
+        {loading
+            ? "Loading payroll data..."
+            : `${rows.length} worker(s) found for ${reportMonth}.`}
+        </Typography>
+
+        {!loading && rows.length > 0 && (
+        <Typography
+            sx={{
+            mt: 2,
+            fontWeight: "bold"
+            }}
+        >
+            Net Salary: Rs.{" "}
+            {totals.balance.toFixed(2)}
+        </Typography>
+        )}
+    </>
+    ) : (
+    <>
+        <Typography color="text.secondary">
+        {weeklyLoading
+            ? "Loading weekly data..."
+            : weeklyData.length > 0
+            ? `${weeklyData.length} attendance record(s) found.`
+            : "Select a week and click Load Weekly Report."}
+        </Typography>
+
+        {weeklyData.length > 0 && (
+        <>
+            <Box
+            sx={{
+                mt: 3,
+                overflowX: "auto"
+            }}
+            >
+            <table
+                style={{
+                width: "100%",
+                borderCollapse: "collapse"
+                }}
+            >
+                <thead>
+                <tr>
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    EPF No
+                    </th>
+
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    Name
+                    </th>
+
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    Date
+                    </th>
+
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    Attendance
+                    </th>
+
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    Rate
+                    </th>
+
+                    <th
+                    style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                    }}
+                    >
+                    Amount
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {weeklyData.map((row, index) => (
+                    <tr key={row.id || index}>
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {row.epf_no || "-"}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px"
+                        }}
+                    >
+                        {row.name || "-"}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {new Date(
+                        row.attendance_date
+                        ).toLocaleDateString()}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "center"
+                        }}
+                    >
+                        {Number(
+                        row.attendance_value || 0
+                        ).toFixed(2)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        Rs.{" "}
+                        {Number(
+                        row.daily_rate || 0
+                        ).toFixed(2)}
+                    </td>
+
+                    <td
+                        style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        textAlign: "right"
+                        }}
+                    >
+                        Rs.{" "}
+                        {Number(
+                        row.amount || 0
+                        ).toFixed(2)}
+                    </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            </Box>
+
             <Typography
-              sx={{
-                mt: 2,
-                fontWeight: "bold"
-              }}
+            sx={{
+                mt: 3,
+                fontWeight: "bold",
+                fontSize: "18px"
+            }}
             >
-              Net Salary: Rs.{" "}
-              {totals.balance.toFixed(2)}
+            Weekly Total: Rs.{" "}
+            {weeklyTotal.toFixed(2)}
             </Typography>
-          )}
+        </>
+        )}
+    </>
+    )}
 
-        </CardContent>
-
-      </Card>
+    </CardContent>
+    </Card>
 
     </Box>
   );
