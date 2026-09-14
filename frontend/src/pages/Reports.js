@@ -42,6 +42,9 @@ export default function Reports({ plantation }) {
   const [rubberData, setRubberData] = useState([]);
   const [rubberLoading, setRubberLoading] = useState(false);
 
+  const [casualData, setCasualData] = useState([]);
+  const [casualLoading, setCasualLoading] = useState(false);
+
   const [rubberTemporaryRate, setRubberTemporaryRate] = useState(300);
   const [rubberBonusRate, setRubberBonusRate] = useState(250);
   const [rubberMinimumKg, setRubberMinimumKg] = useState(2.5);
@@ -62,6 +65,10 @@ export default function Reports({ plantation }) {
 
     if (reportType === "rubbertappers") {
         fetchRubberData();
+    }
+
+    if (reportType === "casualworkers") {
+        fetchCasualData();
     }
     }, [plantation, reportType, month]);
 
@@ -188,6 +195,29 @@ export default function Reports({ plantation }) {
         }
         };
 
+  const fetchCasualData = async () => {
+    try {
+        setCasualLoading(true);
+
+        const res = await axios.get(
+            `${API}/casual-payroll-data?plantation=${plantation}`
+        );
+
+        setCasualData(res.data || []);
+    } catch (error) {
+        console.error(
+            "Error loading casual workers payroll:",
+            error
+        );
+
+        alert(
+            "Error loading casual workers payroll data."
+        );
+    } finally {
+        setCasualLoading(false);
+    }
+};
+
   const fetchWeeklyPlantationData = async () => {
     if (!weekStart || !weekEnd) {
         alert("Please select week start and week end.");
@@ -273,6 +303,23 @@ export default function Reports({ plantation }) {
   };
 };
 
+    const calculateCasualSalary = (row) => {
+    const daysWorked = Number(row.worked_days || 0);
+    const dailyRate = Number(row.daily_rate || 0);
+    const allowance = Number(row.allowance || 0);
+
+    const gross = daysWorked * dailyRate;
+
+    const netSalary = gross + allowance;
+
+    return {
+        daysWorked,
+        dailyRate,
+        allowance,
+        gross,
+        netSalary
+    };
+    };
     const calculateRubberSalary = (row) => {
     const kg = Number(row.kg || 0);
     const workedDays = Number(row.worked_days || 0);
@@ -380,41 +427,53 @@ export default function Reports({ plantation }) {
     );
 
     const rubberRows = Object.values(
-  rubberData.reduce((acc, row) => {
-    const key = `${row.worker_id}-${row.month}`;
+        rubberData.reduce((acc, row) => {
+            const key = `${row.worker_id}-${row.month}`;
 
-    if (!acc[key]) {
-      acc[key] = {
-        worker_id: row.worker_id,
-        name: row.name,
-        month: row.month,
-        rate: Number(row.rate || 0),
-        worker_category: row.worker_category,
-        epf_no: row.epf_no,
-        epf_enabled: Number(row.epf_enabled || 0),
-        kg: 0,
-        allowance: 0,
-        worked_days: 0
-      };
-    }
+            if (!acc[key]) {
+            acc[key] = {
+                worker_id: row.worker_id,
+                name: row.name,
+                month: row.month,
+                rate: Number(row.rate || 0),
+                worker_category: row.worker_category,
+                epf_no: row.epf_no,
+                epf_enabled: Number(row.epf_enabled || 0),
+                kg: 0,
+                allowance: 0,
+                worked_days: 0
+            };
+            }
 
-    acc[key].kg += Number(row.kg || 0);
-    acc[key].allowance += Number(row.allowance || 0);
-    acc[key].worked_days += Number(row.worked_days || 0);
+            acc[key].kg += Number(row.kg || 0);
+            acc[key].allowance += Number(row.allowance || 0);
+            acc[key].worked_days += Number(row.worked_days || 0);
 
-    return acc;
-  }, {})
-)
-  .filter(
-    (row) =>
-      row.month === month &&
-      row.worked_days > 0
-  )
-  .sort(
-    (a, b) =>
-      Number(a.epf_no || 0) -
-      Number(b.epf_no || 0)
-  );
+            return acc;
+        }, {})
+        )
+        .filter(
+            (row) =>
+            row.month === month &&
+            row.worked_days > 0
+        )
+        .sort(
+            (a, b) =>
+            Number(a.epf_no || 0) -
+            Number(b.epf_no || 0)
+        );
+
+        const casualRows = casualData
+        .filter(
+            (row) =>
+            row.month === month &&
+            Number(row.worked_days || 0) > 0
+        )
+        .sort(
+            (a, b) =>
+            Number(a.worker_id || 0) -
+            Number(b.worker_id || 0)
+        );
 
   // =========================
   // TOTALS
@@ -478,6 +537,25 @@ export default function Reports({ plantation }) {
         netSalary: 0
     }
     );
+
+    const casualTotals = casualRows.reduce(
+        (acc, row) => {
+            const c = calculateCasualSalary(row);
+
+            acc.daysWorked += c.daysWorked;
+            acc.gross += c.gross;
+            acc.allowance += c.allowance;
+            acc.netSalary += c.netSalary;
+
+            return acc;
+        },
+        {
+            daysWorked: 0,
+            gross: 0,
+            allowance: 0,
+            netSalary: 0
+        }
+        );
 
   const weeklyTotal = weeklyData.reduce(
     (total, row) => {
@@ -2369,10 +2447,206 @@ const generateReportHTML = () => {
         </Typography>
         )}
     </>
-) : reportType === "rubbertappers" &&
+) : reportType === "casualworkers" &&
     reportPeriod === "monthly" ? (
 
-    <>
+        <>
+    <Typography color="text.secondary">
+        {casualLoading
+            ? "Loading casual workers payroll data..."
+            : `${casualRows.length} casual worker(s) found for ${reportMonth}.`}
+    </Typography>
+
+    {!casualLoading && casualRows.length > 0 && (
+        <Box
+            sx={{
+                mt: 3,
+                overflowX: "auto"
+            }}
+        >
+            <table
+                style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: "13px"
+                }}
+            >
+                <thead>
+                    <tr>
+                        <th
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            Name
+                        </th>
+
+                        <th
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            Days Worked
+                        </th>
+
+                        <th
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            Daily Rate
+                        </th>
+
+                        <th
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            Allowance
+                        </th>
+
+                        <th
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            Total Salary
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {casualRows.map((row) => {
+                        const c = calculateCasualSalary(row);
+
+                        return (
+                            <tr key={row.worker_id}>
+                                <td
+                                    style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px"
+                                    }}
+                                >
+                                    {row.name || "-"}
+                                </td>
+
+                                <td
+                                    style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "center"
+                                    }}
+                                >
+                                    {c.daysWorked}
+                                </td>
+
+                                <td
+                                    style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}
+                                >
+                                    Rs. {c.dailyRate.toFixed(2)}
+                                </td>
+
+                                <td
+                                    style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}
+                                >
+                                    Rs. {c.allowance.toFixed(2)}
+                                </td>
+
+                                <td
+                                    style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}
+                                >
+                                    Rs. {c.netSalary.toFixed(2)}
+                                </td>
+                            </tr>
+                        );
+                    })}
+
+                    <tr>
+                        <td
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px",
+                                fontWeight: "bold"
+                            }}
+                        >
+                            TOTAL
+                        </td>
+
+                        <td
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px",
+                                fontWeight: "bold",
+                                textAlign: "center"
+                            }}
+                        >
+                            {casualTotals.daysWorked}
+                        </td>
+
+                        <td
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px"
+                            }}
+                        >
+                            -
+                        </td>
+
+                        <td
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px",
+                                fontWeight: "bold",
+                                textAlign: "right"
+                            }}
+                        >
+                            Rs. {casualTotals.allowance.toFixed(2)}
+                        </td>
+
+                        <td
+                            style={{
+                                border: "1px solid #ccc",
+                                padding: "8px",
+                                fontWeight: "bold",
+                                textAlign: "right"
+                            }}
+                        >
+                            Rs. {casualTotals.netSalary.toFixed(2)}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <Typography
+                sx={{
+                    mt: 2,
+                    textAlign: "right",
+                    fontWeight: "bold"
+                }}
+            >
+                Net Salary / Cash Required: Rs.{" "}
+                {casualTotals.netSalary.toFixed(2)}
+            </Typography>
+        </Box>
+    )}
+
         <Typography color="text.secondary">
             {rubberLoading
                 ? "Loading rubber tappers payroll data..."
