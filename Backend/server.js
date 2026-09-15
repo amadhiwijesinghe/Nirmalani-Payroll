@@ -5614,12 +5614,16 @@ app.post("/machine-labour-attendance", (req, res) => {
     worker_id,
     plantation,
     attendance_date,
-    tanks,
-    rate
+    oil_cans
   } = req.body;
 
-  const tanksValue = Number(tanks || 0);
-  const rateValue = Number(rate || 0);
+  const oilCansValue = Number(oil_cans || 0);
+
+  // 1 oil can = 16 tanks
+  const tanksValue = oilCansValue * 16;
+
+  // 1 tank = Rs. 1,000
+  const rateValue = 1000;
 
   const total = tanksValue * rateValue;
 
@@ -5629,14 +5633,15 @@ app.post("/machine-labour-attendance", (req, res) => {
       worker_id,
       plantation,
       attendance_date,
+      oil_cans,
       tanks,
       rate,
       total
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
 
     ON DUPLICATE KEY UPDATE
-
+      oil_cans = VALUES(oil_cans),
       tanks = VALUES(tanks),
       rate = VALUES(rate),
       total = VALUES(total)
@@ -5648,6 +5653,7 @@ app.post("/machine-labour-attendance", (req, res) => {
       worker_id,
       plantation,
       attendance_date,
+      oilCansValue,
       tanksValue,
       rateValue,
       total
@@ -5655,12 +5661,20 @@ app.post("/machine-labour-attendance", (req, res) => {
     (err, result) => {
 
       if (err) {
-        console.log("MACHINE LABOUR ATTENDANCE SAVE ERROR:", err);
+
+        console.log(
+          "MACHINE LABOUR ATTENDANCE SAVE ERROR:",
+          err
+        );
+
         return res.status(500).json(err);
       }
 
       res.json({
         success: true,
+        oil_cans: oilCansValue,
+        tanks: tanksValue,
+        rate: rateValue,
         total
       });
 
@@ -5686,6 +5700,7 @@ app.get("/machine-labour-attendance", (req, res) => {
       mlw.name,
       mla.plantation,
       mla.attendance_date,
+      mla.oil_cans,
       mla.tanks,
       mla.rate,
       mla.total

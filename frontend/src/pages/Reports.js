@@ -45,6 +45,9 @@ export default function Reports({ plantation }) {
   const [casualData, setCasualData] = useState([]);
   const [casualLoading, setCasualLoading] = useState(false);
 
+  const [machineLabourData, setMachineLabourData] = useState([]);
+  const [machineLabourLoading, setMachineLabourLoading] = useState(false);
+
   const [rubberTemporaryRate, setRubberTemporaryRate] = useState(300);
   const [rubberBonusRate, setRubberBonusRate] = useState(250);
   const [rubberMinimumKg, setRubberMinimumKg] = useState(2.5);
