@@ -59,10 +59,11 @@ export default function AttendanceRegister({ plantation }) {
   const [machineDialogOpen, setMachineDialogOpen] = useState(false);
 
   const [machineAttendance, setMachineAttendance] = useState({
-    tanks: "",
-    rate: "",
+    oil_cans: "",
+    tanks: 0,
+    rate: 1000,
     total: 0
-  });
+});
 
   const [machineAttendanceData, setMachineAttendanceData] = useState({});
 
@@ -190,8 +191,9 @@ const loadAttendance = async () => {
             `machine-${row.worker_id}-${date}`;
 
         machineObject[key] = {
+            oil_cans: Number(row.oil_cans) || 0,
             tanks: Number(row.tanks) || 0,
-            rate: Number(row.rate) || 0,
+            rate: Number(row.rate) || 1000,
             total: Number(row.total) || 0
         };
 
@@ -318,17 +320,25 @@ const openMachineDialog = (worker, date) => {
 
     if (existing) {
 
+        const oilCans =
+            Number(existing.oil_cans || 0);
+
+        const tanks =
+            Number(existing.tanks || 0);
+
         setMachineAttendance({
-            tanks: existing.tanks,
-            rate: existing.rate,
-            total: existing.total
+            oil_cans: oilCans,
+            tanks,
+            rate: 1000,
+            total: tanks * 1000
         });
 
     } else {
 
         setMachineAttendance({
-            tanks: "",
-            rate: "",
+            oil_cans: "",
+            tanks: 0,
+            rate: 1000,
             total: 0
         });
 
@@ -433,27 +443,24 @@ const saveMachineAttendance = async () => {
         return;
     }
 
+    const oilCans =
+        Number(machineAttendance.oil_cans) || 0;
+
+    if (oilCans <= 0) {
+        alert("Please enter the number of oil cans.");
+        return;
+    }
+
+    // 1 oil can = 16 tanks
     const tanks =
-        Number(machineAttendance.tanks) || 0;
+        oilCans * 16;
 
-    const rate =
-        Number(machineAttendance.rate) || 0;
+    // 1 tank = Rs. 1,000
+    const rate = 1000;
 
-    if (tanks <= 0) {
-
-        alert("Please enter the number of tanks.");
-
-        return;
-
-    }
-
-    if (rate <= 0) {
-
-        alert("Please enter the rate per tank.");
-
-        return;
-
-    }
+    // Total payment
+    const total =
+        tanks * rate;
 
     try {
 
@@ -468,31 +475,30 @@ const saveMachineAttendance = async () => {
                 attendance_date:
                     selectedDate,
 
-                tanks,
-
-                rate
+                oil_cans: oilCans
             }
         );
 
-
         // Close dialog
-
         setMachineDialogOpen(false);
 
-
         // Reset values
-
         setMachineAttendance({
-            tanks: "",
-            rate: "",
+            oil_cans: "",
+            tanks: 0,
+            rate: 1000,
             total: 0
         });
 
-
         // Reload attendance data
-
         await loadAttendance();
 
+        alert(
+            `Machine Labour attendance saved.\n\n` +
+            `Oil Cans: ${oilCans}\n` +
+            `Tanks: ${tanks}\n` +
+            `Payment: Rs. ${total.toLocaleString()}`
+        );
 
     } catch (error) {
 
@@ -1114,20 +1120,29 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
                                 <Box
                                     sx={{
-                                        width: 38,
-                                        height: 28,
+                                        minWidth: 52,
+                                        minHeight: 42,
                                         bgcolor: "#3b82f6",
                                         borderRadius: "6px",
                                         display: "flex",
+                                        flexDirection: "column",
                                         justifyContent: "center",
                                         alignItems: "center",
                                         margin: "auto",
                                         color: "#fff",
                                         fontWeight: "bold",
-                                        fontSize: 12
+                                        fontSize: 11,
+                                        lineHeight: 1.2,
+                                        px: 0.5
                                     }}
                                 >
-                                    {machineData.tanks}
+                                    <div>
+                                        {machineData.tanks}T
+                                    </div>
+
+                                    <div>
+                                        Rs. {Number(machineData.total || 0).toLocaleString()}
+                                    </div>
                                 </Box>
 
                             )
@@ -1181,13 +1196,16 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
             })}
             <TableCell
-              align="center"
-              sx={{
-                  fontWeight: "bold"
-              }}
-          >
-              {totalPresent}
-          </TableCell>
+                align="center"
+                sx={{
+                    fontWeight: "bold",
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {worker.worker_type === "machine"
+                    ? `Rs. ${Number(totalPresent).toLocaleString()}`
+                    : totalPresent}
+            </TableCell>
 
             </TableRow>
 
@@ -1350,59 +1368,60 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                 : "❌ Absent"}
                         </Typography>
 
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            sx={{ mt: 2 }}
-                        >
-
-                            <MobileButton
-                                color="primary"
-                                fullWidth
-                                disabled={!isEditing || isFinalized}
-                                onClick={() => {
-
-                                if (worker.worker_type === "rubber") {
-
-                                    openRubberDialog(worker, date);
-
-                                } else if (worker.worker_type === "machine") {
-
-                                    openMachineDialog(worker, date);
-
-                                } else {
-
-                                    setAttendanceValue(
-                                        worker,
-                                        selectedDay,
-                                        1
-                                    );
-
-                                }
-
-                            }}                           >
-                                Present
-                            </MobileButton>
-
-                            <MobileButton
-                                color="warning"
-                                fullWidth
-                                disabled={!isEditing || isFinalized}
-                                onClick={() => setAttendanceValue(worker, selectedDay, 0.5)}
+                        {worker.worker_type !== "machine" && (
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{ mt: 2 }}
                             >
-                                Half
-                            </MobileButton>
 
-                            <MobileButton
-                                color="danger"
-                                fullWidth
-                                disabled={!isEditing || isFinalized}
-                                onClick={() => setAttendanceValue(worker, selectedDay, 0)}
-                            >
-                                Absent
-                            </MobileButton>
+                                <MobileButton
+                                    color="primary"
+                                    fullWidth
+                                    disabled={!isEditing || isFinalized}
+                                    onClick={() =>
+                                        setAttendanceValue(
+                                            worker,
+                                            selectedDay,
+                                            1
+                                        )
+                                    }
+                                >
+                                    Present
+                                </MobileButton>
 
-                        </Stack>
+                                <MobileButton
+                                    color="warning"
+                                    fullWidth
+                                    disabled={!isEditing || isFinalized}
+                                    onClick={() =>
+                                        setAttendanceValue(
+                                            worker,
+                                            selectedDay,
+                                            0.5
+                                        )
+                                    }
+                                >
+                                    Half
+                                </MobileButton>
+
+                                <MobileButton
+                                    color="danger"
+                                    fullWidth
+                                    disabled={!isEditing || isFinalized}
+                                    onClick={() =>
+                                        setAttendanceValue(
+                                            worker,
+                                            selectedDay,
+                                            0
+                                        )
+                                    }
+                                >
+                                    Absent
+                                </MobileButton>
+
+                            </Stack>
+                        )}
 
                     </ResponsiveCard>
 
@@ -1599,45 +1618,50 @@ const isMobile = useMediaQuery("(max-width:900px)");
 
 
                 <MobileInput
-                    label="Tanks Used"
+                    label="Oil Cans (20L)"
                     type="number"
-                    value={machineAttendance.tanks}
+                    value={machineAttendance.oil_cans}
                     onChange={(e) => {
 
-                        const tanks =
+                        const oilCans =
                             Number(e.target.value) || 0;
 
-                        const rate =
-                            Number(machineAttendance.rate) || 0;
+                        const tanks =
+                            oilCans * 16;
+
+                        const rate = 1000;
+
+                        const total =
+                            tanks * rate;
 
                         setMachineAttendance({
                             ...machineAttendance,
+                            oil_cans: e.target.value,
                             tanks,
-                            total: tanks * rate
+                            rate,
+                            total
                         });
 
                     }}
+                    inputProps={{
+                        min: 0,
+                        step: 0.01
+                    }}
                 />
 
+                <MobileInput
+                    label="Tanks"
+                    value={machineAttendance.tanks}
+                    InputProps={{
+                        readOnly: true
+                    }}
+                />
 
                 <MobileInput
                     label="Rate per Tank"
-                    type="number"
-                    value={machineAttendance.rate}
-                    onChange={(e) => {
-
-                        const rate =
-                            Number(e.target.value) || 0;
-
-                        const tanks =
-                            Number(machineAttendance.tanks) || 0;
-
-                        setMachineAttendance({
-                            ...machineAttendance,
-                            rate,
-                            total: tanks * rate
-                        });
-
+                    value="Rs. 1,000"
+                    InputProps={{
+                        readOnly: true
                     }}
                 />
 
