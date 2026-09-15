@@ -5693,7 +5693,7 @@ app.get("/machine-labour-attendance", (req, res) => {
     plantation
   } = req.query;
 
-  const sql = `
+  let sql = `
     SELECT
       mla.id,
       mla.worker_id,
@@ -5710,20 +5710,29 @@ app.get("/machine-labour-attendance", (req, res) => {
     JOIN machine_labour_workers mlw
       ON mlw.id = mla.worker_id
 
-    WHERE mla.worker_id = ?
-      AND mla.plantation = ?
+    WHERE mla.plantation = ?
       AND DATE_FORMAT(mla.attendance_date, '%Y-%m') = ?
+  `;
 
-    ORDER BY mla.attendance_date
+  const params = [
+    plantation,
+    month
+  ];
+
+  // If a worker is selected,
+  // return only that worker's records.
+  if (worker_id) {
+    sql += ` AND mla.worker_id = ?`;
+    params.push(worker_id);
+  }
+
+  sql += `
+    ORDER BY mla.attendance_date, mlw.name
   `;
 
   db.query(
     sql,
-    [
-      worker_id,
-      plantation,
-      month
-    ],
+    params,
     (err, result) => {
 
       if (err) {
@@ -5736,10 +5745,8 @@ app.get("/machine-labour-attendance", (req, res) => {
       }
 
       res.json(result);
-
     }
   );
-
 });
 
 

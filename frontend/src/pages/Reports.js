@@ -57,23 +57,34 @@ export default function Reports({ plantation }) {
   // LOAD PLANTATION PAYROLL
   // =========================
 
-  useEffect(() => {
-    if (reportType === "plantation") {
-        fetchPlantationData();
-    }
+useEffect(() => {
+  if (reportType === "plantation") {
+    fetchPlantationData();
+  }
 
-    if (reportType === "allworkers") {
-        fetchAllWorkersData();
-    }
+  if (reportType === "allworkers") {
+    fetchAllWorkersData();
+  }
 
-    if (reportType === "rubbertappers") {
-        fetchRubberData();
-    }
+  if (reportType === "rubbertappers") {
+    fetchRubberData();
+  }
 
-    if (reportType === "casualworkers") {
-        fetchCasualData();
-    }
-    }, [plantation, reportType, month]);
+  if (reportType === "casualworkers") {
+    fetchCasualData();
+  }
+
+  if (reportType === "machinelabour") {
+    fetchMachineLabourData();
+  }
+
+}, [
+  reportType,
+  plantation,
+  month,
+  weekStart,
+  weekEnd
+]);
 
   const fetchPlantationData = async () => {
     try {
@@ -219,6 +230,41 @@ export default function Reports({ plantation }) {
     } finally {
         setCasualLoading(false);
     }
+};
+
+// =========================
+// FETCH MACHINE LABOUR DATA
+// =========================
+
+const fetchMachineLabourData = async () => {
+  try {
+    setMachineLabourLoading(true);
+
+    const res = await axios.get(
+      `${API}/machine-labour-attendance`,
+      {
+        params: {
+          month,
+          plantation
+        }
+      }
+    );
+
+    setMachineLabourData(res.data || []);
+
+  } catch (error) {
+    console.error(
+      "Error loading machine labour report:",
+      error.response?.data || error
+    );
+
+    alert(
+      "Error loading machine labour report data."
+    );
+
+  } finally {
+    setMachineLabourLoading(false);
+  }
 };
 
   const fetchWeeklyPlantationData = async () => {
@@ -1257,6 +1303,281 @@ const generateReportHTML = () => {
             win.print();
             };
 
+                    return;
+        }
+
+        // MACHINE LABOUR PRINT REPORT
+        if (
+            reportType === "machinelabour" &&
+            reportPeriod === "monthly"
+        ) {
+            if (machineLabourData.length === 0) {
+                alert(
+                    "No machine labour payments found for this month."
+                );
+                return;
+            }
+
+            const rowsHTML = machineLabourData
+                .map((row) => {
+                    return `
+                        <tr>
+                            <td>
+                                ${
+                                    row.attendance_date
+                                        ? String(
+                                              row.attendance_date
+                                          ).split("T")[0]
+                                        : "-"
+                                }
+                            </td>
+
+                            <td class="name">
+                                ${row.name || "-"}
+                            </td>
+
+                            <td>
+                                ${Number(
+                                    row.oil_cans || 0
+                                )}
+                            </td>
+
+                            <td>
+                                ${Number(
+                                    row.tanks || 0
+                                ).toLocaleString()}
+                            </td>
+
+                            <td>
+                                Rs. ${Number(
+                                    row.rate || 0
+                                ).toLocaleString()}
+                            </td>
+
+                            <td>
+                                Rs. ${Number(
+                                    row.total || 0
+                                ).toLocaleString()}
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join("");
+
+            const monthlyTotal = machineLabourData.reduce(
+                (sum, row) =>
+                    sum + Number(row.total || 0),
+                0
+            );
+
+            const html = `
+                <!DOCTYPE html>
+                <html>
+
+                <head>
+
+                    <title>
+                        ${plantationName}
+                        Machine Labour Payroll Report
+                    </title>
+
+                    <style>
+
+                        @page {
+                            size: A4 portrait;
+                            margin: 15mm;
+                        }
+
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            color: #111;
+                            font-size: 12px;
+                        }
+
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+
+                        .plantation-name {
+                            font-size: 21px;
+                            font-weight: bold;
+                            margin-bottom: 6px;
+                        }
+
+                        .report-title {
+                            font-size: 16px;
+                            font-weight: bold;
+                        }
+
+                        .details {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+
+                        .details td {
+                            padding: 6px 8px;
+                        }
+
+                        .details td.label {
+                            font-weight: bold;
+                            width: 80px;
+                        }
+
+                        table.report {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+
+                        table.report th,
+                        table.report td {
+                            border: 1px solid #000;
+                            padding: 7px 6px;
+                            text-align: center;
+                        }
+
+                        table.report th {
+                            font-weight: bold;
+                        }
+
+                        table.report td.name {
+                            text-align: left;
+                        }
+
+                        table.report tr.total {
+                            font-weight: bold;
+                        }
+
+                        .grand-total {
+                            margin-top: 20px;
+                            text-align: right;
+                            font-size: 15px;
+                            font-weight: bold;
+                        }
+
+                    </style>
+
+                </head>
+
+                <body>
+
+                    <div class="header">
+
+                        <div class="plantation-name">
+                            ${plantationName}
+                        </div>
+
+                        <div class="report-title">
+                            MONTHLY MACHINE LABOUR PAYROLL REPORT
+                        </div>
+
+                    </div>
+
+                    <table class="details">
+
+                        <tr>
+
+                            <td class="label">
+                                Plantation
+                            </td>
+
+                            <td>
+                                ${plantationName}
+                            </td>
+
+                            <td class="label">
+                                Period
+                            </td>
+
+                            <td>
+                                ${reportMonth}
+                            </td>
+
+                            <td class="label">
+                                Generated
+                            </td>
+
+                            <td>
+                                ${new Date().toLocaleDateString(
+                                    "en-GB"
+                                )}
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                    <table class="report">
+
+                        <thead>
+
+                            <tr>
+                                <th>Date</th>
+                                <th>Worker</th>
+                                <th>Oil Cans</th>
+                                <th>Tanks</th>
+                                <th>Rate</th>
+                                <th>Payment</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${rowsHTML}
+
+                            <tr class="total">
+
+                                <td colspan="5">
+                                    MONTHLY TOTAL
+                                </td>
+
+                                <td>
+                                    Rs.
+                                    ${monthlyTotal.toLocaleString()}
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="grand-total">
+
+                        Total Machine Labour Payment:
+                        Rs. ${monthlyTotal.toLocaleString()}
+
+                    </div>
+
+                </body>
+
+                </html>
+            `;
+
+            const win = window.open(
+                "",
+                "_blank"
+            );
+
+            if (!win) {
+                alert(
+                    "Please allow pop-ups to print the report."
+                );
+                return;
+            }
+
+            win.document.write(html);
+            win.document.close();
+
+            setTimeout(() => {
+                win.focus();
+                win.print();
+            }, 500);
+
             return;
         }
 
@@ -1673,6 +1994,290 @@ const generateReportHTML = () => {
 
             return;
         }
+
+                // MACHINE LABOUR DOWNLOAD REPORT
+        if (
+            reportType === "machinelabour" &&
+            reportPeriod === "monthly"
+        ) {
+            if (machineLabourData.length === 0) {
+                alert(
+                    "No machine labour payments found for this month."
+                );
+                return;
+            }
+
+            const rowsHTML = machineLabourData
+                .map((row) => {
+                    return `
+                        <tr>
+                            <td>
+                                ${
+                                    row.attendance_date
+                                        ? String(
+                                              row.attendance_date
+                                          ).split("T")[0]
+                                        : "-"
+                                }
+                            </td>
+
+                            <td class="name">
+                                ${row.name || "-"}
+                            </td>
+
+                            <td>
+                                ${Number(
+                                    row.oil_cans || 0
+                                )}
+                            </td>
+
+                            <td>
+                                ${Number(
+                                    row.tanks || 0
+                                ).toLocaleString()}
+                            </td>
+
+                            <td>
+                                Rs. ${Number(
+                                    row.rate || 0
+                                ).toLocaleString()}
+                            </td>
+
+                            <td>
+                                Rs. ${Number(
+                                    row.total || 0
+                                ).toLocaleString()}
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join("");
+
+            const monthlyTotal = machineLabourData.reduce(
+                (sum, row) =>
+                    sum + Number(row.total || 0),
+                0
+            );
+
+            const html = `
+                <!DOCTYPE html>
+                <html>
+
+                <head>
+
+                    <title>
+                        ${plantationName}
+                        Machine Labour Payroll Report
+                    </title>
+
+                    <style>
+
+                        @page {
+                            size: A4 portrait;
+                            margin: 15mm;
+                        }
+
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            color: #111;
+                            font-size: 12px;
+                        }
+
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+
+                        .plantation-name {
+                            font-size: 21px;
+                            font-weight: bold;
+                            margin-bottom: 6px;
+                        }
+
+                        .report-title {
+                            font-size: 16px;
+                            font-weight: bold;
+                        }
+
+                        .details {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+
+                        .details td {
+                            padding: 6px 8px;
+                        }
+
+                        .details td.label {
+                            font-weight: bold;
+                            width: 80px;
+                        }
+
+                        table.report {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+
+                        table.report th,
+                        table.report td {
+                            border: 1px solid #000;
+                            padding: 7px 6px;
+                            text-align: center;
+                        }
+
+                        table.report th {
+                            font-weight: bold;
+                        }
+
+                        table.report td.name {
+                            text-align: left;
+                        }
+
+                        table.report tr.total {
+                            font-weight: bold;
+                        }
+
+                        .grand-total {
+                            margin-top: 20px;
+                            text-align: right;
+                            font-size: 15px;
+                            font-weight: bold;
+                        }
+
+                    </style>
+
+                </head>
+
+                <body>
+
+                    <div class="header">
+
+                        <div class="plantation-name">
+                            ${plantationName}
+                        </div>
+
+                        <div class="report-title">
+                            MONTHLY MACHINE LABOUR PAYROLL REPORT
+                        </div>
+
+                    </div>
+
+                    <table class="details">
+
+                        <tr>
+
+                            <td class="label">
+                                Plantation
+                            </td>
+
+                            <td>
+                                ${plantationName}
+                            </td>
+
+                            <td class="label">
+                                Period
+                            </td>
+
+                            <td>
+                                ${reportMonth}
+                            </td>
+
+                            <td class="label">
+                                Generated
+                            </td>
+
+                            <td>
+                                ${new Date().toLocaleDateString(
+                                    "en-GB"
+                                )}
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                    <table class="report">
+
+                        <thead>
+
+                            <tr>
+                                <th>Date</th>
+                                <th>Worker</th>
+                                <th>Oil Cans</th>
+                                <th>Tanks</th>
+                                <th>Rate</th>
+                                <th>Payment</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${rowsHTML}
+
+                            <tr class="total">
+
+                                <td colspan="5">
+                                    MONTHLY TOTAL
+                                </td>
+
+                                <td>
+                                    Rs.
+                                    ${monthlyTotal.toLocaleString()}
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="grand-total">
+
+                        Total Machine Labour Payment:
+                        Rs. ${monthlyTotal.toLocaleString()}
+
+                    </div>
+
+                </body>
+
+                </html>
+            `;
+
+            const blob = new Blob(
+                [html],
+                { type: "text/html" }
+            );
+
+            const url =
+                URL.createObjectURL(blob);
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+
+            link.download =
+                `${plantationName} Machine Labour Payroll ${month}.html`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+            return;
+        }
+
+        if (
+            reportType === "rubbertappers" &&
+            reportPeriod === "monthly"
+        ) {
 
         if (
             reportType === "rubbertappers" &&
@@ -2095,25 +2700,14 @@ const generateReportHTML = () => {
                 }
               >
 
-                <MenuItem value="allworkers">
-                  All Workers Payroll
+                <MenuItem value="allworkers">All Workers Payroll</MenuItem>
+                <MenuItem value="plantation">Plantation Workers Payroll</MenuItem>
+                <MenuItem value="rubbertappers">Rubber Tappers Payroll</MenuItem>
+                <MenuItem value="casualworkers">Casual Workers Payroll</MenuItem>
+                <MenuItem value="machinelabour">
+                Machine Labourers Payroll
                 </MenuItem>
-
-                <MenuItem value="plantation">
-                  Plantation Workers Payroll
-                </MenuItem>
-
-                <MenuItem value="rubbertappers">
-                  Rubber Tappers Payroll
-                </MenuItem>
-
-                <MenuItem value="casualworkers">
-                  Casual Workers Payroll
-                </MenuItem>
-
-                <MenuItem value="attendance">
-                  Attendance Register
-                </MenuItem>
+                <MenuItem value="attendance">Attendance Register</MenuItem>
 
               </Select>
 
@@ -2295,7 +2889,165 @@ const generateReportHTML = () => {
         Report Preview
         </Typography>
 
-    {reportType === "allworkers" ? (
+    {reportType === "machinelabour" ? (
+  <>
+    <Typography color="text.secondary">
+      {machineLabourLoading
+        ? "Loading machine labour data..."
+        : `${machineLabourData.length} payment(s) found for ${reportMonth}.`}
+    </Typography>
+
+    {!machineLabourLoading && machineLabourData.length > 0 && (
+      <Box sx={{ mt: 3, overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse"
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Date
+              </th>
+
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Worker
+              </th>
+
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Oil Cans
+              </th>
+
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Tanks
+              </th>
+
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Rate
+              </th>
+
+              <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                Payment
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {machineLabourData.map((row) => (
+              <tr key={row.id}>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px"
+                  }}
+                >
+                  {row.attendance_date
+                    ? String(row.attendance_date).split("T")[0]
+                    : "-"}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px"
+                  }}
+                >
+                  {row.name || "-"}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "right"
+                  }}
+                >
+                  {Number(row.oil_cans || 0)}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "right"
+                  }}
+                >
+                  {Number(row.tanks || 0).toLocaleString()}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "right"
+                  }}
+                >
+                  Rs. {Number(row.rate || 0).toLocaleString()}
+                </td>
+
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "right",
+                    fontWeight: "bold"
+                  }}
+                >
+                  Rs. {Number(row.total || 0).toLocaleString()}
+                </td>
+
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                colSpan="5"
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  textAlign: "right",
+                  fontWeight: "bold"
+                }}
+              >
+                MONTHLY TOTAL
+              </td>
+
+              <td
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  textAlign: "right",
+                  fontWeight: "bold"
+                }}
+              >
+                Rs.{" "}
+                {machineLabourData
+                  .reduce(
+                    (sum, row) =>
+                      sum + Number(row.total || 0),
+                    0
+                  )
+                  .toLocaleString()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </Box>
+    )}
+
+    {!machineLabourLoading &&
+      machineLabourData.length === 0 && (
+        <Typography
+          color="text.secondary"
+          sx={{ mt: 2 }}
+        >
+          No machine labour payments found for {reportMonth}.
+        </Typography>
+      )}
+  </>
+) : reportType === "allworkers" ? (
     <>
         <Typography color="text.secondary">
         {allWorkersLoading
