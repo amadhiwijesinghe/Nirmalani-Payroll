@@ -4002,4 +4002,4 @@ const generateReportHTML = () => {
 
     </Box>
   );
-}
+}}
