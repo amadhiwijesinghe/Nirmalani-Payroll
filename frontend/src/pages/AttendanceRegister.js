@@ -1379,13 +1379,30 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                     color="primary"
                                     fullWidth
                                     disabled={!isEditing || isFinalized}
-                                    onClick={() =>
-                                        setAttendanceValue(
-                                            worker,
-                                            selectedDay,
-                                            1
-                                        )
-                                    }
+                                    onClick={() => {
+
+                                        if (worker.worker_type === "rubber") {
+
+                                            const date = dayjs(
+                                                `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
+                                            ).format("YYYY-MM-DD");
+
+                                            openRubberDialog(
+                                                worker,
+                                                date
+                                            );
+
+                                        } else {
+
+                                            setAttendanceValue(
+                                                worker,
+                                                selectedDay,
+                                                1
+                                            );
+
+                                        }
+
+                                    }}
                                 >
                                     Present
                                 </MobileButton>
@@ -1394,13 +1411,30 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                     color="warning"
                                     fullWidth
                                     disabled={!isEditing || isFinalized}
-                                    onClick={() =>
-                                        setAttendanceValue(
-                                            worker,
-                                            selectedDay,
-                                            0.5
-                                        )
-                                    }
+                                    onClick={() => {
+
+                                        if (worker.worker_type === "rubber") {
+
+                                            const date = dayjs(
+                                                `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
+                                            ).format("YYYY-MM-DD");
+
+                                            openRubberDialog(
+                                                worker,
+                                                date
+                                            );
+
+                                        } else {
+
+                                            setAttendanceValue(
+                                                worker,
+                                                selectedDay,
+                                                0.5
+                                            );
+
+                                        }
+
+                                    }}
                                 >
                                     Half
                                 </MobileButton>

@@ -126,7 +126,11 @@ function App() {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Dashboard plantation={plantation} />
+                  {plantation === "nirmalani" ? (
+                    <Dashboard plantation={plantation} />
+                  ) : (
+                    <IngurupaththalaDashboard plantation={plantation} />
+                  )}
                 </motion.div>
               )}
 
