@@ -16,7 +16,11 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
 
 const API =
@@ -32,6 +36,8 @@ export default function CinnamonCollection({
   const [workerName, setWorkerName] = useState("");
   const [editingWorkerId, setEditingWorkerId] = useState(null);
   const [editWorkerName, setEditWorkerName] = useState("");
+  const [workerSearch, setWorkerSearch] = useState("");
+  const [viewWorker, setViewWorker] = useState(null);
 
   const [workerId, setWorkerId] = useState("");
 
@@ -46,7 +52,7 @@ export default function CinnamonCollection({
 
   // CINNAMON WAREHOUSE
 const [warehouseData, setWarehouseData] = useState([]);
-
+const [viewWarehouseWorker, setViewWarehouseWorker] = useState(null);
 const [warehouseWorkerId, setWarehouseWorkerId] = useState("");
 const [warehouseDate, setWarehouseDate] = useState("");
 const [warehouseWeight, setWarehouseWeight] = useState("");
@@ -58,6 +64,8 @@ const [editWarehouseDate, setEditWarehouseDate] = useState("");
 const [editWarehouseWeight, setEditWarehouseWeight] = useState("");
 const [editWarehouseBundles, setEditWarehouseBundles] = useState("");
 const [editWarehouseSticksPerBundle, setEditWarehouseSticksPerBundle] = useState("");
+const [editWarehouseSticks, setEditWarehouseSticks] = useState("");
+
 
   useEffect(() => {
 
@@ -779,6 +787,143 @@ const updateSticks = async (id) => {
   win.document.close();
 };
 
+const filteredWorkers = workers.filter((worker) =>
+    worker.name
+        ?.toLowerCase()
+        .includes(workerSearch.trim().toLowerCase())
+);
+
+
+const summaryRows = Object.values(
+    data
+        .filter(
+            row =>
+                !filterMonth ||
+                row.date.substring(0, 7) === filterMonth
+        )
+        .reduce((acc, row) => {
+
+            const workerId = row.worker_id;
+
+            if (!acc[workerId]) {
+                acc[workerId] = {
+                    worker_id: workerId,
+                    name: row.name,
+                    total: 0
+                };
+            }
+
+            acc[workerId].total += Number(row.sticks || 0);
+
+            return acc;
+
+        }, {})
+);
+
+const warehouseSummaryRows = Object.values(
+    warehouseData.reduce((acc, row) => {
+
+        const workerId = row.worker_id;
+
+        if (!acc[workerId]) {
+            acc[workerId] = {
+                worker_id: workerId,
+                name: row.name || "-",
+                totalWeight: 0,
+                totalBundles: 0,
+                totalSticks: 0
+            };
+        }
+
+        const weight = Number(row.weight || 0);
+        const bundles = Number(row.bundles || 0);
+        const sticksPerBundle =
+            Number(row.sticks_per_bundle || 0);
+
+        // Total weight
+        acc[workerId].totalWeight += weight;
+
+        // Total bundles
+        acc[workerId].totalBundles += bundles;
+
+        // Total sticks
+        acc[workerId].totalSticks +=
+            bundles * sticksPerBundle;
+
+        return acc;
+
+    }, {})
+);
+
+const warehouseGrandTotalWeight =
+    warehouseSummaryRows.reduce(
+        (sum, worker) =>
+            sum + Number(worker.totalWeight || 0),
+        0
+    );
+
+const warehouseGrandTotalBundles =
+    warehouseSummaryRows.reduce(
+        (sum, worker) =>
+            sum + Number(worker.totalBundles || 0),
+        0
+    );
+
+const warehouseGrandTotalSticks =
+    warehouseSummaryRows.reduce(
+        (sum, worker) =>
+            sum + Number(worker.totalSticks || 0),
+        0
+    );
+
+const workerCollectionData = viewWorker
+    ? data.filter(
+        (row) =>
+            Number(row.worker_id) ===
+            Number(viewWorker.worker_id)
+      )
+    : [];
+
+const workerCollectionTotal =
+    workerCollectionData.reduce(
+        (sum, row) =>
+            sum + Number(row.sticks || 0),
+        0
+    );
+
+
+const warehouseWorkerRecords = viewWarehouseWorker
+    ? warehouseData.filter(
+        row =>
+            Number(row.worker_id) ===
+            Number(viewWarehouseWorker.worker_id)
+      )
+    : [];
+
+const warehouseWorkerTotal =
+    warehouseWorkerRecords.reduce(
+        (sum, row) =>
+            sum + Number(row.weight || 0),
+        0
+    );
+
+const warehouseTotalBundles =
+    warehouseWorkerRecords.reduce(
+        (sum, row) =>
+            sum + Number(row.bundles || 0),
+        0
+    );
+
+const warehouseTotalSticks =
+    warehouseWorkerRecords.reduce(
+        (sum, row) =>
+            sum +
+            (
+                Number(row.bundles || 0) *
+                Number(row.sticks_per_bundle || 0)
+            ),
+        0
+    );
 
   return (
 
@@ -877,6 +1022,30 @@ const updateSticks = async (id) => {
 
             </Grid>
 
+            {/* SEARCH WORKER */}
+
+            <Box sx={{ mb: 3 }}>
+
+                <TextField
+                    fullWidth
+                    label="🔍 Search Cinnamon Worker"
+                    placeholder="Type worker name..."
+                    value={workerSearch}
+                    onChange={(e) =>
+                        setWorkerSearch(e.target.value)
+                    }
+                    sx={{
+                        input: {
+                            color: "#fff"
+                        },
+                        label: {
+                            color: "#aaa"
+                        }
+                    }}
+                />
+
+            </Box>
+
 
             {/* WORKER LIST */}
 
@@ -884,31 +1053,33 @@ const updateSticks = async (id) => {
 
                 <TableHead>
 
-                    <TableRow>
+                  <TableRow>
 
-                        <TableCell sx={{ color: "#aaa" }}>
-                            #
-                        </TableCell>
+                      <TableCell sx={{ color: "#aaa" }}>
+                          #
+                      </TableCell>
 
-                        <TableCell sx={{ color: "#aaa" }}>
-                            Name
-                        </TableCell>
+                      <TableCell sx={{ color: "#aaa" }}>
+                          Worker
+                      </TableCell>
 
-                        <TableCell
-                            sx={{ color: "#aaa" }}
-                            align="right"
-                        >
-                            Actions
-                        </TableCell>
+                      <TableCell sx={{ color: "#aaa" }}>
+                          Total Weight
+                      </TableCell>
 
-                    </TableRow>
+                      <TableCell sx={{ color: "#aaa" }}>
+                          Actions
+                      </TableCell>
 
-                </TableHead>
+                  </TableRow>
+
+              </TableHead>
 
 
                 <TableBody>
 
-                    {workers.map((worker, index) => (
+                  {workerSearch.trim() !== "" &&
+                      filteredWorkers.map((worker, index) => (
 
                         <TableRow key={worker.id}>
 
@@ -944,6 +1115,7 @@ const updateSticks = async (id) => {
 
                                 {editingWorkerId === worker.id ? (
 
+                                <>
                                     <Button
                                         onClick={() =>
                                             updateWorker(worker.id)
@@ -956,9 +1128,12 @@ const updateSticks = async (id) => {
                                     >
                                         Save
                                     </Button>
+                                </>
 
                                 ) : (
 
+                                  <>
+          
                                     <Button
                                         onClick={() => {
 
@@ -980,7 +1155,7 @@ const updateSticks = async (id) => {
                                         Edit
                                     </Button>
 
-                                )}
+                                
 
 
                                 <Button
@@ -995,6 +1170,11 @@ const updateSticks = async (id) => {
                                     Delete
                                 </Button>
 
+                                </>
+                                )}
+
+                                
+
                             </TableCell>
 
                         </TableRow>
@@ -1004,6 +1184,19 @@ const updateSticks = async (id) => {
                 </TableBody>
 
             </Table>
+
+              {workerSearch.trim() !== "" &&
+                filteredWorkers.length === 0 && (
+                    <Typography
+                        sx={{
+                            color: "#aaa",
+                            mt: 2,
+                            textAlign: "center"
+                        }}
+                    >
+                        No Cinnamon Worker found.
+                    </Typography>
+                )}
 
         </Paper>
 
@@ -1246,168 +1439,68 @@ const updateSticks = async (id) => {
         <Table>
 
           <TableHead>
-
             <TableRow>
 
-              <TableCell sx={{ color: "#aaa" }}>
-                Name
-              </TableCell>
+                <TableCell sx={{ color: "#aaa" }}>
+                    Name
+                </TableCell>
 
-              <TableCell sx={{ color: "#aaa" }}>
-                Date
-              </TableCell>
+                <TableCell sx={{ color: "#aaa" }}>
+                    Total Sticks
+                </TableCell>
 
-              <TableCell sx={{ color: "#aaa" }}>
-                Sticks
-              </TableCell>
-
-              <TableCell sx={{ color: "#aaa" }}>
-                Actions
-              </TableCell>
+                <TableCell sx={{ color: "#aaa" }}>
+                    Actions
+                </TableCell>
 
             </TableRow>
+              </TableHead>
 
-          </TableHead>
+                <TableBody>
 
-          <TableBody>
+          {summaryRows.map((worker) => (
 
-            {data
-              .filter(
-                row =>
-                  !filterMonth ||
-                  row.date.substring(0, 7)
-                    === filterMonth
-              )
-              .map((row) => (
+              <TableRow key={worker.worker_id}>
 
-                <TableRow key={row.id}>
-
-                  <TableCell
-                    sx={{ color: "#fff" }}
-                  >
-                    {row.name}
+                  <TableCell sx={{ color: "#fff" }}>
+                      {worker.name}
                   </TableCell>
 
                   <TableCell
-                    sx={{ color: "#fff" }}
+                      sx={{
+                          color: "#22c55e",
+                          fontWeight: "bold"
+                      }}
                   >
-                    {new Date(row.date)
-                        .toISOString()
-                        .split("T")[0]}
+                      {worker.total.toLocaleString()}
                   </TableCell>
-
-                  <TableCell
-                    sx={{ color: "#22c55e" }}
-                    >
-
-                    {editingId === row.id ? (
-
-                        <Box
-                        sx={{
-                            display: "flex",
-                            gap: 1
-                        }}
-                        >
-
-                        <TextField
-                            size="small"
-                            type="number"
-                            value={editSticks}
-                            onChange={(e) =>
-                            setEditSticks(e.target.value)
-                            }
-                            sx={{
-                            width: 100,
-                            input: {
-                                color: "#fff"
-                            }
-                            }}
-                        />
-
-                        <Button
-                            onClick={() =>
-                            updateSticks(row.id)
-                            }
-                            sx={{
-                            background: "#22c55e",
-                            color: "#000"
-                            }}
-                        >
-                            Save
-                        </Button>
-
-                        </Box>
-
-                    ) : (
-
-                        row.sticks
-
-                    )}
-
-                    </TableCell>
 
                   <TableCell>
 
-                    {/* EDIT */}
-                    <Button
-                        onClick={() => {
+                      <Button
+                          onClick={() =>
+                              setViewWorker(worker)
+                          }
+                          sx={{
+                              background: "#3b82f6",
+                              color: "#fff",
+                              fontWeight: "bold",
+                              mr: 1,
+                              "&:hover": {
+                                  background: "#2563eb"
+                              }
+                          }}
+                      >
+                          View
+                      </Button>
 
-                        setEditingId(row.id);
+                  </TableCell>
 
-                        setEditSticks(row.sticks);
-                        }}
-                        sx={{
-                        background: "#facc15",
-                        color: "#000",
-                        mr: 1
-                        }}
-                    >
-                        Edit
-                    </Button>
+              </TableRow>
 
-                    {/* DELETE */}
-                    <Button
-                        onClick={() =>
-                        deleteCollection(row.id)
-                        }
-                        sx={{
-                        background: "#ef4444",
-                        color: "#fff"
-                        }}
-                    >
-                        Delete
-                    </Button>
+          ))}
 
-                    </TableCell>
-
-                </TableRow>
-              ))}
-
-            {/* TOTAL */}
-            <TableRow>
-
-              <TableCell
-                colSpan={3}
-                sx={{
-                  color: "#fff",
-                  fontWeight: "bold"
-                }}
-              >
-                TOTAL STICKS
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  color: "#22c55e",
-                  fontWeight: "bold"
-                }}
-              >
-                {totalSticks.toFixed(2)}
-              </TableCell>
-
-            </TableRow>
-
-          </TableBody>
+      </TableBody>
 
         </Table>
 
@@ -1632,10 +1725,6 @@ const updateSticks = async (id) => {
               </TableCell>
 
               <TableCell sx={{ color: "#aaa" }}>
-                Date
-              </TableCell>
-
-              <TableCell sx={{ color: "#aaa" }}>
                 Weight
               </TableCell>
 
@@ -1658,235 +1747,725 @@ const updateSticks = async (id) => {
 
           <TableBody>
 
-            {warehouseData.map((row, index) => (
+            {warehouseSummaryRows.map((worker, index) => (
 
-              <TableRow key={row.id}>
+                <TableRow key={worker.worker_id}>
 
-                {/* NUMBER */}
-                <TableCell sx={{ color: "#fff" }}>
-                  {index + 1}
-                </TableCell>
+                    <TableCell sx={{ color: "#fff" }}>
+                        {index + 1}
+                    </TableCell>
 
+                    <TableCell sx={{ color: "#fff" }}>
+                        {worker.name}
+                    </TableCell>
 
-                {/* WORKER */}
-                <TableCell sx={{ color: "#fff" }}>
-                  {row.name}
-                </TableCell>
-
-
-                {/* DATE */}
-                <TableCell sx={{ color: "#fff" }}>
-
-                  {editingWarehouseId === row.id ? (
-
-                    <TextField
-                      type="date"
-                      size="small"
-                      value={editWarehouseDate}
-                      onChange={(e) =>
-                        setEditWarehouseDate(e.target.value)
-                      }
-                      sx={{
-                        input: {
-                          color: "#fff"
-                        }
-                      }}
-                    />
-
-                  ) : (
-
-                    new Date(row.transaction_date)
-                      .toISOString()
-                      .split("T")[0]
-
-                  )}
-
-                </TableCell>
-
-
-                {/* WEIGHT */}
-                <TableCell sx={{ color: "#fff" }}>
-
-                  {editingWarehouseId === row.id ? (
-
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={editWarehouseWeight}
-                      onChange={(e) =>
-                        setEditWarehouseWeight(e.target.value)
-                      }
-                      sx={{
-                        width: 100,
-                        input: {
-                          color: "#fff"
-                        }
-                      }}
-                    />
-
-                  ) : (
-
-                    row.weight
-
-                  )}
-
-                </TableCell>
-
-
-                {/* BUNDLES */}
-                <TableCell sx={{ color: "#fff" }}>
-
-                  {editingWarehouseId === row.id ? (
-
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={editWarehouseBundles}
-                      onChange={(e) =>
-                        setEditWarehouseBundles(e.target.value)
-                      }
-                      sx={{
-                        width: 100,
-                        input: {
-                          color: "#fff"
-                        }
-                      }}
-                    />
-
-                  ) : (
-
-                    row.bundles
-
-                  )}
-
-                </TableCell>
-
-
-                {/* STICKS PER BUNDLE */}
-                <TableCell sx={{ color: "#22c55e" }}>
-
-                  {editingWarehouseId === row.id ? (
-
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={editWarehouseSticksPerBundle}
-                      onChange={(e) =>
-                        setEditWarehouseSticksPerBundle(
-                          e.target.value
-                        )
-                      }
-                      sx={{
-                        width: 120,
-                        input: {
-                          color: "#fff"
-                        }
-                      }}
-                    />
-
-                  ) : (
-
-                    row.sticks_per_bundle
-
-                  )}
-
-                </TableCell>
-
-
-                {/* ACTIONS */}
-                <TableCell>
-
-                  {editingWarehouseId === row.id ? (
-
-                    <>
-                      <Button
-                        onClick={() =>
-                          updateWarehouse(row.id)
-                        }
+                    <TableCell
                         sx={{
-                          background: "#22c55e",
-                          color: "#000",
-                          mr: 1
+                            color: "#22c55e",
+                            fontWeight: "bold"
                         }}
-                      >
-                        Save
-                      </Button>
-
-                      <Button
-                        onClick={() => {
-                          setEditingWarehouseId(null);
-                        }}
-                        sx={{
-                          background: "#94a3b8",
-                          color: "#000",
-                          mr: 1
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-
-                  ) : (
-
-                    <Button
-                      onClick={() => {
-
-                        setEditingWarehouseId(row.id);
-
-                        setEditWarehouseDate(
-                          new Date(row.transaction_date)
-                            .toISOString()
-                            .split("T")[0]
-                        );
-
-                        setEditWarehouseWeight(
-                          row.weight || ""
-                        );
-
-                        setEditWarehouseBundles(
-                          row.bundles || ""
-                        );
-
-                        setEditWarehouseSticksPerBundle(
-                          row.sticks_per_bundle || ""
-                        );
-
-                      }}
-                      sx={{
-                        background: "#facc15",
-                        color: "#000",
-                        mr: 1
-                      }}
                     >
-                      Edit
-                    </Button>
+                        {worker.totalWeight.toLocaleString()}
+                    </TableCell>
 
-                  )}
+                    <TableCell
+                        sx={{
+                            color: "#22c55e",
+                            fontWeight: "bold"
+                        }}
+                    >
+                        {worker.totalBundles.toLocaleString()}
+                    </TableCell>
 
+                    <TableCell
+                        sx={{
+                            color: "#22c55e",
+                            fontWeight: "bold"
+                        }}
+                    >
+                        {worker.totalSticks.toLocaleString()}
+                    </TableCell>
 
-                  <Button
-                    onClick={() =>
-                      deleteWarehouse(row.id)
-                    }
-                    sx={{
-                      background: "#ef4444",
-                      color: "#fff"
-                    }}
-                  >
-                    Delete
-                  </Button>
+                    <TableCell>
 
-                </TableCell>
+                        <Button
+                            onClick={() =>
+                                setViewWarehouseWorker(worker)
+                            }
+                            sx={{
+                                background: "#3b82f6",
+                                color: "#fff",
+                                fontWeight: "bold",
+                                "&:hover": {
+                                    background: "#2563eb"
+                                }
+                            }}
+                        >
+                            View
+                        </Button>
 
-              </TableRow>
+                    </TableCell>
+
+                </TableRow>
 
             ))}
 
-          </TableBody>
+
+            {/* GRAND TOTAL */}
+
+            <TableRow>
+
+                <TableCell
+                    colSpan={2}
+                    sx={{
+                        color: "#fff",
+                        fontWeight: "bold",
+                        fontSize: "16px"
+                    }}
+                >
+                    TOTAL WAREHOUSE
+                </TableCell>
+
+                <TableCell
+                    sx={{
+                        color: "#22c55e",
+                        fontWeight: "bold",
+                        fontSize: "16px"
+                    }}
+                >
+                    {warehouseGrandTotalWeight.toLocaleString()}
+                </TableCell>
+
+                <TableCell
+                    sx={{
+                        color: "#22c55e",
+                        fontWeight: "bold",
+                        fontSize: "16px"
+                    }}
+                >
+                    {warehouseGrandTotalBundles.toLocaleString()}
+                </TableCell>
+
+                <TableCell
+                    sx={{
+                        color: "#22c55e",
+                        fontWeight: "bold",
+                        fontSize: "16px"
+                    }}
+                >
+                    {warehouseGrandTotalSticks.toLocaleString()}
+                </TableCell>
+
+                <TableCell />
+
+            </TableRow>
+
+        </TableBody>
 
         </Table>
 
       </Paper>
+
+      <Dialog
+        open={Boolean(viewWarehouseWorker)}
+        onClose={() => setViewWarehouseWorker(null)}
+        fullWidth
+        maxWidth="lg"
+        PaperProps={{
+            sx: {
+                width: "100%",
+                maxWidth: {
+                    xs: "100%",
+                    sm: "95%",
+                    md: "1000px"
+                },
+                m: {
+                    xs: 1,
+                    sm: 2
+                },
+                borderRadius: {
+                    xs: 2,
+                    sm: 3
+                }
+            }
+        }}
+    >
+
+        <DialogTitle
+          sx={{
+              fontWeight: 700,
+              pb: 1
+          }}
+      >
+          🏭 Warehouse Records
+
+          <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.5 }}
+          >
+              Worker: {viewWarehouseWorker?.name || "-"}
+          </Typography>
+      </DialogTitle>
+
+        <DialogContent>
+
+
+            {warehouseWorkerRecords.length === 0 ? (
+
+                <Typography color="text.secondary">
+                    No warehouse records found for this worker.
+                </Typography>
+
+            ) : (
+
+                <Box
+                  sx={{
+                      width: "100%",
+                      overflowX: "auto",
+                      WebkitOverflowScrolling: "touch"
+                  }}
+              >
+                  <Table
+                      sx={{
+                          minWidth: 750
+                      }}
+                  >
+
+                    <TableHead>
+                      <TableRow>
+
+                          <TableCell>
+                              Date
+                          </TableCell>
+
+                          <TableCell align="right">
+                              Weight
+                          </TableCell>
+
+                          <TableCell align="right">
+                              Bundles
+                          </TableCell>
+
+                          <TableCell align="right">
+                              Sticks / Bundle
+                          </TableCell>
+
+                          <TableCell align="right">
+                              Actions
+                          </TableCell>
+
+                      </TableRow>
+                  </TableHead>
+
+
+                    <TableBody>
+
+                        {warehouseWorkerRecords.map((row) => (
+
+                           <TableRow key={row.id}>
+
+                            {/* DATE */}
+
+                            <TableCell>
+
+                                {editingWarehouseId === row.id ? (
+
+                                    <TextField
+                                        type="date"
+                                        size="small"
+                                        value={editWarehouseDate}
+                                        onChange={(e) =>
+                                            setEditWarehouseDate(e.target.value)
+                                        }
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
+                                    />
+
+                                ) : (
+
+                                    row.transaction_date
+                                        ? String(row.transaction_date).split("T")[0]
+                                        : "-"
+
+                                )}
+
+                            </TableCell>
+
+
+                            {/* WEIGHT */}
+
+                            <TableCell align="right">
+
+                                {editingWarehouseId === row.id ? (
+
+                                    <TextField
+                                        type="number"
+                                        size="small"
+                                        value={editWarehouseWeight}
+                                        onChange={(e) =>
+                                            setEditWarehouseWeight(e.target.value)
+                                        }
+                                        sx={{
+                                            width: 100
+                                        }}
+                                    />
+
+                                ) : (
+
+                                    Number(row.weight || 0).toLocaleString()
+
+                                )}
+
+                            </TableCell>
+
+
+                            {/* BUNDLES */}
+
+                            <TableCell align="right">
+
+                                {editingWarehouseId === row.id ? (
+
+                                    <TextField
+                                        type="number"
+                                        size="small"
+                                        value={editWarehouseBundles}
+                                        onChange={(e) =>
+                                            setEditWarehouseBundles(e.target.value)
+                                        }
+                                        sx={{
+                                            width: 80
+                                        }}
+                                    />
+
+                                ) : (
+
+                                    Number(row.bundles || 0).toLocaleString()
+
+                                )}
+
+                            </TableCell>
+
+
+                            {/* STICKS PER BUNDLE */}
+
+                            <TableCell align="right">
+
+                                {editingWarehouseId === row.id ? (
+
+                                    <TextField
+                                        type="number"
+                                        size="small"
+                                        value={editWarehouseSticksPerBundle}
+                                        onChange={(e) =>
+                                            setEditWarehouseSticksPerBundle(
+                                                e.target.value
+                                            )
+                                        }
+                                        sx={{
+                                            width: 100
+                                        }}
+                                    />
+
+                                ) : (
+
+                                    Number(
+                                        row.sticks_per_bundle || 0
+                                    ).toLocaleString()
+
+                                )}
+
+                            </TableCell>
+
+
+                            {/* ACTIONS */}
+
+                            <TableCell align="right">
+
+                                {editingWarehouseId === row.id ? (
+
+                                    <>
+
+                                        <Button
+                                          size="small"
+                                            onClick={async () => {
+
+                                                await updateWarehouse(row.id);
+
+                                                setEditingWarehouseId(null);
+
+                                            }}
+                                            sx={{
+                                                background: "#22c55e",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                mr: 1,
+                                                "&:hover": {
+                                                    background: "#16a34a"
+                                                }
+                                            }}
+                                        >
+                                            Save
+                                        </Button>
+
+
+                                        <Button
+                                          size="small"
+                                            onClick={() =>
+                                                setEditingWarehouseId(null)
+                                            }
+                                            sx={{
+                                                background: "#9ca3af",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                "&:hover": {
+                                                    background: "#6b7280"
+                                                }
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+
+                                    </>
+
+                                ) : (
+
+                                    <>
+
+                                        <Button
+                                          size="small"
+                                            onClick={() => {
+
+                                                setEditingWarehouseId(row.id);
+
+                                                setEditWarehouseDate(
+                                                    row.transaction_date
+                                                        ? String(
+                                                            row.transaction_date
+                                                        ).split("T")[0]
+                                                        : ""
+                                                );
+
+                                                setEditWarehouseWeight(
+                                                    row.weight || ""
+                                                );
+
+                                                setEditWarehouseBundles(
+                                                    row.bundles || ""
+                                                );
+
+                                                setEditWarehouseSticksPerBundle(
+                                                    row.sticks_per_bundle || ""
+                                                );
+
+                                            }}
+                                            sx={{
+                                                background: "#facc15",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                mr: 1
+                                            }}
+                                        >
+                                            Edit
+                                        </Button>
+
+
+                                        <Button
+                                          size="small"
+                                            onClick={() =>
+                                                deleteWarehouse(row.id)
+                                            }
+                                            sx={{
+                                                background: "#ef4444",
+                                                color: "#fff",
+                                                fontWeight: "bold"
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+
+                                    </>
+
+                                )}
+
+                            </TableCell>
+
+                        </TableRow>
+
+                        ))}
+
+
+                        {/* TOTAL */}
+
+                        <TableRow>
+
+                          <TableCell
+                              sx={{
+                                  fontWeight: "bold"
+                              }}
+                          >
+                              TOTAL
+                          </TableCell>
+
+                          <TableCell
+                              align="right"
+                              sx={{
+                                  fontWeight: "bold",
+                                  color: "#16a34a"
+                              }}
+                          >
+                              {warehouseWorkerTotal.toLocaleString()}
+                          </TableCell>
+
+                          <TableCell
+                              align="right"
+                              sx={{
+                                  fontWeight: "bold",
+                                  color: "#16a34a"
+                              }}
+                          >
+                              {warehouseTotalBundles.toLocaleString()}
+                          </TableCell>
+
+                          <TableCell
+                              align="right"
+                              sx={{
+                                  fontWeight: "bold",
+                                  color: "#16a34a"
+                              }}
+                          >
+                              {warehouseTotalSticks.toLocaleString()}
+                          </TableCell>
+
+                      </TableRow>
+
+                    </TableBody>
+
+                </Table>
+                </Box>
+
+            )}
+
+        </DialogContent>
+
+
+        <DialogActions>
+
+            <Button
+                onClick={() =>
+                    setViewWarehouseWorker(null)
+                }
+            >
+                Close
+            </Button>
+
+        </DialogActions>
+
+    </Dialog>
+
+      {/* VIEW CINNAMON COLLECTION */}
+
+      <Dialog
+        open={Boolean(viewWorker)}
+        onClose={() => setViewWorker(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+
+        <DialogTitle>
+          🌿 Cinnamon Collection
+        </DialogTitle>
+
+        <DialogContent>
+
+          <Typography
+            sx={{
+              fontWeight: "bold",
+              mb: 2
+            }}
+          >
+            Worker: {viewWorker?.name}
+          </Typography>
+
+
+          {workerCollectionData.length === 0 ? (
+
+            <Typography color="text.secondary">
+              No collection records found for this worker.
+            </Typography>
+
+          ) : (
+
+            <Table>
+
+              <TableHead>
+
+                <TableRow>
+
+                  <TableCell>
+                      Date
+                  </TableCell>
+
+                  <TableCell align="right">
+                      Sticks
+                  </TableCell>
+
+                  <TableCell align="right">
+                      Actions
+                  </TableCell>
+
+              </TableRow>
+
+              </TableHead>
+
+
+              <TableBody>
+
+                {workerCollectionData.map((row) => (
+
+                  <TableRow key={row.id}>
+
+                    <TableCell>
+                        {row.date
+                            ? String(row.date).split("T")[0]
+                            : "-"}
+                    </TableCell>
+
+                    <TableCell align="right">
+
+                      {editingId === row.id ? (
+
+                          <Box
+                              sx={{
+                                  display: "flex",
+                                  justifyContent: "flex-end",
+                                  alignItems: "center",
+                                  gap: 1
+                              }}
+                          >
+
+                              <TextField
+                                  size="small"
+                                  type="number"
+                                  value={editSticks}
+                                  onChange={(e) =>
+                                      setEditSticks(e.target.value)
+                                  }
+                                  sx={{
+                                      width: 100,
+                                      input: {
+                                          color: "#fff"
+                                      }
+                                  }}
+                              />
+
+                              <Button
+                                  onClick={async () => {
+                                      await updateSticks(row.id);
+                                  }}
+                                  sx={{
+                                      background: "#22c55e",
+                                      color: "#000",
+                                      fontWeight: "bold"
+                                  }}
+                              >
+                                  Save
+                              </Button>
+
+                          </Box>
+
+                      ) : (
+
+                          Number(row.sticks || 0).toLocaleString()
+
+                      )}
+
+                  </TableCell>
+
+                    <TableCell align="right">
+
+                        <Button
+                            onClick={() => {
+                                setEditingId(row.id);
+                                setEditSticks(row.sticks);
+                            }}
+                            sx={{
+                                background: "#facc15",
+                                color: "#000",
+                                fontWeight: "bold",
+                                mr: 1
+                            }}
+                        >
+                            Edit
+                        </Button>
+
+                        <Button
+                            onClick={() =>
+                                deleteCollection(row.id)
+                            }
+                            sx={{
+                                background: "#ef4444",
+                                color: "#fff",
+                                fontWeight: "bold"
+                            }}
+                        >
+                            Delete
+                        </Button>
+
+                    </TableCell>
+
+                </TableRow>
+
+                ))}
+
+
+                {/* TOTAL */}
+
+                <TableRow>
+
+                  <TableCell
+                    sx={{
+                      fontWeight: "bold"
+                    }}
+                  >
+                    TOTAL
+                  </TableCell>
+
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: "bold",
+                      color: "#16a34a"
+                    }}
+                  >
+                    {workerCollectionTotal.toLocaleString()}
+                  </TableCell>
+
+                </TableRow>
+
+              </TableBody>
+
+            </Table>
+
+          )}
+
+        </DialogContent>
+
+
+        <DialogActions>
+
+          <Button
+            onClick={() =>
+              setViewWorker(null)
+            }
+          >
+            Close
+          </Button>
+
+        </DialogActions>
+
+      </Dialog>
 
     </Box>
   );
