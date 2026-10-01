@@ -86,6 +86,7 @@ useEffect(() => {
   weekEnd
 ]);
 
+
   const fetchPlantationData = async () => {
     try {
       setLoading(true);
@@ -105,110 +106,81 @@ useEffect(() => {
 
   const fetchAllWorkersData = async () => {
     try {
-        setAllWorkersLoading(true);
+      setAllWorkersLoading(true);
 
-        const res = await axios.get(
+      const res = await axios.get(
         `${API}/dashboard/all-worker-salary-report/${month}`,
         {
-            params: {
+          params: {
             plantation
-            }
+          }
         }
-        );
+      );
 
-        setAllWorkersData(res.data || []);
+      setAllWorkersData(res.data || []);
+
     } catch (error) {
-        console.error("Error loading all workers report:", error);
-        alert("Error loading all workers report.");
+      console.error(
+        "Error loading all workers report:",
+        error
+      );
+
+      alert(
+        "Error loading all workers report."
+      );
+
     } finally {
-        setAllWorkersLoading(false);
-    }const fetchRubberData = async () => {
-  try {
-    setRubberLoading(true);
+      setAllWorkersLoading(false);
+    }
+  };
 
-    const res = await axios.get(
-      `${API}/rubber-payroll-data?plantation=${plantation}`
-    );
 
-    const settingsRes = await axios.get(
-      `${API}/payroll-settings?plantation=${plantation}`
-    );
+  const fetchRubberData = async () => {
+    try {
+      setRubberLoading(true);
 
-    const settings = settingsRes.data || {};
+      const res = await axios.get(
+        `${API}/rubber-payroll-data?plantation=${plantation}`
+      );
 
-    setRubberTemporaryRate(
-      Number(settings.temporary_rate || 300)
-    );
+      const settingsRes = await axios.get(
+        `${API}/payroll-settings?plantation=${plantation}`
+      );
 
-    setRubberBonusRate(
-      Number(settings.rubber_bonus_rate || 250)
-    );
+      const settings = settingsRes.data || {};
 
-    setRubberMinimumKg(
-      Number(settings.rubber_minimum_kg || 2.5)
-    );
+      setRubberTemporaryRate(
+        Number(settings.temporary_rate || 300)
+      );
 
-    setRubberBonusStartKg(
-      Number(settings.rubber_bonus_start_kg || 7)
-    );
+      setRubberBonusRate(
+        Number(settings.rubber_bonus_rate || 250)
+      );
 
-    setRubberData(res.data || []);
-  } catch (error) {
-    console.error(
-      "Error loading rubber tappers payroll:",
-      error
-    );
+      setRubberMinimumKg(
+        Number(settings.rubber_minimum_kg || 2.5)
+      );
 
-    alert("Error loading rubber tappers payroll data.");
-  } finally {
-    setRubberLoading(false);
-  }
-};
-    };
+      setRubberBonusStartKg(
+        Number(settings.rubber_bonus_start_kg || 7)
+      );
 
-    const fetchRubberData = async () => {
-        try {
-            setRubberLoading(true);
+      setRubberData(res.data || []);
 
-            const res = await axios.get(
-            `${API}/rubber-payroll-data?plantation=${plantation}`
-            );
+    } catch (error) {
+      console.error(
+        "Error loading rubber tappers payroll:",
+        error
+      );
 
-            const settingsRes = await axios.get(
-            `${API}/payroll-settings?plantation=${plantation}`
-            );
+      alert(
+        "Error loading rubber tappers payroll data."
+      );
 
-            const settings = settingsRes.data || {};
-
-            setRubberTemporaryRate(
-            Number(settings.temporary_rate || 300)
-            );
-
-            setRubberBonusRate(
-            Number(settings.rubber_bonus_rate || 250)
-            );
-
-            setRubberMinimumKg(
-            Number(settings.rubber_minimum_kg || 2.5)
-            );
-
-            setRubberBonusStartKg(
-            Number(settings.rubber_bonus_start_kg || 7)
-            );
-
-            setRubberData(res.data || []);
-        } catch (error) {
-            console.error(
-            "Error loading rubber tappers payroll:",
-            error
-            );
-
-            alert("Error loading rubber tappers payroll data.");
-        } finally {
-            setRubberLoading(false);
-        }
-        };
-
+    } finally {
+      setRubberLoading(false);
+    }
+  };
   const fetchCasualData = async () => {
     try {
         setCasualLoading(true);
@@ -266,7 +238,7 @@ const fetchMachineLabourData = async () => {
     setMachineLabourLoading(false);
   }
 };
-
+  
   const fetchWeeklyPlantationData = async () => {
     if (!weekStart || !weekEnd) {
         alert("Please select week start and week end.");
@@ -303,7 +275,7 @@ const fetchMachineLabourData = async () => {
         setWeeklyLoading(false);
     }
     };
-
+  
   // =========================
   // PAYROLL CALCULATION
   // =========================
@@ -444,7 +416,7 @@ const fetchMachineLabourData = async () => {
         netSalary
     };
     };
-
+  
   // =========================
   // GROUP DATA
   // =========================
@@ -2646,7 +2618,7 @@ const generateReportHTML = () => {
 
     URL.revokeObjectURL(url);
     };
-
+    }
   return (
     <Box sx={{ p: 3 }}>
 
@@ -3202,6 +3174,181 @@ const generateReportHTML = () => {
         </Typography>
         )}
     </>
+
+) : reportType === "plantation" &&
+    reportPeriod === "monthly" ? (
+
+    <>
+        <Typography color="text.secondary">
+            {loading
+                ? "Loading plantation workers payroll data..."
+                : `${rows.length} worker(s) found for ${reportMonth}.`}
+        </Typography>
+
+        {!loading && rows.length > 0 && (
+            <Box sx={{ mt: 3, overflowX: "auto" }}>
+                <table
+                    style={{
+                        width: "100%",
+                        borderCollapse: "collapse"
+                    }}
+                >
+                    <thead>
+                        <tr>
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                EPF No
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Name
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Days
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Rate
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Amount
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Allowance
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                EPF 8%
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                EPF 12%
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                ETF
+                            </th>
+
+                            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                Net Salary
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {rows.map((row, index) => {
+
+                            const c = calculate(
+                                row.amount,
+                                row.allowance
+                            );
+
+                            return (
+                                <tr
+                                    key={
+                                        row.worker_id ||
+                                        row.id ||
+                                        index
+                                    }
+                                >
+                                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                        {row.epf_no || "-"}
+                                    </td>
+
+                                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                                        {row.name || "-"}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "center"
+                                    }}>
+                                        {Number(
+                                            row.days ||
+                                            row.worked_days ||
+                                            row.attendance ||
+                                            0
+                                        ).toFixed(1)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {Number(
+                                            row.rate ||
+                                            row.daily_rate ||
+                                            0
+                                        ).toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {c.amount.toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {c.allowance.toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {c.epf_8.toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {c.epf_12.toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right"
+                                    }}>
+                                        Rs. {c.etf.toFixed(2)}
+                                    </td>
+
+                                    <td style={{
+                                        border: "1px solid #ccc",
+                                        padding: "8px",
+                                        textAlign: "right",
+                                        fontWeight: "bold"
+                                    }}>
+                                        Rs. {c.balance.toFixed(2)}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </Box>
+        )}
+
+        {!loading && rows.length === 0 && (
+            <Typography color="text.secondary" sx={{ mt: 2 }}>
+                No plantation workers payroll data found for {reportMonth}.
+            </Typography>
+        )}
+    </>
+
 ) : reportType === "casualworkers" &&
     reportPeriod === "monthly" ? (
 
@@ -3401,7 +3548,10 @@ const generateReportHTML = () => {
             </Typography>
         </Box>
     )}
-
+        </>
+    ) : reportType === "rubbertappers" &&
+        reportPeriod === "monthly" ? (
+        <>
         <Typography color="text.secondary">
             {rubberLoading
                 ? "Loading rubber tappers payroll data..."
@@ -3994,12 +4144,13 @@ const generateReportHTML = () => {
             </Typography>
         </>
         )}
-    </>
-    )}
+
+        </>
+        )}
 
     </CardContent>
     </Card>
 
     </Box>
-  );
-}}
+    );
+}
