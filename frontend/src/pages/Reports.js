@@ -1838,32 +1838,33 @@ const generateReportHTML = () => {
             return;
         }
 
-          if (reportType === "plantation") {
+          
+        if (reportType === "plantation") {
             if (rows.length === 0) {
-            alert("No plantation workers payroll data found for this month.");
-            return;
+                alert("No plantation workers payroll data found for this month.");
+                return;
             }
 
             const html = generateReportHTML();
+            const win = window.open("", "_blank");
 
-            const blob = new Blob([html], {
-            type: "text/html"
-            });
+            if (!win) {
+                alert("Please allow pop-ups to print the report.");
+                return;
+            }
 
-            const url = URL.createObjectURL(blob);
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
 
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `Plantation_Workers_Payroll_${month}.html`;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            URL.revokeObjectURL(url);
+            win.onload = () => {
+                win.focus();
+                win.print();
+            };
 
             return;
         }
+
 
         if (reportPeriod === "weekly") {
         if (!weekStart || !weekEnd) {
