@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");  
 const mysql = require("mysql2");
 const multer = require("multer");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const mysqldump = require("mysqldump");
 const fs = require("fs");
@@ -134,21 +136,19 @@ app.get("/check-file", (req, res) => {
 });
 // ================= DATABASE =================
 
+
 const db = mysql.createPool({
-  host: process.env.MYSQLHOST || "localhost",
-  user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "root123",
-  database: process.env.MYSQLDATABASE || "railway",
-  port: process.env.MYSQLPORT || 3306,
-
-  ssl: {
-    rejectUnauthorized: false
-  },
-
+  host: process.env.RAILWAY_DB_HOST,
+  user: process.env.RAILWAY_DB_USER,
+  password: process.env.RAILWAY_DB_PASSWORD,
+  database: process.env.RAILWAY_DB_NAME,
+  port: Number(process.env.RAILWAY_DB_PORT || 3306),
+  ssl: { rejectUnauthorized: false },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
+
 
 // ================= ROOT =================
 
@@ -158,15 +158,88 @@ app.get("/", (req, res) => {
 
 // ================= LOGIN =================
 
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
 
-  if (username === "admin" && password === "Admin@2026") {
-    res.send({ success: true });
-  } else {
-    res.send({ success: false });
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required.",
+      });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing.");
+      return res.status(500).json({
+        success: false,
+        message: "Authentication is not configured.",
+      });
+    }
+
+    const [rows] = await db.promise().execute(
+      `SELECT id, full_name, username, password_hash,
+              role, plantation, is_active
+       FROM app_users
+       WHERE username = ?
+       LIMIT 1`,
+      [username.trim()]
+    );
+
+    console.log("LOGIN DIAGNOSTIC:", {
+      submittedUsername: username.trim(),
+      accountFound: rows.length > 0,
+      accountActive: rows.length > 0 ? rows[0].is_active : null,
+      passwordMatches: rows.length > 0
+        ? await bcrypt.compare(password, rows[0].password_hash)
+        : false
+    });
+
+    if (
+      rows.length === 0 ||
+      !rows[0].is_active ||
+      !(await bcrypt.compare(password, rows[0].password_hash))
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password.",
+      });
+    }
+
+    const user = rows[0];
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        plantation: user.plantation,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        username: user.username,
+        role: user.role,
+        plantation: user.plantation,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to log in. Please try again.",
+    });
   }
 });
+
 
 // ================= EMPLOYEES =================
 

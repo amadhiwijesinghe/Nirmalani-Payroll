@@ -1,3 +1,19 @@
 node_modules/
 frontend/node_modules/
 Backend/node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Database backups
+Backend/backups/
+
+# Temporary diagnostic scripts
+Backend/checkAdminLogin.js
+Backend/checkDatabase.js
+Backend/createAdmin.js
+ Copy content

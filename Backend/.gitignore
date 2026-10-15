@@ -1,3 +1,10 @@
 node_modules
-package-lock.json
 config/google-service-account.json
+
+Backend/.env
+Backend/.env.*
+!Backend/.env.example
+Backend/backups/
+Backend/checkAdminLogin.js
+Backend/checkDatabase.js
+Backend/createAdmin.js
