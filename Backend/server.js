@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");  
+const cors = require("cors");
 const mysql = require("mysql2");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
@@ -78,6 +78,80 @@ app.use(cors({
 
 app.use(express.json());
 
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required.",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired session. Please log in again.",
+    });
+  }
+}
+
+
+async function verifyAdmin(req, res, next) {
+  try {
+    if (
+      !req.user ||
+      req.user.role !== "admin" ||
+      req.user.username !== "AmadhiW"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Administrator access required.",
+      });
+    }
+
+    const [users] = await db.promise().execute(
+      `SELECT id, username, role, is_active, account_status
+       FROM app_users
+       WHERE id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (
+      users.length === 0 ||
+      users[0].username !== "AmadhiW" ||
+      users[0].role !== "admin" ||
+      !users[0].is_active ||
+      users[0].account_status !== "approved"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Administrator account is inactive or not approved.",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin verification error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to verify administrator access.",
+    });
+  }
+}
+
+
+
 const uploadDir = path.join(
   __dirname,
   "uploads",
@@ -108,46 +182,35 @@ const backupRoutes = require("./routes/backupRoutes");
 app.use("/api/backup", backupRoutes);
 
 
-// ================= DEBUG ENV =================
-console.log("ENV CHECK:", {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  db: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
-});
-
-app.get("/check-file", (req, res) => {
-
-  const fs = require("fs");
-
-  const filePath =
-    path.join(
-      __dirname,
-      "uploads",
-      "expenditure",
-      "Sanuji Agro Bill - 15.jpeg"
-    );
-
-  res.json({
-    exists: fs.existsSync(filePath),
-    path: filePath
-  });
-
-});
 // ================= DATABASE =================
 
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const db = mysql.createPool({
-  host: process.env.RAILWAY_DB_HOST,
-  user: process.env.RAILWAY_DB_USER,
-  password: process.env.RAILWAY_DB_PASSWORD,
-  database: process.env.RAILWAY_DB_NAME,
-  port: Number(process.env.RAILWAY_DB_PORT || 3306),
-  ssl: { rejectUnauthorized: false },
+  host: isProduction
+    ? process.env.RAILWAY_DB_HOST
+    : process.env.DB_HOST,
+  user: isProduction
+    ? process.env.RAILWAY_DB_USER
+    : process.env.DB_USER,
+  password: isProduction
+    ? process.env.RAILWAY_DB_PASSWORD
+    : process.env.DB_PASSWORD,
+  database: isProduction
+    ? process.env.RAILWAY_DB_NAME
+    : process.env.DB_NAME,
+  port: Number(
+    isProduction
+      ? process.env.RAILWAY_DB_PORT || 3306
+      : process.env.DB_PORT || 3306
+  ),
+  ...(isProduction ? { ssl: { rejectUnauthorized: false } } : {}),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
+
 
 
 // ================= ROOT =================
@@ -178,27 +241,20 @@ app.post("/login", async (req, res) => {
       });
     }
 
+
     const [rows] = await db.promise().execute(
       `SELECT id, full_name, username, password_hash,
-              role, plantation, is_active
-       FROM app_users
-       WHERE username = ?
-       LIMIT 1`,
+              role, plantation, is_active, account_status
+      FROM app_users
+      WHERE username = ?
+      LIMIT 1`,
       [username.trim()]
     );
-
-    console.log("LOGIN DIAGNOSTIC:", {
-      submittedUsername: username.trim(),
-      accountFound: rows.length > 0,
-      accountActive: rows.length > 0 ? rows[0].is_active : null,
-      passwordMatches: rows.length > 0
-        ? await bcrypt.compare(password, rows[0].password_hash)
-        : false
-    });
 
     if (
       rows.length === 0 ||
       !rows[0].is_active ||
+      rows[0].account_status !== "approved" ||
       !(await bcrypt.compare(password, rows[0].password_hash))
     ) {
       return res.status(401).json({
@@ -208,6 +264,20 @@ app.post("/login", async (req, res) => {
     }
 
     const user = rows[0];
+
+
+    await db.promise().execute(
+      `INSERT INTO activity_logs
+       (user_id, username, action, module, description)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        user.id,
+        user.username,
+        "LOGIN",
+        "Authentication",
+        "Staff logged in successfully"
+      ]
+    );
 
     const token = jwt.sign(
       {
@@ -241,67 +311,361 @@ app.post("/login", async (req, res) => {
 });
 
 
-// ================= EMPLOYEES =================
+ // ================= STAFF REGISTRATION =================
 
-app.get("/employees", async (req, res) => {
-
+app.post("/register", async (req, res) => {
   try {
+    const { fullName, username, password } = req.body;
 
-    const plantation = req.query.plantation;
+    if (
+      typeof fullName !== "string" ||
+      typeof username !== "string" ||
+      typeof password !== "string" ||
+      !fullName.trim() ||
+      !username.trim() ||
+      password.length < 8
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter your full name, username, and a password with at least 8 characters.",
+      });
+    }
 
-    const [rows] =
-      await db.promise().query(
-        `
-        SELECT *
-        FROM employees
-        WHERE LOWER(plantation) = LOWER(?)
-        `,
-        [plantation]
-      );
+    const cleanName = fullName.trim();
+    const cleanUsername = username.trim();
 
-    res.json(rows);
+    if (cleanName.length > 100 || cleanUsername.length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name or username is too long.",
+      });
+    }
 
-  } catch (err) {
+    const [existingUsers] = await db.promise().execute(
+      "SELECT id FROM app_users WHERE username = ? LIMIT 1",
+      [cleanUsername]
+    );
 
-    console.log(err);
+    if (existingUsers.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "That username is already taken. Please choose another.",
+      });
+    }
 
-    res.status(500).json(err);
+    const passwordHash = await bcrypt.hash(password, 12);
 
+    await db.promise().execute(
+      `INSERT INTO app_users
+        (full_name, username, password_hash, role, plantation,
+         is_active, account_status)
+       VALUES (?, ?, ?, 'staff', 'nirmalani', 1, 'pending')`,
+      [cleanName, cleanUsername, passwordHash]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Registration submitted. Please wait for administrator approval before logging in.",
+    });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        success: false,
+        message: "That username is already taken. Please choose another.",
+      });
+    }
+
+    console.error("Staff registration error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to register. Please try again later.",
+    });
   }
 });
 
-app.post("/employees", (req, res) => {
+
+ // ================= ADMIN STAFF MANAGEMENT =================
+
+app.get("/admin/pending-users", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const [users] = await db.promise().execute(
+      `SELECT id, full_name, username, role, is_active,
+              account_status, created_at
+       FROM app_users
+       WHERE account_status = 'pending'
+       ORDER BY created_at ASC`
+    );
+
+    return res.json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error("Pending users error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load pending staff accounts.",
+    });
+  }
+});
+
+
+app.put(
+  "/admin/users/:id/approve",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID.",
+        });
+      }
+
+      const [result] = await db.promise().execute(
+        `UPDATE app_users
+         SET account_status = 'approved'
+         WHERE id = ?
+           AND role = 'staff'
+           AND account_status = 'pending'`,
+        [userId]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Pending staff account not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Staff account approved successfully.",
+      });
+    } catch (error) {
+      console.error("Approve staff error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to approve staff account.",
+      });
+    }
+  }
+);
+
+
+app.put(
+  "/admin/users/:id/reject",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID.",
+        });
+      }
+
+      const [result] = await db.promise().execute(
+        `UPDATE app_users
+         SET account_status = 'rejected'
+         WHERE id = ?
+           AND role = 'staff'
+           AND account_status = 'pending'`,
+        [userId]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Pending staff account not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Staff registration rejected.",
+      });
+    } catch (error) {
+      console.error("Reject staff error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to reject staff registration.",
+      });
+    }
+  }
+);
+
+
+app.put(
+  "/admin/users/:id/deactivate",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID.",
+        });
+      }
+
+      const [result] = await db.promise().execute(
+        `UPDATE app_users
+         SET is_active = 0
+         WHERE id = ?
+           AND role = 'staff'
+           AND is_active = 1`,
+        [userId]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Active staff account not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Staff account deactivated successfully.",
+      });
+    } catch (error) {
+      console.error("Deactivate staff error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to deactivate staff account.",
+      });
+    }
+  }
+);
+
+
+app.get(
+  "/admin/users",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const [users] = await db.promise().execute(
+        `SELECT id, full_name, username, role, is_active,
+                account_status, created_at
+         FROM app_users
+         WHERE role = 'staff'
+         ORDER BY created_at DESC`
+      );
+
+      return res.json({
+        success: true,
+        users,
+      });
+    } catch (error) {
+      console.error("Load staff accounts error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load staff accounts.",
+      });
+    }
+  }
+);
+
+
+
+ // ================= EMPLOYEES =================
+
+app.get("/employees", verifyToken, async (req, res) => {
+  try {
+    const plantation = req.query.plantation;
+
+    const [rows] = await db.promise().query(
+      `SELECT *
+       FROM employees
+       WHERE LOWER(plantation) = LOWER(?)`,
+      [plantation]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Fetch employees error:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch employees."
+    });
+  }
+});
+
+app.post("/employees", verifyToken, (req, res) => {
   const { name, memberid, NIC, basic_salary, plantation } = req.body;
 
   db.query(
-    "INSERT INTO employees (name, memberid, NIC, basic_salary, plantation) VALUES (?, ?, ?, ?, ?)",
+    `INSERT INTO employees
+     (name, memberid, NIC, basic_salary, plantation)
+     VALUES (?, ?, ?, ?, ?)`,
     [name, memberid, NIC, basic_salary, plantation],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("Add employee error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Unable to add employee."
+        });
+      }
+
       res.json(result);
     }
   );
 });
 
-app.put("/employees/:id", (req, res) => {
+app.put("/employees/:id", verifyToken, (req, res) => {
   const { name, memberid, NIC, basic_salary } = req.body;
 
   db.query(
-    "UPDATE employees SET name=?, memberid=?, NIC=?, basic_salary=? WHERE id=?",
+    `UPDATE employees
+     SET name = ?, memberid = ?, NIC = ?, basic_salary = ?
+     WHERE id = ?`,
     [name, memberid, NIC, basic_salary, req.params.id],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("Update employee error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Unable to update employee."
+        });
+      }
+
       res.json(result);
     }
   );
 });
 
-app.delete("/employees/:id", (req, res) => {
+app.delete("/employees/:id", verifyToken, (req, res) => {
   db.query(
-    "DELETE FROM employees WHERE memberid=?",
+    "DELETE FROM employees WHERE memberid = ?",
     [req.params.id],
     (err, result) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("Delete employee error:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Unable to delete employee."
+        });
+      }
+
       res.json({ success: true });
     }
   );
@@ -309,7 +673,7 @@ app.delete("/employees/:id", (req, res) => {
 
 // ================= ATTENDANCE =================
 
-app.post("/attendance", (req, res) => {
+app.post("/attendance", verifyToken, (req, res) => {
   const { memberid, date, present, month, plantation } = req.body;
 
   const sql = `
@@ -324,7 +688,7 @@ app.post("/attendance", (req, res) => {
   });
 });
 
-app.get("/attendance", (req, res) => {
+app.get("/attendance", verifyToken, (req, res) => {
 
     const plantation = req.query.plantation;
 
@@ -353,7 +717,7 @@ app.get("/attendance", (req, res) => {
 
 // ================= ALLOWANCE =================
 
-app.post("/allowance", (req, res) => {
+app.post("/allowance", verifyToken, (req, res) => {
 
   const {
     memberid,
@@ -385,7 +749,7 @@ app.post("/allowance", (req, res) => {
 
 });
 
-app.get("/allowance-summary", (req, res) => {
+app.get("/allowance-summary", verifyToken, (req, res) => {
 
   const {
     month,
@@ -425,7 +789,7 @@ app.get("/allowance-summary", (req, res) => {
 
 // ================= PAYROLL (FIXED) =================
 
-app.get("/payroll/:month?", (req, res) => {
+app.get("/payroll/:month?", verifyToken, (req, res) => {
 
     const plantation = req.query.plantation;
     const month = req.params.month;
@@ -505,7 +869,7 @@ app.get("/payroll/:month?", (req, res) => {
 
 // ================= PLANTATION WORKERS =================
 // 🌿 Plantation Workers
-app.get('/plantation-workers', (req, res) => {
+app.get("/plantation-workers", verifyToken, async (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -524,7 +888,7 @@ app.get('/plantation-workers', (req, res) => {
   );
 });
 
-app.post('/plantation-workers', (req, res) => {
+app.post("/plantation-workers", verifyToken, async (req, res) => {
 
   const { name, epf_no, plantation } = req.body;
 
@@ -547,7 +911,7 @@ app.post('/plantation-workers', (req, res) => {
 });
 
 // UPDATE PLANTATION WORKER
-app.put("/plantation-workers/:id", (req, res) => {
+app.put("/plantation-workers/:id", verifyToken, async (req, res) => {
 
   const { name, epf_no } = req.body;
 
@@ -569,8 +933,8 @@ app.put("/plantation-workers/:id", (req, res) => {
   );
 });
 
-// Plantation Workers Save Allowance 
-app.post("/plantation-allowance", (req, res) => {
+// Plantation Workers Save Allowance
+app.post("/plantation-allowance", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -616,7 +980,7 @@ app.post("/plantation-allowance", (req, res) => {
 });
 
 // Plantation Workers Get Allowance
-app.get("/plantation-allowance", (req, res) => {
+app.get("/plantation-allowance", verifyToken, (req, res) => {
 
   const {
     month,
@@ -747,7 +1111,7 @@ app.get("/plantation-allowance", (req, res) => {
 // });
 
 // DELETE FULL PLANTATION PAYROLL
-app.delete("/plantation-attendance", (req, res) => {
+app.delete("/plantation-attendance", verifyToken, (req, res) => {
 
   const { worker_id, month } = req.query;
 
@@ -864,7 +1228,7 @@ app.delete("/plantation-attendance", (req, res) => {
 
 
 // 🌿 Combined Data
-app.get('/plantation-data', (req, res) => {
+app.get("/plantation-data", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -921,7 +1285,7 @@ app.get('/plantation-data', (req, res) => {
 });
 
 // Get Daily Rate
-app.get("/payroll-settings", (req, res) => {
+app.get("/payroll-settings", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -955,7 +1319,7 @@ app.get("/payroll-settings", (req, res) => {
 });
 
 // Update Payroll Settings
-app.put("/payroll-settings", (req, res) => {
+app.put("/payroll-settings", verifyToken, (req, res) => {
 
   const {
     plantation,
@@ -1005,7 +1369,7 @@ app.put("/payroll-settings", (req, res) => {
 });
 
 // View Plantation Worker Attendance
-app.get("/attendance-register/worker", (req, res) => {
+app.get("/attendance-register/worker", verifyToken, (req, res) => {
 
   const { worker_id, month } = req.query;
 
@@ -1037,7 +1401,7 @@ app.get("/attendance-register/worker", (req, res) => {
 
 // ================= DELETE PLANTATION ATTENDANCE =================
 
-app.delete("/attendance-register/:id", (req, res) => {
+app.delete("/attendance-register/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -1065,7 +1429,7 @@ app.delete("/attendance-register/:id", (req, res) => {
 });
 
 // WEEKLY REPORT
-app.get("/plantation-weekly-report", (req, res) => {
+app.get("/plantation-weekly-report", verifyToken, (req, res) => {
 
   const { weekStart, weekEnd } = req.query;
 
@@ -1130,9 +1494,7 @@ app.get("/plantation-weekly-report", (req, res) => {
   );
 });
 
-app.get(
-  "/dashboard/plantation-total-required/:month",
-  (req, res) => {
+app.get("/dashboard/plantation-total-required/:month", verifyToken, (req, res) => {
 
     const month = req.params.month;
     const plantation = req.query.plantation;
@@ -1204,7 +1566,7 @@ app.get(
 // ================= RUBBER TAPPERS ============
 //ADD
 
-app.get("/rubber-tappers", (req, res) => {
+app.get("/rubber-tappers", verifyToken, (req, res) => {
 
     const { plantation } = req.query;
 
@@ -1223,7 +1585,7 @@ app.get("/rubber-tappers", (req, res) => {
     );
 
 });
-app.post('/rubber-tappers', (req, res) => {
+app.post("/rubber-tappers", verifyToken, (req, res) => {
 
   const {
 
@@ -1258,7 +1620,7 @@ app.post('/rubber-tappers', (req, res) => {
 });
 
 // SAVE RUBBER TAPPERS ATTENDANCE
-app.post("/rubber-attendance-register", (req, res) => {
+app.post("/rubber-attendance-register", verifyToken, async (req, res) => {
 
   const {
     worker_id,
@@ -1327,7 +1689,7 @@ app.post("/rubber-attendance-register", (req, res) => {
 });
 
 // GET RUBBER TAPPERS ATTENDANCE
-app.get("/rubber-attendance-register", (req, res) => {
+app.get("/rubber-attendance-register", verifyToken, async (req, res) => {
 
   const {
     worker_id,
@@ -1363,7 +1725,7 @@ app.get("/rubber-attendance-register", (req, res) => {
 });
 
 // DELETE RUBBER TAPPERS ATTENDANCE
-app.delete("/rubber-attendance-register/:id", (req, res) => {
+app.delete("/rubber-attendance-register/:id", verifyToken, (req, res) => {
 
     const id = req.params.id;
 
@@ -1429,8 +1791,8 @@ app.delete("/rubber-attendance-register/:id", (req, res) => {
 
 });
 
-// RUBBER TAPPERS SAVE ALLOWANCE 
-app.post("/rubber-allowance",(req,res)=>{
+// RUBBER TAPPERS SAVE ALLOWANCE
+app.post("/rubber-allowance", verifyToken, (req,res)=>{
 
     const {worker_id,month,allowance}=req.body;
 
@@ -1465,8 +1827,8 @@ app.post("/rubber-allowance",(req,res)=>{
 
 });
 
-// RUBBER TAPPERS GET ALLOWANCE 
-app.get("/rubber-allowance",(req,res)=>{
+// RUBBER TAPPERS GET ALLOWANCE
+app.get("/rubber-allowance", verifyToken, (req,res)=>{
 
     const {month,plantation}=req.query;
 
@@ -1518,7 +1880,7 @@ app.get("/rubber-allowance",(req,res)=>{
 });
 
 // RUBBER TAPPERS CALENDAR
-app.get("/rubber-attendance-calendar", (req, res) => {
+app.get("/rubber-attendance-calendar", verifyToken, (req, res) => {
 
     const { plantation, month, year } = req.query;
 
@@ -1552,7 +1914,7 @@ app.get("/rubber-attendance-calendar", (req, res) => {
 });
 
 // RUBBER TAPPERS PAYROLL DATA
-app.get("/rubber-payroll-data", (req, res) => {
+app.get("/rubber-payroll-data", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -1621,7 +1983,7 @@ app.get("/rubber-payroll-data", (req, res) => {
 
 
 // GET RUBBER TAPPERS HISTORY
-app.get("/rubber-attendance-history/:workerId/:month", (req, res) => {
+app.get("/rubber-attendance-history/:workerId/:month", verifyToken, (req, res) => {
 
     const { workerId, month } = req.params;
 
@@ -1649,8 +2011,8 @@ app.get("/rubber-attendance-history/:workerId/:month", (req, res) => {
 
 });
 
-// RUBBER TAPPERS WEEKLY REPORT 
-app.get("/rubber-weekly-report", (req, res) => {
+// RUBBER TAPPERS WEEKLY REPORT
+app.get("/rubber-weekly-report", verifyToken, (req, res) => {
 
   const { plantation, weekStart, weekEnd } = req.query;
 
@@ -1874,7 +2236,7 @@ app.get("/rubber-weekly-report", (req, res) => {
 
 // ================= RUBBER TAPPERS DASHBOARD SUMMARY =================
 
-app.get("/dashboard/rubber-summary/:month", (req, res) => {
+app.get("/dashboard/rubber-summary/:month", verifyToken, (req, res) => {
 
   const month = req.params.month;
   const plantation = req.query.plantation;
@@ -1953,7 +2315,7 @@ app.get("/dashboard/rubber-summary/:month", (req, res) => {
 
 // ================= FULL SYSTEM PDF REPORT =================
 
-app.get("/full-system-report/:month", async (req, res) => {
+app.get("/full-system-report/:month", verifyToken, async (req, res) => {
 
   const month = req.params.month;
 
@@ -2171,7 +2533,7 @@ app.get("/full-system-report/:month", async (req, res) => {
 // ================= TEA COLLECTION =================
 
 // ADD TEA COLLECTION
-app.post("/tea-collection", (req, res) => {
+app.post("/tea-collection", verifyToken, (req, res) => {
   const { worker_id, date, kg, plantation } = req.body;
 
   if (!date || kg === undefined || !plantation) {
@@ -2224,7 +2586,7 @@ app.post("/tea-collection", (req, res) => {
 });
 
 // GET TEA COLLECTION
-app.get("/tea-collection", (req, res) => {
+app.get("/tea-collection", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -2261,7 +2623,7 @@ app.get("/tea-collection", (req, res) => {
 });
 
 // UPDATE TEA COLLECTION
-app.put("/tea-collection/:id", (req, res) => {
+app.put("/tea-collection/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -2286,7 +2648,7 @@ app.put("/tea-collection/:id", (req, res) => {
 });
 
 // DELETE TEA COLLECTION
-app.delete("/tea-collection/:id", (req, res) => {
+app.delete("/tea-collection/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -2309,7 +2671,7 @@ app.delete("/tea-collection/:id", (req, res) => {
 });
 
 // TEA DISTRIBUTION
-app.post("/tea-distribution", (req,res)=>{
+app.post("/tea-distribution", verifyToken, (req,res)=>{
 
   const {
     distribution_date,
@@ -2347,7 +2709,7 @@ app.post("/tea-distribution", (req,res)=>{
 
 });
 
-app.get("/tea-distribution",(req,res)=>{
+app.get("/tea-distribution", verifyToken, (req,res)=>{
 
   const plantation =
     req.query.plantation;
@@ -2375,7 +2737,8 @@ app.get("/tea-distribution",(req,res)=>{
 // ================= CINNAMON WORKERS =================
 
 // GET CINNAMON WORKERS
-app.get("/cinnamon-workers", (req, res) => {
+app.get("/cinnamon-workers", verifyToken, (req, res) => {
+
 
     const { plantation } = req.query;
 
@@ -2398,7 +2761,7 @@ app.get("/cinnamon-workers", (req, res) => {
 });
 
 // ADD CINNAMON WORKER
-app.post("/cinnamon-workers", (req, res) => {
+app.post("/cinnamon-workers", verifyToken, (req, res) => {
 
     const { name, plantation } = req.body;
 
@@ -2434,7 +2797,7 @@ app.post("/cinnamon-workers", (req, res) => {
 });
 
 // UPDATE CINNAMON WORKER
-app.put("/cinnamon-workers/:id", (req, res) => {
+app.put("/cinnamon-workers/:id", verifyToken, (req, res) => {
 
     const { name } = req.body;
 
@@ -2469,7 +2832,7 @@ app.put("/cinnamon-workers/:id", (req, res) => {
 });
 
 // DELETE CINNAMON WORKER
-app.delete("/cinnamon-workers/:id", (req, res) => {
+app.delete("/cinnamon-workers/:id", verifyToken, (req, res) => {
 
     const sql = `
         DELETE FROM cinnamon_workers
@@ -2497,7 +2860,7 @@ app.delete("/cinnamon-workers/:id", (req, res) => {
 // ================= CINNAMON COLLECTION =================
 
 // ADD CINNAMON COLLECTION
-app.post("/cinnamon-collection", (req, res) => {
+app.post("/cinnamon-collection", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -2558,7 +2921,7 @@ app.post("/cinnamon-collection", (req, res) => {
 
 
 // GET CINNAMON COLLECTION
-app.get("/cinnamon-collection", (req, res) => {
+app.get("/cinnamon-collection", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -2599,7 +2962,7 @@ app.get("/cinnamon-collection", (req, res) => {
 
 
 // UPDATE CINNAMON COLLECTION
-app.put("/cinnamon-collection/:id", (req, res) => {
+app.put("/cinnamon-collection/:id", verifyToken, (req, res) => {
 
   const {
     date,
@@ -2640,7 +3003,7 @@ app.put("/cinnamon-collection/:id", (req, res) => {
 
 
 // DELETE CINNAMON COLLECTION
-app.delete("/cinnamon-collection/:id", (req, res) => {
+app.delete("/cinnamon-collection/:id", verifyToken, (req, res) => {
 
   const sql = `
     DELETE FROM cinnamon_collection
@@ -2670,7 +3033,7 @@ app.delete("/cinnamon-collection/:id", (req, res) => {
 // ================= CINNAMON WAREHOUSE =================
 
 // GET CINNAMON WAREHOUSE
-app.get("/cinnamon-warehouse", (req, res) => {
+app.get("/cinnamon-warehouse", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -2706,7 +3069,7 @@ app.get("/cinnamon-warehouse", (req, res) => {
 
 
 // ADD CINNAMON WAREHOUSE
-app.post("/cinnamon-warehouse", (req, res) => {
+app.post("/cinnamon-warehouse", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -2779,7 +3142,7 @@ app.post("/cinnamon-warehouse", (req, res) => {
 
 
 // UPDATE CINNAMON WAREHOUSE
-app.put("/cinnamon-warehouse/:id", (req, res) => {
+app.put("/cinnamon-warehouse/:id", verifyToken, (req, res) => {
 
   const {
     transaction_date,
@@ -2826,7 +3189,7 @@ app.put("/cinnamon-warehouse/:id", (req, res) => {
 
 
 // DELETE CINNAMON WAREHOUSE
-app.delete("/cinnamon-warehouse/:id", (req, res) => {
+app.delete("/cinnamon-warehouse/:id", verifyToken, (req, res) => {
 
   const sql = `
     DELETE FROM cinnamon_warehouse
@@ -2855,7 +3218,7 @@ app.delete("/cinnamon-warehouse/:id", (req, res) => {
 
 // කෝට උර
 // ADD KOTA URA
-app.post("/cinnamon-kota-ura", (req, res) => {
+app.post("/cinnamon-kota-ura", verifyToken, (req, res) => {
 
   const {
     date,
@@ -2894,7 +3257,7 @@ app.post("/cinnamon-kota-ura", (req, res) => {
 });
 
 // GET KOTA URA
-app.get("/cinnamon-kota-ura", (req, res) => {
+app.get("/cinnamon-kota-ura", verifyToken, (req, res) => {
 
   const plantation =
     req.query.plantation;
@@ -2921,7 +3284,7 @@ app.get("/cinnamon-kota-ura", (req, res) => {
 
 // තැන්පත් කිරීම
 // ADD DEPOSIT
-app.post("/cinnamon-deposit", (req, res) => {
+app.post("/cinnamon-deposit", verifyToken, (req, res) => {
 
   const {
     date,
@@ -2960,7 +3323,7 @@ app.post("/cinnamon-deposit", (req, res) => {
 });
 
 // GET DEPOSIT
-app.get("/cinnamon-deposit", (req, res) => {
+app.get("/cinnamon-deposit", verifyToken, (req, res) => {
 
   const plantation =
     req.query.plantation;
@@ -2988,7 +3351,7 @@ app.get("/cinnamon-deposit", (req, res) => {
 // ================= RUBBER DISPATCH =================
 
 // ADD DISPATCH
-app.post("/rubber-dispatch", (req, res) => {
+app.post("/rubber-dispatch", verifyToken, (req, res) => {
 
   const {
     liters_sent,
@@ -3029,7 +3392,7 @@ app.post("/rubber-dispatch", (req, res) => {
 });
 
 // GET DISPATCH DATA
-app.get("/rubber-dispatch", (req, res) => {
+app.get("/rubber-dispatch", verifyToken, (req, res) => {
 
   const sql = `
     SELECT *
@@ -3054,7 +3417,7 @@ app.get("/rubber-dispatch", (req, res) => {
 });
 
 // DELETE DISPATCH
-app.delete("/rubber-dispatch/:id", (req, res) => {
+app.delete("/rubber-dispatch/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -3077,7 +3440,7 @@ app.delete("/rubber-dispatch/:id", (req, res) => {
 });
 
 // UPDATE DISPATCH
-app.put("/rubber-dispatch/:id", (req, res) => {
+app.put("/rubber-dispatch/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -3108,7 +3471,7 @@ app.put("/rubber-dispatch/:id", (req, res) => {
 // ================= RUBBER COLLECTION =================
 
 // ADD COLLECTION
-app.post("/rubber-collection", (req, res) => {
+app.post("/rubber-collection", verifyToken, (req, res) => {
 
   const {
     liters_collected,
@@ -3148,7 +3511,7 @@ app.post("/rubber-collection", (req, res) => {
   );
 });
 
-app.get("/rubber-collection", (req, res) => {
+app.get("/rubber-collection", verifyToken, (req, res) => {
 
   const sql = `
     SELECT *
@@ -3173,7 +3536,7 @@ app.get("/rubber-collection", (req, res) => {
 });
 
 // ADD OTTAPALU
-app.post("/ottapalu", (req, res) => {
+app.post("/ottapalu", verifyToken, (req, res) => {
 
   const {
     quantity,
@@ -3214,7 +3577,7 @@ app.post("/ottapalu", (req, res) => {
 });
 
 // GET OTTAPALU
-app.get("/ottapalu", (req, res) => {
+app.get("/ottapalu", verifyToken, (req, res) => {
 
   const plantation =
     req.query.plantation;
@@ -3244,7 +3607,7 @@ app.get("/ottapalu", (req, res) => {
 // ================ COCONUT ===================
 
 // SAVE COCONUT
-app.post("/coconut-collection", (req,res)=>{
+app.post("/coconut-collection", verifyToken, (req, res) => {
 
   const {
     collection_date,
@@ -3284,7 +3647,7 @@ app.post("/coconut-collection", (req,res)=>{
 
 // GET COCONUT
 
-app.get("/coconut-collection",(req,res)=>{
+app.get("/coconut-collection", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3308,7 +3671,7 @@ app.get("/coconut-collection",(req,res)=>{
 });
 
 // DELETE COCONUT
-app.delete("/coconut-collection/:id", (req,res)=>{
+app.delete("/coconut-collection/:id", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3332,7 +3695,7 @@ app.delete("/coconut-collection/:id", (req,res)=>{
 });
 
 // SALES
-app.post("/coconut-sales", (req,res)=>{
+app.post("/coconut-sales", verifyToken, (req, res) => {
 
   const {
     sale_date,
@@ -3371,7 +3734,7 @@ app.post("/coconut-sales", (req,res)=>{
 
 });
 
-app.get("/coconut-sales",(req,res)=>{
+app.get("/coconut-sales", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3394,8 +3757,8 @@ app.get("/coconut-sales",(req,res)=>{
 
 });
 
-// FREE GIVING 
-app.post("/coconut-free-giving",(req,res)=>{
+// FREE GIVING
+app.post("/coconut-free-giving", verifyToken, (req, res) => {
 
   const {
     free_date,
@@ -3434,7 +3797,7 @@ app.post("/coconut-free-giving",(req,res)=>{
 
 });
 
-app.get("/coconut-free-giving",(req,res)=>{
+app.get("/coconut-free-giving", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3460,7 +3823,7 @@ app.get("/coconut-free-giving",(req,res)=>{
 // ================ PADDY =======================
 
 // SAVE PADDY
-app.post("/paddy-collection", (req,res)=>{
+app.post("/paddy-collection", verifyToken, (req, res) => {
 
   const {
     collection_date,
@@ -3500,7 +3863,7 @@ app.post("/paddy-collection", (req,res)=>{
 
 // GET PADDY
 
-app.get("/paddy-collection",(req,res)=>{
+app.get("/paddy-collection", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3524,7 +3887,7 @@ app.get("/paddy-collection",(req,res)=>{
 });
 
 // DELETE PADDY
-app.delete("/paddy-collection/:id", (req,res)=>{
+app.delete("/paddy-collection/:id", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3548,7 +3911,7 @@ app.delete("/paddy-collection/:id", (req,res)=>{
 });
 
 // SALES
-app.post("/paddy-sales", (req,res)=>{
+app.post("/paddy-sales", verifyToken, (req, res) => {
 
   const {
     sale_date,
@@ -3587,7 +3950,7 @@ app.post("/paddy-sales", (req,res)=>{
 
 });
 
-app.get("/paddy-sales",(req,res)=>{
+app.get("/paddy-sales", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3610,8 +3973,8 @@ app.get("/paddy-sales",(req,res)=>{
 
 });
 
-// FREE GIVING 
-app.post("/paddy-free-giving",(req,res)=>{
+// FREE GIVING
+app.post("/paddy-free-giving", verifyToken, (req, res) => {
 
   const {
     free_date,
@@ -3650,7 +4013,7 @@ app.post("/paddy-free-giving",(req,res)=>{
 
 });
 
-app.get("/paddy-free-giving",(req,res)=>{
+app.get("/paddy-free-giving", verifyToken, (req, res) => {
 
   db.query(
     `
@@ -3674,7 +4037,7 @@ app.get("/paddy-free-giving",(req,res)=>{
 });
 
 // ================= CASUAL WORKERS =========
-app.get("/casual-workers-data", (req, res) => {
+app.get("/casual-workers-data", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -3729,6 +4092,7 @@ app.get("/casual-workers-data", (req, res) => {
 // GET CASUAL WORKER ATTENDANCE DATES
 app.get(
   "/casual-workers-attendance-dates",
+  verifyToken,
   (req, res) => {
 
     const {
@@ -3772,7 +4136,7 @@ app.get(
 );
 
 // GET CASUAL WORKERS
-app.get("/casual-workers", (req,res)=>{
+app.get("/casual-workers", verifyToken, (req,res)=>{
 
     const plantation = req.query.plantation;
 
@@ -3798,7 +4162,7 @@ app.get("/casual-workers", (req,res)=>{
 });
 
 // ADD CASUAL WORKERS
-app.post("/casual-workers", (req, res) => {
+app.post("/casual-workers", verifyToken, (req, res) => {
 
   const { name, plantation } = req.body;
 
@@ -3829,7 +4193,7 @@ app.post("/casual-workers", (req, res) => {
 });
 
 // CASUAL WORKERS SAVE ALLOWANCE
-app.post("/casual-allowance", (req, res) => {
+app.post("/casual-allowance", verifyToken, (req, res) => {
 
     const {
         worker_id,
@@ -3875,7 +4239,7 @@ app.post("/casual-allowance", (req, res) => {
 });
 
 // CASUAL WORKERS GET ALLOWANCE
-app.get("/casual-allowance", (req, res) => {
+app.get("/casual-allowance", verifyToken, (req, res) => {
 
     const {
         month,
@@ -3929,7 +4293,7 @@ app.get("/casual-allowance", (req, res) => {
 
 // ================= CASUAL WORKERS PAYROLL DATA =================
 
-app.get("/casual-payroll-data", (req, res) => {
+app.get("/casual-payroll-data", verifyToken, (req, res) => {
 
     const plantation = req.query.plantation;
 
@@ -4017,6 +4381,7 @@ app.get("/casual-payroll-data", (req, res) => {
 // ADD DAILY ATTENDANCE - CASUAL WORKERS
 app.post(
   "/casual-workers-attendance",
+  verifyToken,
   (req, res) => {
 
     const {
@@ -4078,6 +4443,7 @@ app.post(
 // DELETE ATTENDANCE - CASUAL WORKERS
 app.delete(
   "/casual-workers-attendance/:id",
+  verifyToken,
   (req, res) => {
 
     const { id } = req.params;
@@ -4109,6 +4475,7 @@ app.delete(
 // UPDATE CASUAL WORKERS
 app.put(
   "/casual-workers-attendance/:id",
+  verifyToken,
   (req, res) => {
 
     const { id } = req.params;
@@ -4155,7 +4522,7 @@ app.put(
 );
 
 //SUMMARY
-app.get("/dashboard/casual-summary/:month", (req, res) => {
+app.get("/dashboard/casual-summary/:month", verifyToken, (req, res) => {
 
     const month = req.params.month;
     const plantation = req.query.plantation;
@@ -4215,7 +4582,7 @@ app.get("/dashboard/casual-summary/:month", (req, res) => {
 
 // ======================= ATTENDANCE REGISTER ======================
 // LOAD ALL WORKERS
-app.get("/attendance-register/workers", async (req, res) => {
+app.get("/attendance-register/workers", verifyToken, async (req, res) => {
 
     try {
 
@@ -4298,7 +4665,8 @@ app.get("/attendance-register/workers", async (req, res) => {
 
 
 // LOAD MONTHLY ATTENDANCE
-app.get("/attendance-register", async (req, res) => {
+app.get("/attendance-register", verifyToken, async (req, res) => {
+
 
     try {
 
@@ -4337,7 +4705,7 @@ app.get("/attendance-register", async (req, res) => {
 });
 
 // SAVE MONTHLY ATTENDANCE
-app.post("/attendance-register", async (req, res) => {
+app.post("/attendance-register", verifyToken, async (req, res) => {
 
     try {
 
@@ -4390,7 +4758,7 @@ app.post("/attendance-register", async (req, res) => {
 });
 
 // ATTENDANCE STATUS
-app.get("/attendance-register/status", async (req, res) => {
+app.get("/attendance-register/status", verifyToken, async (req, res) => {
 
     try {
 
@@ -4436,7 +4804,7 @@ app.get("/attendance-register/status", async (req, res) => {
 });
 
 // POST FINALIZED ATTENDANCE
-app.post("/attendance-register/finalize", async (req, res) => {
+app.post("/attendance-register/finalize", verifyToken, async (req, res) => {
 
     try {
 
@@ -4490,7 +4858,7 @@ app.post("/attendance-register/finalize", async (req, res) => {
 
 // ================= INCOME ================
 // GET INCOME
-app.get("/income", (req, res) => {
+app.get("/income", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -4516,7 +4884,7 @@ app.get("/income", (req, res) => {
 });
 
 // ADD INCOME
-app.post("/income", (req,res)=>{
+app.post("/income", verifyToken, (req, res) => {
 
   const {
     income_type,
@@ -4563,7 +4931,7 @@ app.post("/income", (req,res)=>{
 });
 
 // DELETE INCOME
-app.delete("/income/:id", (req,res)=>{
+app.delete("/income/:id", verifyToken, (req, res) => {
 
   db.query(
     "DELETE FROM income WHERE id=?",
@@ -4583,7 +4951,7 @@ app.delete("/income/:id", (req,res)=>{
 });
 
 // UPDATE INCOME
-app.put("/income/:id", (req, res) => {
+app.put("/income/:id", verifyToken, (req, res) => {
 
   const {
     category,
@@ -4629,7 +4997,7 @@ app.put("/income/:id", (req, res) => {
 });
 
 // ================ EXPENDITURE ============
-app.get("/expenditure", async (req, res) => {
+app.get("/expenditure", verifyToken, async (req, res) => {
   try {
 
     const plantation = req.query.plantation;
@@ -4698,8 +5066,9 @@ app.get("/expenditure", async (req, res) => {
 // ADD EXPENDITURE
 app.post(
   "/expenditure",
+  verifyToken,
   upload.array("photos", 10),
-  async (req,res)=>{
+  async (req, res) => {
 
     const photos = [];
     console.log("Files:", req.files);
@@ -4755,7 +5124,7 @@ app.post(
     sql,
     [
 
-      bank_account || null, 
+      bank_account || null,
       category || null,
 
       sub_category || null,
@@ -4767,9 +5136,9 @@ app.post(
       date || null,
 
       transaction_type || "Expense",
-      
+
       JSON.stringify(photos),
-      
+
       plantation
     ],
     (err,result)=>{
@@ -4797,7 +5166,7 @@ app.post(
 });
 
 // DELETE EXPENDITURE
-app.delete("/expenditure/:id", (req,res)=>{
+app.delete("/expenditure/:id", verifyToken, (req, res) => {
 
   db.query(
     "DELETE FROM expenditure WHERE id=?",
@@ -4819,6 +5188,7 @@ app.delete("/expenditure/:id", (req,res)=>{
 // UPDATE EXPENDITURE
 app.put(
   "/expenditure/:id",
+  verifyToken,
   upload.array("photos", 10),
   async (req, res) => {
 
@@ -4916,7 +5286,7 @@ app.put(
 
 //Total Income
 
-app.get("/dashboard/total-income/:month", (req,res)=>{
+app.get("/dashboard/total-income/:month", verifyToken, (req, res) => {
 
     const month = req.params.month;
     const plantation = req.query.plantation;
@@ -4948,7 +5318,7 @@ app.get("/dashboard/total-income/:month", (req,res)=>{
 
 // Total Expenditure
 
-app.get("/dashboard/total-expenditure/:month", (req, res) => {
+app.get("/dashboard/total-expenditure/:month", verifyToken, (req, res) => {
 
     const month = req.params.month;
     const plantation = req.query.plantation;
@@ -4978,7 +5348,7 @@ app.get("/dashboard/total-expenditure/:month", (req, res) => {
 });
 
 // Monthly Profit & Loss
-app.get("/dashboard/monthly-profit-loss", (req, res) => {
+app.get("/dashboard/monthly-profit-loss", verifyToken, (req, res) => {
 
   const plantation=req.query.plantation;
 
@@ -5064,9 +5434,10 @@ app.get("/dashboard/monthly-profit-loss", (req, res) => {
 
 });
 
-// MONTHLY FINANCIAL REPORT 
+// MONTHLY FINANCIAL REPORT
 app.get(
   "/dashboard/monthly-financial-report/:month",
+  verifyToken,
   async (req, res) => {
 
     const plantation=req.query.plantation;
@@ -5119,6 +5490,7 @@ app.get(
 
 app.get(
   "/dashboard/monthly-cashflow",
+  verifyToken,
   async (req,res) => {
 
     try {
@@ -5213,6 +5585,7 @@ app.get(
 
 app.get(
   "/dashboard/monthly-cashflow/:month",
+  verifyToken,
   async (req,res) => {
 
     const plantation=req.query.plantation;
@@ -5335,7 +5708,7 @@ app.get(
 });
 
 // ALL WORKER REPORT
-app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
+app.get("/dashboard/all-worker-salary-report/:month", verifyToken, async (req, res) => {
 
   const plantation = req.query.plantation;
   const month = req.params.month;
@@ -5346,44 +5719,46 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
     // ================= PLANTATION =================
 
-    const plantationSql = `
-      SELECT
-        pw.name,
-        pw.epf_no,
-        DATE_FORMAT(pda.date,'%Y-%m') AS month,
 
-        SUM(
-          CASE
-            WHEN DAYOFWEEK(pda.date)=1
-            THEN 1.5
-            ELSE 1
-          END
-        ) AS days,
+const plantationSql = `
+  SELECT
+    pw.name,
+    pw.epf_no,
+    DATE_FORMAT(ar.attendance_date, '%Y-%m') AS month,
 
-        MIN(pda.rate_per_day) AS rate,
+    SUM(ar.attendance_value) AS days,
 
-        SUM(pda.rate_per_day) AS amount,
+    ps.daily_rate AS rate,
 
-        IFNULL(MAX(pa.allowance),0) AS allowance
+    SUM(ar.attendance_value * ps.daily_rate) AS amount,
 
-      FROM plantation_workers pw
+    COALESCE(MAX(pa.allowance), 0) AS allowance
 
-      JOIN plantation_daily_attendance pda
-        ON pw.id = pda.worker_id
+  FROM plantation_workers pw
 
-      LEFT JOIN plantation_attendance pa
-        ON pa.worker_id = pw.id
-        AND pa.month = DATE_FORMAT(pda.date,'%Y-%m')
+  JOIN attendance_register ar
+    ON pw.id = ar.worker_id
+    AND ar.worker_type = 'plantation'
 
-      WHERE pda.status='present'
-      AND DATE_FORMAT(pda.date,'%Y-%m') = ?
-      AND pw.plantation = ?
+  JOIN payroll_settings ps
+    ON ps.plantation = pw.plantation
 
-      GROUP BY
-        pw.id,
-        pw.epf_no,
-        DATE_FORMAT(pda.date,'%Y-%m')
-    `;
+  LEFT JOIN plantation_allowance pa
+    ON pa.worker_id = pw.id
+    AND pa.month = DATE_FORMAT(ar.attendance_date, '%Y-%m')
+
+  WHERE ar.is_present = 1
+    AND DATE_FORMAT(ar.attendance_date, '%Y-%m') = ?
+    AND LOWER(pw.plantation) = LOWER(?)
+
+  GROUP BY
+    pw.id,
+    pw.name,
+    pw.epf_no,
+    DATE_FORMAT(ar.attendance_date, '%Y-%m'),
+    ps.daily_rate
+`;
+
 
     const PlantationWorkers = await new Promise((resolve, reject) => {
 
@@ -5415,7 +5790,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 
     // ================= CASUAL =================
 
-  
+
     const casualSql = `
       SELECT
         cw.name,
@@ -5560,7 +5935,7 @@ app.get("/dashboard/all-worker-salary-report/:month", async (req, res) => {
 // ================= MACHINE LABOUR =================
 
 // GET MACHINE LABOUR WORKERS
-app.get("/machine-labours", (req, res) => {
+app.get("/machine-labours", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -5588,7 +5963,7 @@ app.get("/machine-labours", (req, res) => {
 
 
 // ADD MACHINE LABOUR WORKER
-app.post("/machine-labours", (req, res) => {
+app.post("/machine-labours", verifyToken, (req, res) => {
 
   const {
     name,
@@ -5634,7 +6009,7 @@ app.post("/machine-labours", (req, res) => {
 
 
 // DELETE MACHINE LABOUR WORKER
-app.delete("/machine-labours/:id", (req, res) => {
+app.delete("/machine-labours/:id", verifyToken, (req, res) => {
 
   const workerId = req.params.id;
 
@@ -5681,7 +6056,7 @@ app.delete("/machine-labours/:id", (req, res) => {
 
 
 // SAVE MACHINE LABOUR ATTENDANCE
-app.post("/machine-labour-attendance", (req, res) => {
+app.post("/machine-labour-attendance", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -5758,7 +6133,7 @@ app.post("/machine-labour-attendance", (req, res) => {
 
 
 // GET MACHINE LABOUR ATTENDANCE FOR MONTH
-app.get("/machine-labour-attendance", (req, res) => {
+app.get("/machine-labour-attendance", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -5824,7 +6199,7 @@ app.get("/machine-labour-attendance", (req, res) => {
 
 
 // DELETE MACHINE LABOUR ATTENDANCE
-app.delete("/machine-labour-attendance/:id", (req, res) => {
+app.delete("/machine-labour-attendance/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -5853,7 +6228,7 @@ app.delete("/machine-labour-attendance/:id", (req, res) => {
 
 
 // MACHINE LABOUR MONTHLY SUMMARY
-app.get("/machine-labour-summary/:month", (req, res) => {
+app.get("/machine-labour-summary/:month", verifyToken, (req, res) => {
 
   const {
     plantation

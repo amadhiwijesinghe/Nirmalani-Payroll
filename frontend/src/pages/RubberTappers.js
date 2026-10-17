@@ -33,7 +33,7 @@ import {
   Stack
 } from "@mui/material";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function RubberTappers({
   plantation

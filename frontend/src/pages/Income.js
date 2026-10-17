@@ -29,7 +29,7 @@ import {
 } from "@mui/material";
 
 const API =
-"https://nirmalani-payroll-production.up.railway.app";
+process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Income({
   plantation

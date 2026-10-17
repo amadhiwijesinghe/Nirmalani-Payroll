@@ -23,7 +23,7 @@ import MobileInput from "../components/mobile/MobileInput";
 import ResponsiveCard from "../components/mobile/ResponsiveCard";
 
 const API =
-  "https://nirmalani-payroll-production.up.railway.app";
+  process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Dashboard({ plantation }) {
 

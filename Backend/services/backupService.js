@@ -36,50 +36,58 @@ const createBackup = async () => {
       `backup-${timestamp}.sql`
     );
 
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const connection = {
+      host: isProduction
+        ? process.env.RAILWAY_DB_HOST
+        : process.env.DB_HOST,
+      user: isProduction
+        ? process.env.RAILWAY_DB_USER
+        : process.env.DB_USER,
+      password: isProduction
+        ? process.env.RAILWAY_DB_PASSWORD
+        : process.env.DB_PASSWORD,
+      database: isProduction
+        ? process.env.RAILWAY_DB_NAME
+        : process.env.DB_NAME,
+      port: Number(
+        isProduction
+          ? process.env.RAILWAY_DB_PORT || 3306
+          : process.env.DB_PORT || 3306
+      ),
+    };
+
+    if (
+      !connection.host ||
+      !connection.user ||
+      !connection.database
+    ) {
+      throw new Error("Backup database configuration is incomplete");
+    }
+
     await mysqldump({
-        connection: {
-        host: process.env.MYSQLHOST,
-        user: process.env.MYSQLUSER,
-        password: process.env.MYSQLPASSWORD,
-        database: process.env.MYSQLDATABASE,
-        port: process.env.MYSQLPORT
-        },
+      connection,
       dumpToFile: filePath,
     });
 
-  await uploadBackup(
-    filePath,
-    path.basename(filePath)
-  );
+await uploadBackup(filePath, path.basename(filePath));
 
-  console.log("✅ Backup Email Sent");
+console.log("✅ Backup uploaded to S3");
 
-  fs.unlinkSync(filePath);
-
-  console.log("🗑️ Local Backup Deleted");
+fs.unlinkSync(filePath);
+console.log("🗑️ Local backup deleted after successful upload");
 
   console.log(`✅ Backup Created: ${path.basename(filePath)}`);
   } catch (error) {
-    console.error("❌ Backup Failed:", error);
+    console.error("Backup failed:", error.message);
+    throw error;
   }
 };
 
-// Create one backup when server starts
-createBackup();
+// Automatic backup on server startup is disabled for safety.
 
-// Run every day at 12:00 AM Sri Lanka time
-cron.schedule(
-  "0 0 * * *",
-  async () => {
-    console.log("🔄 Running Daily Backup...");
-    await createBackup();
-  },
-  {
-    timezone: "Asia/Colombo",
-  }
-);
-
-console.log("✅ Backup Scheduler Started");
+// Daily backup scheduler temporarily disabled during local testing.
 
 // Export for manual backup
 module.exports = { createBackup };
