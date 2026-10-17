@@ -21,7 +21,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const API =
-  "https://nirmalani-payroll-production.up.railway.app";
+  process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function MachineLabours({ plantation }) {
 

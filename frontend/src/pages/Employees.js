@@ -18,7 +18,16 @@ import {
   Grid,
   Box
 } from '@mui/material';
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API =
+  process.env.REACT_APP_API_URL ||
+  "https://nirmalani-payroll-production.up.railway.app";
+
+
+const getAuthConfig = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 
 
 export default function Employees({ plantation }) {
@@ -41,7 +50,10 @@ export default function Employees({ plantation }) {
     console.log("PLANTATION:", plantation);
 
     axios
-      .get(`${API}/employees?plantation=${plantation}`)
+      .get(
+        `${API}/employees?plantation=${plantation}`,
+        getAuthConfig()
+      )
       .then(res => {
 
         console.log("EMPLOYEES:", res.data);
@@ -80,13 +92,21 @@ export default function Employees({ plantation }) {
     };
 
     if (editId) {
-      axios.put(`${API}/employees/${editId}`, payload)
+      axios.put(
+        `${API}/employees/${editId}`,
+        payload,
+        getAuthConfig()
+      )
         .then(() => {
           resetForm();
           fetchEmployees();
         });
     } else {
-      axios.post(`${API}/employees`, payload)
+      axios.post(
+        `${API}/employees`,
+        payload,
+        getAuthConfig()
+      )
         .then(() => {
           resetForm();
           fetchEmployees();
@@ -112,7 +132,10 @@ export default function Employees({ plantation }) {
 
   const deleteEmployee = (id) => {
     if (!window.confirm("Delete employee?")) return;
-    axios.delete(`${API}/employees/${id}`)
+    axios.delete(
+      `${API}/employees/${id}`,
+      getAuthConfig()
+    )
       .then(fetchEmployees);
   };
 

@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import jsPDF from "jspdf";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Payslips({
   plantation

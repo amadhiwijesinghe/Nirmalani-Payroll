@@ -32,7 +32,7 @@ import {
 } from "@mui/material";
 import ResponsiveTable from "../components/mobile/ResponsiveTable";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function PlantationWorkers({
   setPage,

@@ -34,7 +34,7 @@ import {
 } from "@mui/material";
 import printAttendanceRegister from "../utils/printAttendanceRegister";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function AttendanceRegister({ plantation }) {
 

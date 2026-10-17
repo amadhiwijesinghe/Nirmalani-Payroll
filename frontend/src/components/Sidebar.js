@@ -26,19 +26,23 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ParkIcon from '@mui/icons-material/Park';
-import GroupWorkIcon from '@mui/icons-material/GroupWork'; 
+import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import GrassIcon from '@mui/icons-material/Grass';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PropaneTankIcon from '@mui/icons-material/PropaneTank';
 
 const drawerWidth = 240;
 
+
 export default function Sidebar({
-    setPage,
-    currentPage,
-    plantation,
-    setPlantation
+  setPage,
+  currentPage,
+  plantation,
+  setPlantation,
+  onLogout,
+  user
 }) {
+
 
   const isMobile = useMediaQuery("(max-width:900px)");
 
@@ -78,7 +82,17 @@ export default function Sidebar({
     { label: "Income", value: "income", icon: <TrendingUpIcon />},
     { label: "Expenditure", value: "expenditure", icon: <TrendingDownIcon />},
     { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />},
-    { label: "Reports", value: "reports", icon: <ReceiptIcon /> }
+
+    { label: "Reports", value: "reports", icon: <ReceiptIcon /> },
+    ...(user?.username === "AmadhiW" && user?.role === "admin"
+      ? [
+          {
+            label: "Admin Staff",
+            value: "adminstaff",
+            icon: <PeopleIcon />
+          }
+        ]
+      : [])
 
   ];
 
@@ -204,10 +218,35 @@ export default function Sidebar({
         </ListItem>
       ))}
 
+
     </List>
+
+    <Box sx={{ px: 2, py: 2, mt: 2 }}>
+      <Button
+        fullWidth
+        variant="outlined"
+        color="error"
+        onClick={onLogout}
+        sx={{
+          color: "#f87171",
+          borderColor: "rgba(248,113,113,0.5)",
+          textTransform: "none",
+          fontWeight: 700,
+          borderRadius: 2,
+          py: 1,
+          "&:hover": {
+            background: "rgba(248,113,113,0.1)",
+            borderColor: "#f87171"
+          }
+        }}
+      >
+        Logout
+      </Button>
+    </Box>
 
   </>
 );
+
 
 return (
   <>
@@ -235,17 +274,30 @@ return (
       <MenuIcon />
     </IconButton>
 
-    <Typography
-      sx={{
-        color: "#fff",
-        ml: 2,
-        fontWeight: 700
-      }}
-    >
-      {plantation === "nirmalani"
-        ? "Nirmalani Payroll"
-        : "Common Payroll"}
-    </Typography>
+
+    <Box sx={{ ml: 2, minWidth: 0 }}>
+      <Typography
+        sx={{
+          color: "#fff",
+          fontWeight: 700,
+          fontSize: "0.95rem"
+        }}
+      >
+        Welcome, {user?.full_name || user?.username || "User"}!
+      </Typography>
+
+      <Typography
+        sx={{
+          color: "#94a3b8",
+          fontSize: "0.7rem"
+        }}
+      >
+        {plantation === "nirmalani"
+          ? "Nirmalani Payroll"
+          : "Common Payroll"}
+      </Typography>
+    </Box>
+
 
     <Button
       size="small"

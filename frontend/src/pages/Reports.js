@@ -18,7 +18,7 @@ import {
 import PrintIcon from "@mui/icons-material/Print";
 import DownloadIcon from "@mui/icons-material/Download";
 
-const API = "https://nirmalani-payroll-production.up.railway.app";
+const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Reports({ plantation }) {
   const [reportType, setReportType] = useState("plantation");
@@ -31,6 +31,10 @@ export default function Reports({ plantation }) {
   );
 
   const [data, setData] = useState([]);
+
+  const [incomeReportData, setIncomeReportData] = useState([]);
+  const [expenditureReportData, setExpenditureReportData] = useState([]);
+
   const [loading, setLoading] = useState(false);
 
   const [weeklyData, setWeeklyData] = useState([]);
@@ -57,9 +61,14 @@ export default function Reports({ plantation }) {
   // LOAD PLANTATION PAYROLL
   // =========================
 
+
 useEffect(() => {
   if (reportType === "plantation") {
     fetchPlantationData();
+  }
+
+  if (reportType === "weeklyfinance") {
+    fetchFinancialReportData();
   }
 
   if (reportType === "allworkers") {
@@ -77,7 +86,6 @@ useEffect(() => {
   if (reportType === "machinelabour") {
     fetchMachineLabourData();
   }
-
 }, [
   reportType,
   plantation,
@@ -85,6 +93,7 @@ useEffect(() => {
   weekStart,
   weekEnd
 ]);
+
 
 
   const fetchPlantationData = async () => {
@@ -117,7 +126,13 @@ useEffect(() => {
         }
       );
 
-      setAllWorkersData(res.data || []);
+      setAllWorkersData(
+        (res.data || []).map(row => ({
+            ...row,
+            days: Number(row.days ?? row.worked_days ?? row.attendance ?? 0),
+            rate: Number(row.rate ?? row.rate_per_day ?? row.daily_rate ?? 0)
+        }))
+        );
 
     } catch (error) {
       console.error(
@@ -238,7 +253,7 @@ const fetchMachineLabourData = async () => {
     setMachineLabourLoading(false);
   }
 };
-  
+
   const fetchWeeklyPlantationData = async () => {
     if (!weekStart || !weekEnd) {
         alert("Please select week start and week end.");
@@ -275,7 +290,7 @@ const fetchMachineLabourData = async () => {
         setWeeklyLoading(false);
     }
     };
-  
+
   // =========================
   // PAYROLL CALCULATION
   // =========================
@@ -416,7 +431,7 @@ const fetchMachineLabourData = async () => {
         netSalary
     };
     };
-  
+
   // =========================
   // GROUP DATA
   // =========================
@@ -720,6 +735,19 @@ const fetchMachineLabourData = async () => {
             justify-content: space-between;
             font-size: 11px;
             }
+
+            .draft-warning {
+                border: 1px solid #d97706;
+                padding: 10px;
+                margin-bottom: 15px;
+                color: #9a3412;
+                background: #fff7ed;
+                text-align: center;
+            }
+
+            .draft-warning p {
+                margin: 5px 0 0;
+            }
         </style>
         </head>
 
@@ -735,6 +763,14 @@ const fetchMachineLabourData = async () => {
             </div>
         </div>
 
+        <div class="draft-warning">
+            <strong>DRAFT ATTENDANCE — PROVISIONAL FIGURES ONLY</strong>
+            <p>
+                These salary figures must be checked against the attendance records.
+                Do not use them for salary payments until attendance has been reviewed
+                and finalized.
+            </p>
+        </div>
         <table class="details">
             <tr>
             <td>Plantation</td>
@@ -1838,7 +1874,7 @@ const generateReportHTML = () => {
             return;
         }
 
-          
+
         if (reportType === "plantation") {
             if (rows.length === 0) {
                 alert("No plantation workers payroll data found for this month.");
@@ -2620,6 +2656,25 @@ const generateReportHTML = () => {
     URL.revokeObjectURL(url);
     };
     }
+
+
+const fetchFinancialReportData = async () => {
+  try {
+    const [incomeRes, expenditureRes] = await Promise.all([
+      axios.get(`${API}/income?plantation=${plantation}`),
+      axios.get(`${API}/expenditure?plantation=${plantation}`)
+    ]);
+
+    setIncomeReportData(Array.isArray(incomeRes.data) ? incomeRes.data : []);
+    setExpenditureReportData(
+      Array.isArray(expenditureRes.data) ? expenditureRes.data : []
+    );
+  } catch (error) {
+    console.error("Failed to load financial report data:", error);
+    alert("Unable to load income and expenditure records.");
+  }
+};
+
   return (
     <Box sx={{ p: 3 }}>
 
@@ -2677,10 +2732,10 @@ const generateReportHTML = () => {
                 <MenuItem value="plantation">Plantation Workers Payroll</MenuItem>
                 <MenuItem value="rubbertappers">Rubber Tappers Payroll</MenuItem>
                 <MenuItem value="casualworkers">Casual Workers Payroll</MenuItem>
-                <MenuItem value="machinelabour">
-                Machine Labourers Payroll
-                </MenuItem>
+                <MenuItem value="machinelabour">Machine Labourers Payroll</MenuItem>
                 <MenuItem value="attendance">Attendance Register</MenuItem>
+                <MenuItem value="weeklyregister">Weekly Daily Register</MenuItem>
+                <MenuItem value="weeklyfinance">Weekly Income & Expenditure</MenuItem>
 
               </Select>
 
@@ -3022,11 +3077,28 @@ const generateReportHTML = () => {
   </>
 ) : reportType === "allworkers" ? (
     <>
-        <Typography color="text.secondary">
+    <Typography
+        sx={{
+            mb: 2,
+            p: 2,
+            border: "1px solid #d97706",
+            borderRadius: 1,
+            backgroundColor: "#fff7ed",
+            color: "#9a3412",
+        }}
+    >
+        <strong>DRAFT ATTENDANCE — PROVISIONAL FIGURES ONLY</strong>
+        <br />
+        These salary figures must be checked against the attendance
+        records. Do not use them for salary payments until attendance
+        has been reviewed and finalized.
+    </Typography>
+
+    <Typography color="text.secondary">
         {allWorkersLoading
             ? "Loading all workers data..."
             : `${allWorkersData.length} worker(s) found for ${reportMonth}.`}
-        </Typography>
+    </Typography>
 
         {!allWorkersLoading && allWorkersData.length > 0 && (
         <Box sx={{ mt: 3, overflowX: "auto" }}>
@@ -3066,6 +3138,7 @@ const generateReportHTML = () => {
             </thead>
 
             <tbody>
+
                 {allWorkersData.map((row, index) => {
                 const salary = calculateAllWorkerSalary(row);
 

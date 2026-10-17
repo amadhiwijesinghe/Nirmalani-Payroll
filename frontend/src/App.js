@@ -28,18 +28,38 @@ import CoconutCollection from './pages/CoconutCollection';
 import PaddyCollection from './pages/PaddyCollection';
 import AttendanceRegister from "./pages/AttendanceRegister";
 import Dashboard from "./pages/Dashboard";
-import Reports from "./pages/Reports"
+import Reports from "./pages/Reports";
+import AdminStaff from "./pages/AdminStaff";
 
 function App() {
   const [page, setPage] = useState("dashboard");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => Boolean(localStorage.getItem('token'))
+  );
+
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  setPage("dashboard");
+  setIsLoggedIn(false);
+};
+
+
   const [darkMode, setDarkMode] = useState(true);
   const isMobile = useMediaQuery("(max-width:900px)");
   const [plantation, setPlantation] = useState("nirmalani");
 
-  if (!isLoggedIn) {
-    return <Login setIsLoggedIn={setIsLoggedIn} />;
-  }
+
+if (!isLoggedIn) {
+  return (
+    <Login
+      setIsLoggedIn={setIsLoggedIn}
+      setPage={setPage}
+    />
+  );
+}
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -57,12 +77,16 @@ function App() {
       >
 
         {/* SIDEBAR */}
-       <Sidebar
-        setPage={setPage}
-        currentPage={page}
-        plantation={plantation}
-        setPlantation={setPlantation}
-      />
+
+        <Sidebar
+          setPage={setPage}
+          currentPage={page}
+          plantation={plantation}
+          setPlantation={setPlantation}
+          onLogout={handleLogout}
+          user={JSON.parse(localStorage.getItem("user") || "null")}
+        />
+
 
         {/* MAIN AREA */}
         <Box
@@ -241,7 +265,7 @@ function App() {
                   <TeaCollection plantation={plantation} />
                 </motion.div>
               )}
- 
+
               {page === "rubberdispatch" && (
                 <motion.div
                   key="rubberdispatch"
@@ -373,6 +397,20 @@ function App() {
               <PaddyCollection plantation={plantation} />
               </motion.div>
             )}
+
+
+            {page === "adminstaff" && (
+              <motion.div
+                key="adminstaff"
+                initial={{ opacity: 0, x: 80 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -80 }}
+                transition={{ duration: 0.4 }}
+              >
+                <AdminStaff />
+              </motion.div>
+            )}
+
             </AnimatePresence>
 
           </Box>

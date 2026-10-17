@@ -17,3 +17,16 @@ Backend/checkAdminLogin.js
 Backend/checkDatabase.js
 Backend/createAdmin.js
  Copy content
+
+
+# Generated frontend build
+frontend/build/
+
+# Local safety backups
+local-changes-backup.patch
+Backend/*.safety-copy
+Backend/server-backup.js
+
+# Temporary local helper files
+frontend/fix-api.js
+frontend/API_ URL.txt
