@@ -3471,7 +3471,7 @@ app.put("/rubber-dispatch/:id", verifyToken, (req, res) => {
 // ================= RUBBER COLLECTION =================
 
 // ADD COLLECTION
-app.post("/rubber-collection", (req, res) => {
+app.post("/rubber-collection", verifyToken, (req, res) => {
 
   const {
     liters_collected,
@@ -3511,7 +3511,7 @@ app.post("/rubber-collection", (req, res) => {
   );
 });
 
-app.get("/rubber-collection", (req, res) => {
+app.get("/rubber-collection", verifyToken, (req, res) => {
 
   const sql = `
     SELECT *
@@ -4092,6 +4092,7 @@ app.get("/casual-workers-data", verifyToken, (req, res) => {
 // GET CASUAL WORKER ATTENDANCE DATES
 app.get(
   "/casual-workers-attendance-dates",
+  verifyToken,
   (req, res) => {
 
     const {
@@ -4380,6 +4381,7 @@ app.get("/casual-payroll-data", verifyToken, (req, res) => {
 // ADD DAILY ATTENDANCE - CASUAL WORKERS
 app.post(
   "/casual-workers-attendance",
+  verifyToken,
   (req, res) => {
 
     const {
@@ -4441,6 +4443,7 @@ app.post(
 // DELETE ATTENDANCE - CASUAL WORKERS
 app.delete(
   "/casual-workers-attendance/:id",
+  verifyToken,
   (req, res) => {
 
     const { id } = req.params;
@@ -4472,6 +4475,7 @@ app.delete(
 // UPDATE CASUAL WORKERS
 app.put(
   "/casual-workers-attendance/:id",
+  verifyToken,
   (req, res) => {
 
     const { id } = req.params;
@@ -5486,6 +5490,7 @@ app.get(
 
 app.get(
   "/dashboard/monthly-cashflow",
+  verifyToken,
   async (req,res) => {
 
     try {
@@ -5580,6 +5585,7 @@ app.get(
 
 app.get(
   "/dashboard/monthly-cashflow/:month",
+  verifyToken,
   async (req,res) => {
 
     const plantation=req.query.plantation;
