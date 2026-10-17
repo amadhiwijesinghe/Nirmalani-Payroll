@@ -2533,7 +2533,7 @@ app.get("/full-system-report/:month", verifyToken, async (req, res) => {
 // ================= TEA COLLECTION =================
 
 // ADD TEA COLLECTION
-app.post("/tea-collection", (req, res) => {
+app.post("/tea-collection", verifyToken, (req, res) => {
   const { worker_id, date, kg, plantation } = req.body;
 
   if (!date || kg === undefined || !plantation) {
@@ -2586,7 +2586,7 @@ app.post("/tea-collection", (req, res) => {
 });
 
 // GET TEA COLLECTION
-app.get("/tea-collection", (req, res) => {
+app.get("/tea-collection", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -2623,7 +2623,7 @@ app.get("/tea-collection", (req, res) => {
 });
 
 // UPDATE TEA COLLECTION
-app.put("/tea-collection/:id", (req, res) => {
+app.put("/tea-collection/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -2648,7 +2648,7 @@ app.put("/tea-collection/:id", (req, res) => {
 });
 
 // DELETE TEA COLLECTION
-app.delete("/tea-collection/:id", (req, res) => {
+app.delete("/tea-collection/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -2671,7 +2671,7 @@ app.delete("/tea-collection/:id", (req, res) => {
 });
 
 // TEA DISTRIBUTION
-app.post("/tea-distribution", (req,res)=>{
+app.post("/tea-distribution", verifyToken, (req,res)=>{
 
   const {
     distribution_date,
@@ -2709,7 +2709,7 @@ app.post("/tea-distribution", (req,res)=>{
 
 });
 
-app.get("/tea-distribution",(req,res)=>{
+app.get("/tea-distribution", verifyToken, (req,res)=>{
 
   const plantation =
     req.query.plantation;
@@ -2737,7 +2737,8 @@ app.get("/tea-distribution",(req,res)=>{
 // ================= CINNAMON WORKERS =================
 
 // GET CINNAMON WORKERS
-app.get("/cinnamon-workers", (req, res) => {
+app.get("/cinnamon-workers", verifyToken, (req, res) => {
+
 
     const { plantation } = req.query;
 
@@ -2760,7 +2761,7 @@ app.get("/cinnamon-workers", (req, res) => {
 });
 
 // ADD CINNAMON WORKER
-app.post("/cinnamon-workers", (req, res) => {
+app.post("/cinnamon-workers", verifyToken, (req, res) => {
 
     const { name, plantation } = req.body;
 
@@ -2796,7 +2797,7 @@ app.post("/cinnamon-workers", (req, res) => {
 });
 
 // UPDATE CINNAMON WORKER
-app.put("/cinnamon-workers/:id", (req, res) => {
+app.put("/cinnamon-workers/:id", verifyToken, (req, res) => {
 
     const { name } = req.body;
 
@@ -2831,7 +2832,7 @@ app.put("/cinnamon-workers/:id", (req, res) => {
 });
 
 // DELETE CINNAMON WORKER
-app.delete("/cinnamon-workers/:id", (req, res) => {
+app.delete("/cinnamon-workers/:id", verifyToken, (req, res) => {
 
     const sql = `
         DELETE FROM cinnamon_workers
@@ -2859,7 +2860,7 @@ app.delete("/cinnamon-workers/:id", (req, res) => {
 // ================= CINNAMON COLLECTION =================
 
 // ADD CINNAMON COLLECTION
-app.post("/cinnamon-collection", (req, res) => {
+app.post("/cinnamon-collection", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -2920,7 +2921,7 @@ app.post("/cinnamon-collection", (req, res) => {
 
 
 // GET CINNAMON COLLECTION
-app.get("/cinnamon-collection", (req, res) => {
+app.get("/cinnamon-collection", verifyToken, (req, res) => {
 
   const plantation = req.query.plantation;
 
@@ -2961,7 +2962,7 @@ app.get("/cinnamon-collection", (req, res) => {
 
 
 // UPDATE CINNAMON COLLECTION
-app.put("/cinnamon-collection/:id", (req, res) => {
+app.put("/cinnamon-collection/:id", verifyToken, (req, res) => {
 
   const {
     date,
@@ -3002,7 +3003,7 @@ app.put("/cinnamon-collection/:id", (req, res) => {
 
 
 // DELETE CINNAMON COLLECTION
-app.delete("/cinnamon-collection/:id", (req, res) => {
+app.delete("/cinnamon-collection/:id", verifyToken, (req, res) => {
 
   const sql = `
     DELETE FROM cinnamon_collection
@@ -3032,7 +3033,7 @@ app.delete("/cinnamon-collection/:id", (req, res) => {
 // ================= CINNAMON WAREHOUSE =================
 
 // GET CINNAMON WAREHOUSE
-app.get("/cinnamon-warehouse", (req, res) => {
+app.get("/cinnamon-warehouse", verifyToken, (req, res) => {
 
   const { plantation } = req.query;
 
@@ -3068,7 +3069,7 @@ app.get("/cinnamon-warehouse", (req, res) => {
 
 
 // ADD CINNAMON WAREHOUSE
-app.post("/cinnamon-warehouse", (req, res) => {
+app.post("/cinnamon-warehouse", verifyToken, (req, res) => {
 
   const {
     worker_id,
@@ -3141,7 +3142,7 @@ app.post("/cinnamon-warehouse", (req, res) => {
 
 
 // UPDATE CINNAMON WAREHOUSE
-app.put("/cinnamon-warehouse/:id", (req, res) => {
+app.put("/cinnamon-warehouse/:id", verifyToken, (req, res) => {
 
   const {
     transaction_date,
@@ -3188,7 +3189,7 @@ app.put("/cinnamon-warehouse/:id", (req, res) => {
 
 
 // DELETE CINNAMON WAREHOUSE
-app.delete("/cinnamon-warehouse/:id", (req, res) => {
+app.delete("/cinnamon-warehouse/:id", verifyToken, (req, res) => {
 
   const sql = `
     DELETE FROM cinnamon_warehouse
@@ -3217,7 +3218,7 @@ app.delete("/cinnamon-warehouse/:id", (req, res) => {
 
 // කෝට උර
 // ADD KOTA URA
-app.post("/cinnamon-kota-ura", (req, res) => {
+app.post("/cinnamon-kota-ura", verifyToken, (req, res) => {
 
   const {
     date,
@@ -3256,7 +3257,7 @@ app.post("/cinnamon-kota-ura", (req, res) => {
 });
 
 // GET KOTA URA
-app.get("/cinnamon-kota-ura", (req, res) => {
+app.get("/cinnamon-kota-ura", verifyToken, (req, res) => {
 
   const plantation =
     req.query.plantation;
@@ -3283,7 +3284,7 @@ app.get("/cinnamon-kota-ura", (req, res) => {
 
 // තැන්පත් කිරීම
 // ADD DEPOSIT
-app.post("/cinnamon-deposit", (req, res) => {
+app.post("/cinnamon-deposit", verifyToken, (req, res) => {
 
   const {
     date,
@@ -3322,7 +3323,7 @@ app.post("/cinnamon-deposit", (req, res) => {
 });
 
 // GET DEPOSIT
-app.get("/cinnamon-deposit", (req, res) => {
+app.get("/cinnamon-deposit", verifyToken, (req, res) => {
 
   const plantation =
     req.query.plantation;
@@ -3350,7 +3351,7 @@ app.get("/cinnamon-deposit", (req, res) => {
 // ================= RUBBER DISPATCH =================
 
 // ADD DISPATCH
-app.post("/rubber-dispatch", (req, res) => {
+app.post("/rubber-dispatch", verifyToken, (req, res) => {
 
   const {
     liters_sent,
@@ -3391,7 +3392,7 @@ app.post("/rubber-dispatch", (req, res) => {
 });
 
 // GET DISPATCH DATA
-app.get("/rubber-dispatch", (req, res) => {
+app.get("/rubber-dispatch", verifyToken, (req, res) => {
 
   const sql = `
     SELECT *
@@ -3416,7 +3417,7 @@ app.get("/rubber-dispatch", (req, res) => {
 });
 
 // DELETE DISPATCH
-app.delete("/rubber-dispatch/:id", (req, res) => {
+app.delete("/rubber-dispatch/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
@@ -3439,7 +3440,7 @@ app.delete("/rubber-dispatch/:id", (req, res) => {
 });
 
 // UPDATE DISPATCH
-app.put("/rubber-dispatch/:id", (req, res) => {
+app.put("/rubber-dispatch/:id", verifyToken, (req, res) => {
 
   const id = req.params.id;
 
