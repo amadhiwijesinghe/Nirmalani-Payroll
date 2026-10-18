@@ -30,6 +30,7 @@ import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import GrassIcon from '@mui/icons-material/Grass';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PropaneTankIcon from '@mui/icons-material/PropaneTank';
+import HistoryIcon from "@mui/icons-material/History";
 
 const drawerWidth = 240;
 
@@ -84,14 +85,19 @@ export default function Sidebar({
     { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />},
 
     { label: "Reports", value: "reports", icon: <ReceiptIcon /> },
-    ...(user?.username === "AmadhiW" && user?.role === "admin"
+    ...(user?.role === "admin"
       ? [
-          {
-            label: "Admin Staff",
-            value: "adminstaff",
-            icon: <PeopleIcon />
-          }
-        ]
+        {
+          label: "Admin Staff",
+          value: "adminstaff",
+          icon: <PeopleIcon />
+        },
+        {
+          label: "Activity Logs",
+          value: "activitylogs",
+          icon: <HistoryIcon />
+        }
+      ]
       : [])
 
   ];

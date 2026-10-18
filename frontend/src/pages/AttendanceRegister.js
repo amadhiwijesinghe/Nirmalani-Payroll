@@ -45,6 +45,7 @@ export default function AttendanceRegister({ plantation }) {
   const [workers, setWorkers] = useState([]);
   const [search, setSearch] = useState("");
   const [attendance, setAttendance] = useState({});
+  const [originalAttendance, setOriginalAttendance] = useState({});
 
   const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
 
@@ -200,7 +201,7 @@ const loadAttendance = async () => {
     });
 
         setAttendance(attendanceObject);
-
+        setOriginalAttendance(attendanceObject);
         setMachineAttendanceData(machineObject);
 
     } catch (err) {
@@ -358,46 +359,59 @@ const calculateKG = (liter, drc) => {
 
 };
 
-// Save Attendance
+
 const saveAttendance = async () => {
+  try {
+    const attendanceData = [];
 
-    try {
+    Object.entries(attendance).forEach(([key, value]) => {
+      const parts = key.split("-");
+      const workerType = parts[0];
+      const workerId = Number(parts[1]);
+      const date = `${parts[2]}-${parts[3]}-${parts[4]}`;
 
-        const attendanceData = [];
+      const originalValue = Number(originalAttendance[key] ?? 0);
+      const currentValue = Number(value ?? 0);
 
-        Object.entries(attendance).forEach(([key, value]) => {
+      // Submit only records whose value actually changed.
+      if (originalValue === currentValue) {
+        return;
+      }
 
-            const parts = key.split("-");
+      attendanceData.push({
+        worker_type: workerType,
+        worker_id: workerId,
+        attendance_date: date,
+        plantation,
+        attendance_value: currentValue,
+        is_present: currentValue > 0 ? 1 : 0,
+      });
+    });
 
-            attendanceData.push({
-                worker_type: parts[0],
-                worker_id: Number(parts[1]),
-                attendance_date: `${parts[2]}-${parts[3]}-${parts[4]}`,
-                plantation,
-                attendance_value: value,
-                is_present: value > 0 ? 1 : 0
-            });
-
-        });
-
-        await axios.post(
-            `${API}/attendance-register`,
-            attendanceData
-        );
-
-        setIsEditing(false);
-
-        alert("Attendance Saved Successfully");
-
-    } catch (err) {
-
-        console.log(err);
-
-        alert("Error Saving Attendance");
-
+    if (attendanceData.length === 0) {
+      alert("No attendance changes to save.");
+      return;
     }
 
+    await axios.post(
+      `${API}/attendance-register`,
+      attendanceData
+    );
+
+    // Update the baseline only after a successful save.
+    setOriginalAttendance({ ...attendance });
+
+    setIsEditing(false);
+
+    alert(
+      `Attendance Saved Successfully. ${attendanceData.length} changed record(s) saved.`
+    );
+  } catch (err) {
+    console.error("Error saving attendance:", err);
+    alert("Error Saving Attendance");
+  }
 };
+
 
 // Save Rubber Attendance
 const saveRubberAttendance = async () => {

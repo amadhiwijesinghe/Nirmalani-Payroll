@@ -107,11 +107,7 @@ function verifyToken(req, res, next) {
 
 async function verifyAdmin(req, res, next) {
   try {
-    if (
-      !req.user ||
-      req.user.role !== "admin" ||
-      req.user.username !== "AmadhiW"
-    ) {
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Administrator access required.",
@@ -119,7 +115,7 @@ async function verifyAdmin(req, res, next) {
     }
 
     const [users] = await db.promise().execute(
-      `SELECT id, username, role, is_active, account_status
+      `SELECT id, role, is_active, account_status
        FROM app_users
        WHERE id = ?
        LIMIT 1`,
@@ -128,7 +124,6 @@ async function verifyAdmin(req, res, next) {
 
     if (
       users.length === 0 ||
-      users[0].username !== "AmadhiW" ||
       users[0].role !== "admin" ||
       !users[0].is_active ||
       users[0].account_status !== "approved"
@@ -210,6 +205,38 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+
+
+async function logActivity(req, {
+  action,
+  module,
+  description,
+  recordId = null,
+  oldValues = null,
+  newValues = null,
+}) {
+  if (!req.user?.id || !req.user?.username) {
+    throw new Error("Cannot audit an action without an authenticated user.");
+  }
+
+  await db.promise().execute(
+    `INSERT INTO activity_logs
+      (user_id, username, action, module, record_id,
+       description, old_values, new_values)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      req.user.id,
+      req.user.username,
+      action,
+      module,
+      recordId == null ? null : String(recordId),
+      description,
+      oldValues == null ? null : JSON.stringify(oldValues),
+      newValues == null ? null : JSON.stringify(newValues),
+    ]
+  );
+}
+
 
 
 
@@ -414,6 +441,7 @@ app.get("/admin/pending-users", verifyToken, verifyAdmin, async (req, res) => {
 });
 
 
+
 app.put(
   "/admin/users/:id/approve",
   verifyToken,
@@ -428,6 +456,25 @@ app.put(
           message: "Invalid user ID.",
         });
       }
+
+      const [users] = await db.promise().execute(
+        `SELECT id, full_name, username, role, is_active, account_status
+         FROM app_users
+         WHERE id = ?
+           AND role = 'staff'
+           AND account_status = 'pending'
+         LIMIT 1`,
+        [userId]
+      );
+
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Pending staff account not found.",
+        });
+      }
+
+      const targetUser = users[0];
 
       const [result] = await db.promise().execute(
         `UPDATE app_users
@@ -445,6 +492,15 @@ app.put(
         });
       }
 
+      await logActivity(req, {
+        action: "APPROVE",
+        module: "User Management",
+        recordId: userId,
+        description: `Approved account for ${targetUser.username}`,
+        oldValues: { account_status: "pending" },
+        newValues: { account_status: "approved" },
+      });
+
       return res.json({
         success: true,
         message: "Staff account approved successfully.",
@@ -459,6 +515,7 @@ app.put(
     }
   }
 );
+
 
 
 app.put(
@@ -585,6 +642,129 @@ app.get(
 );
 
 
+ // ================= ADMIN ACTIVITY LOGS =================
+
+app.get(
+  "/admin/activity-logs",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+      const limit = Math.min(
+        100,
+        Math.max(1, Number.parseInt(req.query.limit, 10) || 25)
+      );
+      const offset = (page - 1) * limit;
+
+      const {
+        username,
+        action,
+        module,
+        startDate,
+        endDate,
+      } = req.query;
+
+      const conditions = [];
+      const params = [];
+
+      if (username) {
+        conditions.push("username LIKE ?");
+        params.push(`%${String(username).slice(0, 50)}%`);
+      }
+
+      if (action) {
+        conditions.push("action = ?");
+        params.push(String(action).slice(0, 30));
+      }
+
+      if (module) {
+        conditions.push("module LIKE ?");
+        params.push(`%${String(module).slice(0, 100)}%`);
+      }
+
+      const validDate = (value) =>
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+        !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) &&
+        new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+
+      if (startDate && !validDate(startDate)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid start date. Use YYYY-MM-DD.",
+        });
+      }
+
+      if (endDate && !validDate(endDate)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid end date. Use YYYY-MM-DD.",
+        });
+      }
+
+      if (startDate && endDate && startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Start date must not be after end date.",
+        });
+      }
+
+      if (startDate) {
+        conditions.push("created_at >= ?");
+        params.push(`${startDate} 00:00:00`);
+      }
+
+      if (endDate) {
+        conditions.push("created_at < DATE_ADD(?, INTERVAL 1 DAY)");
+        params.push(`${endDate} 00:00:00`);
+      }
+
+      const whereClause = conditions.length
+        ? `WHERE ${conditions.join(" AND ")}`
+        : "";
+
+      const [countRows] = await db.promise().execute(
+        `SELECT COUNT(*) AS total
+         FROM activity_logs
+         ${whereClause}`,
+        params
+      );
+
+      const total = Number(countRows[0].total);
+
+      const [logs] = await db.promise().execute(
+        `SELECT id, user_id, username, action, module,
+                record_id, description, old_values,
+                new_values, created_at
+        FROM activity_logs
+        ${whereClause}
+        ORDER BY created_at DESC, id DESC
+        LIMIT ${limit} OFFSET ${offset}`,
+        params
+      );
+
+      return res.json({
+        success: true,
+        logs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      console.error("Activity logs error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load activity logs.",
+      });
+    }
+  }
+);
+
 
  // ================= EMPLOYEES =================
 
@@ -673,20 +853,109 @@ app.delete("/employees/:id", verifyToken, (req, res) => {
 
 // ================= ATTENDANCE =================
 
-app.post("/attendance", verifyToken, (req, res) => {
+
+app.post("/attendance", verifyToken, async (req, res) => {
   const { memberid, date, present, month, plantation } = req.body;
 
-  const sql = `
-    INSERT INTO attendance (memberid, date, present, month, plantation)
-    VALUES (?, ?, ?, ?,?)
-    ON DUPLICATE KEY UPDATE present = VALUES(present)
-  `;
+  if (
+    memberid == null ||
+    !date ||
+    !month ||
+    !plantation ||
+    ![0, 1, true, false].includes(present)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid attendance details.",
+    });
+  }
 
-  db.query(sql, [memberid, date, present, month, plantation], (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.send("Saved");
-  });
+  const connection = await db.promise().getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [existing] = await connection.execute(
+      `SELECT id, memberid, date, present, month, plantation
+      FROM attendance
+      WHERE memberid = ?
+        AND date = ?
+      LIMIT 1
+      FOR UPDATE`,
+      [memberid, date]
+    );
+
+    await connection.execute(
+      `INSERT INTO attendance
+         (memberid, date, present, month, plantation)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+        present = VALUES(present),
+        month = VALUES(month),
+        plantation = VALUES(plantation),
+      [memberid, date, present, month, plantation]
+    );
+
+    const [updated] = await connection.execute(
+      `SELECT id, memberid, date, present, month, plantation
+      FROM attendance
+      WHERE memberid = ?
+        AND date = ?
+      LIMIT 1`,
+      [memberid, date]
+    );
+
+   const oldRecord = existing[0] || null;
+    const newRecord = updated[0] || null;
+
+    const hasChanged =
+      !oldRecord ||
+      Number(oldRecord.present) !== Number(newRecord?.present) ||
+      oldRecord.month !== newRecord?.month ||
+      oldRecord.plantation !== newRecord?.plantation;
+
+    if (hasChanged) {
+      const action = oldRecord ? "UPDATE" : "CREATE";
+
+      await connection.execute(
+        `INSERT INTO activity_logs
+          (user_id, username, action, module, record_id,
+            description, old_values, new_values)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          req.user.username,
+          action,
+          "Attendance",
+          newRecord?.id == null ? null : String(newRecord.id),
+          oldRecord
+            ? "Attendance record updated"
+            : "Attendance record created",
+          oldRecord ? JSON.stringify(oldRecord) : null,
+          newRecord ? JSON.stringify(newRecord) : null,
+        ]
+      );
+    }
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Saved",
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Save attendance error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to save attendance.",
+    });
+  } finally {
+    connection.release();
+  }
 });
+
 
 app.get("/attendance", verifyToken, (req, res) => {
 
@@ -4704,58 +4973,130 @@ app.get("/attendance-register", verifyToken, async (req, res) => {
 
 });
 
-// SAVE MONTHLY ATTENDANCE
+
+ // SAVE MONTHLY ATTENDANCE
 app.post("/attendance-register", verifyToken, async (req, res) => {
+  const connection = await db.promise().getConnection();
 
-    try {
+  try {
+    const attendance = req.body;
 
-        const attendance = req.body;
-
-        for (const row of attendance) {
-
-            await db.promise().query(
-                `
-                INSERT INTO attendance_register
-                (
-                    worker_id,
-                    worker_type,
-                    attendance_date,
-                    plantation,
-                    is_present,
-                    attendance_value
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-
-                ON DUPLICATE KEY UPDATE
-                    is_present = VALUES(is_present),
-                    attendance_value = VALUES(attendance_value)
-                `,
-                [
-                  row.worker_id,
-                  row.worker_type,
-                  row.attendance_date,
-                  row.plantation,
-                  row.is_present,
-                  row.attendance_value
-              ]
-            );
-
-        }
-
-        res.json({
-            success: true,
-            message: "Attendance Saved Successfully"
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.status(500).json(err);
-
+    if (!Array.isArray(attendance)) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendance must be an array.",
+      });
     }
 
+    await connection.beginTransaction();
+
+    for (const row of attendance) {
+      const {
+        worker_id,
+        worker_type,
+        attendance_date,
+        plantation,
+        is_present,
+        attendance_value,
+      } = row;
+
+      // Read the existing record before inserting or updating it.
+      const [existingRows] = await connection.execute(
+        `SELECT id, plantation, is_present, attendance_value
+         FROM attendance_register
+         WHERE worker_id = ?
+           AND worker_type = ?
+           AND attendance_date = ?
+         LIMIT 1
+         FOR UPDATE`,
+        [worker_id, worker_type, attendance_date]
+      );
+
+      const oldRecord = existingRows[0] || null;
+
+      await connection.execute(
+        `INSERT INTO attendance_register
+          (worker_id, worker_type, attendance_date, plantation,
+           is_present, attendance_value)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+           plantation = VALUES(plantation),
+           is_present = VALUES(is_present),
+           attendance_value = VALUES(attendance_value)`,
+        [
+          worker_id,
+          worker_type,
+          attendance_date,
+          plantation,
+          is_present,
+          attendance_value,
+        ]
+      );
+
+      const newRecord = {
+        worker_id,
+        worker_type,
+        attendance_date,
+        plantation,
+        is_present,
+        attendance_value,
+      };
+
+      const changed =
+        !oldRecord ||
+        String(oldRecord.plantation ?? "") !== String(plantation ?? "") ||
+        String(oldRecord.is_present ?? "") !== String(is_present ?? "") ||
+        String(oldRecord.attendance_value ?? "") !==
+          String(attendance_value ?? "");
+
+      // Only log new records or actual changes.
+      if (changed) {
+        await connection.execute(
+          `INSERT INTO activity_logs
+            (user_id, username, action, module, record_id,
+             description, old_values, new_values)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            req.user.id,
+            req.user.username,
+            oldRecord ? "UPDATE" : "CREATE",
+            "Attendance",
+            `${worker_type}-${worker_id}-${attendance_date}`,
+            oldRecord
+              ? `Updated attendance for worker ${worker_id}`
+              : `Created attendance for worker ${worker_id}`,
+            oldRecord
+              ? JSON.stringify({
+                  plantation: oldRecord.plantation,
+                  is_present: oldRecord.is_present,
+                  attendance_value: oldRecord.attendance_value,
+                })
+              : null,
+            JSON.stringify(newRecord),
+          ]
+        );
+      }
+    }
+
+    await connection.commit();
+
+    res.json({
+      success: true,
+      message: "Attendance Saved Successfully",
+    });
+  } catch (err) {
+    await connection.rollback();
+    console.error("Attendance save/audit error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to save attendance.",
+    });
+  } finally {
+    connection.release();
+  }
 });
+
 
 // ATTENDANCE STATUS
 app.get("/attendance-register/status", verifyToken, async (req, res) => {
