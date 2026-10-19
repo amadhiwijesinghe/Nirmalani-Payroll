@@ -677,9 +677,13 @@ app.post("/attendance", verifyToken, (req, res) => {
   const { memberid, date, present, month, plantation } = req.body;
 
   const sql = `
-    INSERT INTO attendance (memberid, date, present, month, plantation)
-    VALUES (?, ?, ?, ?,?)
-    ON DUPLICATE KEY UPDATE present = VALUES(present)
+    INSERT INTO attendance
+      (memberid, date, present, month, plantation)
+    VALUES (?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      present = VALUES(present),
+      month = VALUES(month),
+      plantation = VALUES(plantation)
   `;
 
   db.query(sql, [memberid, date, present, month, plantation], (err, result) => {
