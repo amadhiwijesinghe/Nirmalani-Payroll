@@ -383,6 +383,100 @@ app.post("/register", async (req, res) => {
 });
 
 
+
+ // ================= STAFF SELF-SERVICE PASSWORD RESET =================
+
+app.post("/reset-staff-password", async (req, res) => {
+  try {
+    const username =
+      typeof req.body.username === "string"
+        ? req.body.username.trim()
+        : "";
+
+    const password =
+      typeof req.body.password === "string"
+        ? req.body.password
+        : "";
+
+    const confirmPassword =
+      typeof req.body.confirmPassword === "string"
+        ? req.body.confirmPassword
+        : "";
+
+    if (!username || username.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid username.",
+      });
+    }
+
+    if (password.length < 8 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be between 8 and 128 characters.",
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match.",
+      });
+    }
+
+    const [users] = await db.promise().execute(
+      `SELECT id
+       FROM app_users
+       WHERE username = ?
+         AND role = 'staff'
+         AND is_active = 1
+         AND account_status = 'approved'
+       LIMIT 1`,
+      [username]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Eligible staff account not found.",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const [result] = await db.promise().execute(
+      `UPDATE app_users
+       SET password_hash = ?
+       WHERE id = ?
+         AND role = 'staff'
+         AND is_active = 1
+         AND account_status = 'approved'`,
+      [passwordHash, users[0].id]
+    );
+
+    if (result.affectedRows !== 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Unable to reset this staff password.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Password updated. You can now log in.",
+    });
+  } catch (error) {
+    console.error("Staff password reset error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to reset the password. Please try again.",
+    });
+  }
+});
+
+
+
  // ================= ADMIN STAFF MANAGEMENT =================
 
 app.get("/admin/pending-users", verifyToken, verifyAdmin, async (req, res) => {
