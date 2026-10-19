@@ -30,6 +30,7 @@ import AttendanceRegister from "./pages/AttendanceRegister";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import AdminStaff from "./pages/AdminStaff";
+import ActivityLogs from "./pages/ActivityLogs";
 
 function App() {
   const [page, setPage] = useState("dashboard");
@@ -410,6 +411,20 @@ if (!isLoggedIn) {
                 <AdminStaff />
               </motion.div>
             )}
+
+
+{page === "activitylogs" && (
+  <motion.div
+    key="activitylogs"
+    initial={{ opacity: 0, x: 80 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -80 }}
+    transition={{ duration: 0.4 }}
+  >
+    <ActivityLogs />
+  </motion.div>
+)}
+
 
             </AnimatePresence>
 

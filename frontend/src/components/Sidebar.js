@@ -86,11 +86,16 @@ export default function Sidebar({
     { label: "Reports", value: "reports", icon: <ReceiptIcon /> },
     ...(user?.role === "admin"
       ? [
-          {
+                    {
             label: "Admin Staff",
             value: "adminstaff",
             icon: <PeopleIcon />
-          }
+          },
+          {
+            label: "Activity Logs",
+            value: "activitylogs",
+            icon: <EventIcon />
+          },
         ]
       : [])
 
