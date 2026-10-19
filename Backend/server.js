@@ -105,13 +105,10 @@ function verifyToken(req, res, next) {
 }
 
 
+
 async function verifyAdmin(req, res, next) {
   try {
-    if (
-      !req.user ||
-      req.user.role !== "admin" ||
-      req.user.username !== "AmadhiW"
-    ) {
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Administrator access required.",
@@ -128,7 +125,6 @@ async function verifyAdmin(req, res, next) {
 
     if (
       users.length === 0 ||
-      users[0].username !== "AmadhiW" ||
       users[0].role !== "admin" ||
       !users[0].is_active ||
       users[0].account_status !== "approved"
@@ -142,13 +138,13 @@ async function verifyAdmin(req, res, next) {
     next();
   } catch (error) {
     console.error("Admin verification error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to verify administrator access.",
     });
   }
 }
+
 
 
 
