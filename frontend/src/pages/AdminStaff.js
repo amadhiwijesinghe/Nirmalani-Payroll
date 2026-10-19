@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -28,9 +27,7 @@ export default function AdminStaff() {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(`${API}/admin/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setUsers(response.data.users || []);
@@ -67,9 +64,7 @@ export default function AdminStaff() {
         `${API}/admin/users/${userId}/${action}`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -139,7 +134,11 @@ export default function AdminStaff() {
                   </Typography>
 
                   <Typography
-                    sx={{ color: "#94a3b8", fontSize: "0.8rem", mt: 0.5 }}
+                    sx={{
+                      color: "#94a3b8",
+                      fontSize: "0.8rem",
+                      mt: 0.5,
+                    }}
                   >
                     Account ID: {user.id}
                   </Typography>
