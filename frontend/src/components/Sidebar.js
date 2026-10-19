@@ -84,7 +84,7 @@ export default function Sidebar({
     { label: "Financial Dashboard", value: "financialdashboard", icon: <AccountBalanceWalletIcon />},
 
     { label: "Reports", value: "reports", icon: <ReceiptIcon /> },
-    ...(user?.username === "AmadhiW" && user?.role === "admin"
+    ...(user?.role === "admin"
       ? [
           {
             label: "Admin Staff",
