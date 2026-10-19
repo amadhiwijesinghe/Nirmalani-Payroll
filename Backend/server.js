@@ -885,16 +885,16 @@ app.post("/attendance", verifyToken, async (req, res) => {
       [memberid, date]
     );
 
-    await connection.execute(
-      `INSERT INTO attendance
-         (memberid, date, present, month, plantation)
-       VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-        present = VALUES(present),
-        month = VALUES(month),
-        plantation = VALUES(plantation),
-      [memberid, date, present, month, plantation]
-    );
+        await connection.execute(
+        `INSERT INTO attendance
+          (memberid, date, present, month, plantation)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          present = VALUES(present),
+          month = VALUES(month),
+          plantation = VALUES(plantation)`,
+        [memberid, date, present, month, plantation]
+      );
 
     const [updated] = await connection.execute(
       `SELECT id, memberid, date, present, month, plantation
