@@ -581,6 +581,82 @@ app.get(
 );
 
 
+ // ================= ADMIN DASHBOARD & ACTIVITY LOGS =================
+
+app.get(
+  "/admin/dashboard-summary",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const [[staffStats]] = await db.promise().execute(`
+        SELECT
+          COUNT(*) AS totalStaff,
+          SUM(account_status = 'pending') AS pendingStaff,
+          SUM(account_status = 'approved' AND is_active = 1) AS activeStaff,
+          SUM(is_active = 0) AS inactiveStaff
+        FROM app_users
+        WHERE role = 'staff'
+      `);
+
+      const [recentActivity] = await db.promise().execute(`
+        SELECT id, username, action, module, description, created_at
+        FROM activity_logs
+        ORDER BY created_at DESC
+        LIMIT 10
+      `);
+
+      res.json({
+        success: true,
+        staffStats,
+        recentActivity,
+      });
+    } catch (error) {
+      console.error("Admin dashboard error:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Unable to load admin dashboard.",
+      });
+    }
+  }
+);
+
+app.get(
+  "/admin/activity-logs",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const limit = Math.min(
+        Math.max(parseInt(req.query.limit, 10) || 100, 1),
+        500
+      );
+
+      const [logs] = await db.promise().execute(
+        `SELECT id, user_id, username, action, module,
+                record_id, description, old_values,
+                new_values, created_at
+         FROM activity_logs
+         ORDER BY created_at DESC
+         LIMIT ?`,
+        [limit]
+      );
+
+      res.json({
+        success: true,
+        logs,
+      });
+    } catch (error) {
+      console.error("Activity logs error:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Unable to load activity logs.",
+      });
+    }
+  }
+);
+
+
 
  // ================= EMPLOYEES =================
 

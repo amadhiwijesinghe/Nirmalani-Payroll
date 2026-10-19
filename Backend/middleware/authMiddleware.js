@@ -51,14 +51,10 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+
 const verifyAdmin = async (req, res, next) => {
   try {
-    if (
-      !req.user ||
-      req.user.username !== "AmadhiW" ||
-      req.user.role !== "admin" ||
-      !req.user.id
-    ) {
+    if (!req.user || !req.user.id || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Admin access required",
@@ -77,7 +73,6 @@ const verifyAdmin = async (req, res, next) => {
 
     if (
       !admin ||
-      admin.username !== "AmadhiW" ||
       admin.role !== "admin" ||
       !admin.is_active ||
       admin.account_status !== "approved"
@@ -90,7 +85,7 @@ const verifyAdmin = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Backup admin verification failed:", error.message);
+    console.error("Admin verification failed:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -98,6 +93,7 @@ const verifyAdmin = async (req, res, next) => {
     });
   }
 };
+
 
 module.exports = {
   verifyToken,
