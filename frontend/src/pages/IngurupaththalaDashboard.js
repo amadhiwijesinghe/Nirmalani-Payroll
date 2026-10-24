@@ -4,11 +4,11 @@ export default function IngurupaththalaDashboard() {
   return (
     <Paper sx={{ p: 4 }}>
       <Typography variant="h4">
-        🌿 Ingurupaththala Plantation Payroll System
+        🌿 Common Plantation Payroll System
       </Typography>
 
       <Typography sx={{ mt: 2 }}>
-        Welcome to Ingurupaththala Dashboard
+        Welcome to Common Dashboard
       </Typography>
     </Paper>
   );

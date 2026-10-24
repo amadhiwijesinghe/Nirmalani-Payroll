@@ -308,13 +308,13 @@ return (
       size="small"
       variant="contained"
       onClick={() => {
-        if (plantation === "nirmalani") {
-          setPlantation("ingurupaththala");
-          setPage("employees");
-        } else {
-          setPlantation("nirmalani");
-          setPage("employees");
-        }
+        const nextPlantation =
+          plantation === "nirmalani"
+            ? "ingurupaththala"
+            : "nirmalani";
+
+        setPlantation(nextPlantation);
+        setPage("dashboard");
       }}
       sx={{
         ml: "auto",

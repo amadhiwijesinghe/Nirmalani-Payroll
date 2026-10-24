@@ -53,13 +53,13 @@ export default function Topbar({
         <Button
           variant="contained"
           onClick={() => {
-            if (plantation === "nirmalani") {
-              setPlantation("ingurupaththala");
-              setPage("ingurupaththala");
-            } else {
-              setPlantation("nirmalani");
-              setPage("employees");
-            }
+            const nextPlantation =
+              plantation === "nirmalani"
+                ? "ingurupaththala"
+                : "nirmalani";
+
+            setPlantation(nextPlantation);
+            setPage("dashboard");
           }}
         >
           {plantation === "nirmalani"
