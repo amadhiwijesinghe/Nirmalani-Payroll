@@ -6,7 +6,7 @@
     "start": "node server.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1063.0",
@@ -22,6 +22,7 @@
     "mysqldump": "^3.2.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.10",
-    "pdfkit": "^0.18.0"
+    "pdfkit": "^0.18.0",
+    "puppeteer": "^25.16.0"
   }
 }
