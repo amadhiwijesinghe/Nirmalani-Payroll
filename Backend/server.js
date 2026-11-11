@@ -22,6 +22,7 @@ const {
 } = require("@aws-sdk/s3-request-presigner");
 
 const PDFDocument = require("pdfkit");
+const puppeteer = require("puppeteer");
 const app = express();
 
 const s3 = new S3Client({
@@ -106,6 +107,166 @@ function verifyToken(req, res, next) {
 }
 
 
+// ================= SINHALA PDF FONT TEST =================
+
+app.get("/test-sinhala-pdf", verifyToken, async (req, res) => {
+  let browser;
+
+  try {
+    const fontPath = path.join(
+      __dirname,
+      "fonts",
+      "NotoSansSinhala-Regular.ttf"
+    );
+
+    if (!fs.existsSync(fontPath)) {
+      return res.status(500).json({
+        success: false,
+        message: "Sinhala font file not found."
+      });
+    }
+
+    const fontBase64 = fs.readFileSync(fontPath).toString("base64");
+
+    browser = await puppeteer.launch({
+      headless: true
+    });
+
+    const page = await browser.newPage();
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="si">
+      <head>
+        <meta charset="UTF-8">
+
+        <style>
+          @font-face {
+            font-family: 'NotoSinhala';
+            src: url(data:font/ttf;base64,${fontBase64})
+                 format('truetype');
+            font-weight: normal;
+          }
+
+          body {
+            font-family: 'NotoSinhala', sans-serif;
+            padding: 35px;
+            color: #000;
+          }
+
+          h1 {
+            text-align: center;
+            font-size: 22px;
+          }
+
+          h2 {
+            font-size: 17px;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+
+          th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <h1>සතිපතා කළමනාකරණ වාර්තාව</h1>
+
+        <h2>සේවක පැමිණීම</h2>
+
+        <p>සතියේ සේවක පැමිණීමේ වාර්තාව</p>
+
+        <table>
+          <tr>
+            <th>දිනය</th>
+            <th>පැමිණීම</th>
+            <th>මුළු එකතුව</th>
+          </tr>
+
+          <tr>
+            <td>සඳුදා</td>
+            <td>10</td>
+            <td>10</td>
+          </tr>
+
+          <tr>
+            <td>අඟහරුවාදා</td>
+            <td>12</td>
+            <td>22</td>
+          </tr>
+
+          <tr>
+            <td>බදාදා</td>
+            <td>15</td>
+            <td>37</td>
+          </tr>
+        </table>
+
+        <h2>ආදායම් සහ වියදම්</h2>
+
+        <p>මුළු ආදායම: රු. 50,000</p>
+
+        <p>මුළු වියදම: රු. 20,000</p>
+
+        <p>ශේෂය: රු. 30,000</p>
+
+      </body>
+      </html>
+    `;
+
+    await page.setContent(html, {
+      waitUntil: "networkidle0"
+    });
+
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+
+const pdfData = Buffer.from(pdfBuffer);
+
+console.log("Management PDF generated:", {
+  size: pdfData.length,
+  signature: pdfData.subarray(0, 5).toString()
+});
+
+res.setHeader("Content-Type", "application/pdf");
+
+res.setHeader(
+  "Content-Disposition",
+  `attachment; filename=management-summary-${month}.pdf`
+);
+
+res.setHeader("Content-Length", pdfData.length);
+
+res.send(pdfData);
+
+
+  } catch (error) {
+    console.error("SINHALA PDF TEST ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+});
+
+
 
 async function verifyAdmin(req, res, next) {
   try {
@@ -183,6 +344,11 @@ app.use("/api/backup", backupRoutes);
 
 
 const isProduction = process.env.NODE_ENV === "production";
+
+console.log(
+  "DATABASE MODE:",
+  isProduction ? "PRODUCTION (Railway)" : "LOCAL"
+);
 
 const db = mysql.createPool({
   host: isProduction
@@ -6443,6 +6609,1045 @@ app.get("/machine-labour-summary/:month", verifyToken, (req, res) => {
   );
 
 });
+
+
+
+
+// =====================================================
+// MANAGEMENT SUMMARY - DATE RANGE DATA API
+// Supports Weekly and Monthly Reports
+// =====================================================
+
+app.get(
+  "/management-summary-data",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const { plantation, startDate, endDate } = req.query;
+
+      const [dbInfo] = await db.promise().query(`
+        SELECT
+          DATABASE() AS database_name,
+          @@hostname AS database_host,
+          @@port AS database_port
+      `);
+
+      console.log("MANAGEMENT SUMMARY DATABASE:", dbInfo[0]);
+
+      if (!plantation || !startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Plantation, start date and end date are required."
+        });
+      }
+
+      
+      const isValidDate = (value) => {
+        if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return false;
+        }
+
+        const [year, month, day] = value.split("-").map(Number);
+
+        const date = new Date(Date.UTC(year, month - 1, day));
+
+        return (
+          date.getUTCFullYear() === year &&
+          date.getUTCMonth() === month - 1 &&
+          date.getUTCDate() === day
+        );
+      };
+
+
+      if (!isValidDate(startDate) || !isValidDate(endDate)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format. Use YYYY-MM-DD."
+        });
+      }
+
+      console.log("START DATE:", startDate);
+      console.log("END DATE:", endDate);
+      console.log("PLANTATION:", plantation);
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Start date cannot be after end date."
+        });
+      }
+
+      // 1. TEA, RUBBER AND CASUAL ATTENDANCE
+      // Includes Draft and Finalized records.
+      // Only present records contribute to attendance days.
+
+      const [attendanceRows] = await db.promise().query(
+        `
+        SELECT
+          worker_type,
+          COALESCE(
+            SUM(
+              CASE
+                WHEN is_present = 1 THEN attendance_value
+                ELSE 0
+              END
+            ), 0
+          ) AS total_days
+        FROM attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+        GROUP BY worker_type
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const attendanceMap = {
+        plantation: 0,
+        rubber: 0,
+        casual: 0
+      };
+
+      attendanceRows.forEach(row => {
+        attendanceMap[row.worker_type] =
+          Number(row.total_days || 0);
+      });
+
+      // 2. MACHINE LABOUR ATTENDANCE
+      // Each saved attendance record represents one attendance day.
+
+      const [machineRows] = await db.promise().query(
+        `
+        SELECT
+          COUNT(*) AS total_days,
+          COUNT(DISTINCT worker_id) AS workers,
+          COALESCE(SUM(oil_cans), 0) AS oil_cans,
+          COALESCE(SUM(tanks), 0) AS tanks,
+          COALESCE(SUM(total), 0) AS total_amount
+        FROM machine_labour_attendance
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const machineLabourDays =
+        Number(machineRows[0]?.total_days || 0);
+
+      const attendanceSummary = [
+        {
+          category: "Tea Workers",
+          days: attendanceMap.plantation
+        },
+        {
+          category: "Rubber Tappers",
+          days: attendanceMap.rubber
+        },
+        {
+          category: "Casual Workers",
+          days: attendanceMap.casual
+        },
+        {
+          category: "Machine Labourers",
+          days: machineLabourDays
+        }
+      ];
+
+      const totalAttendanceDays = attendanceSummary.reduce(
+        (sum, row) => sum + row.days,
+        0
+      );
+
+      // 3. EXPENSES DURING SELECTED PERIOD
+
+      const [expenseSummaryRows] = await db.promise().query(
+        `
+        SELECT
+          CASE
+            WHEN TRIM(COALESCE(bank_account, '')) = ''
+              THEN 'Unallocated'
+            WHEN LOWER(TRIM(bank_account)) = 'sampath'
+              THEN 'Sampath'
+            WHEN LOWER(TRIM(bank_account)) = 'nations trust'
+              THEN 'Nations Trust'
+            ELSE 'Unallocated'
+          END AS bank,
+          COALESCE(SUM(amount), 0) AS total
+        FROM expenditure
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+          AND transaction_type = 'Expense'
+        GROUP BY bank
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const expenseSummary = {
+        sampath: 0,
+        nationsTrust: 0,
+        unallocated: 0
+      };
+
+      expenseSummaryRows.forEach(row => {
+        if (row.bank === "Sampath") {
+          expenseSummary.sampath = Number(row.total || 0);
+        } else if (row.bank === "Nations Trust") {
+          expenseSummary.nationsTrust = Number(row.total || 0);
+        } else {
+          expenseSummary.unallocated += Number(row.total || 0);
+        }
+      });
+
+      const totalExpenses =
+        expenseSummary.sampath +
+        expenseSummary.nationsTrust +
+        expenseSummary.unallocated;
+
+      // 4. SAMPATH BANK BALANCE AS AT END DATE
+      // Opening Balance + Received - Expenses.
+      // Uses transactions up to endDate, not just the selected period.
+
+      const [bankBalanceRows] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type = 'Opening Balance'
+                  AND LOWER(TRIM(bank_account)) = 'sampath'
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS opening_balance,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type IN ('Received', 'Money Received')
+                  AND LOWER(TRIM(bank_account)) = 'sampath'
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS money_received,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type = 'Expense'
+                  AND LOWER(TRIM(bank_account)) = 'sampath'
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS expenses
+
+        FROM expenditure
+        WHERE plantation = ?
+          AND date <= ?
+        `,
+        [plantation, endDate]
+      );
+
+      const bankData = bankBalanceRows[0];
+
+      const sampathBalance =
+        Number(bankData.opening_balance || 0) +
+        Number(bankData.money_received || 0) -
+        Number(bankData.expenses || 0);
+
+      // 5. INCOME DURING SELECTED PERIOD
+
+      const [incomeRows] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(amount), 0) AS total
+        FROM income
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const totalIncome = Number(incomeRows[0]?.total || 0);
+
+      // 6. RETURN REPORT DATA
+
+      res.json({
+        success: true,
+
+        report: {
+          plantation,
+          startDate,
+          endDate
+        },
+
+        attendance: attendanceSummary,
+
+        totalAttendanceDays,
+
+        machineLabour: machineRows[0],
+
+        financial: {
+          sampathBalance,
+          sampathExpenses: expenseSummary.sampath,
+          nationsTrustExpenses: expenseSummary.nationsTrust,
+          unallocatedExpenses: expenseSummary.unallocated,
+          totalExpenses,
+          totalIncome
+        }
+      });
+
+    } catch (error) {
+      console.error("MANAGEMENT SUMMARY DATA ERROR:", error);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to calculate management summary.",
+        error: error.message
+      });
+    }
+  }
+);
+
+
+// =====================================================
+// MONTHLY MANAGEMENT SUMMARY - PDF GENERATION
+// =====================================================
+
+
+app.post(
+  "/management-summary-pdf",
+  verifyToken,
+  async (req, res) => {
+    let browser;
+
+    try {
+      const { plantation, notes, startDate, endDate, reportPeriod } = req.body;
+
+      if (!plantation) {
+        return res.status(400).json({
+          success: false,
+          message: "Plantation is required."
+        });
+      }
+
+      if (
+        !startDate ||
+        !endDate ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
+        startDate > endDate
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid reporting dates."
+        });
+      }
+
+
+      // Escape text before inserting it into HTML
+      const escapeHTML = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+          })[char]
+        );
+
+      // 1. Attendance
+      const [attendance] = await db.promise().query(
+        `
+        SELECT
+          worker_type,
+
+          COUNT(
+            DISTINCT CASE
+              WHEN is_present = 1 THEN worker_id
+            END
+          ) AS workers,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN is_present = 1 THEN attendance_value
+                ELSE 0
+              END
+            ), 0
+          ) AS total_attendance
+
+        FROM attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+        GROUP BY worker_type
+        `,
+        [plantation, startDate, endDate]
+      );
+
+
+      // 1B. Daily attendance details
+      const [dailyAttendance] = await db.promise().query(
+        `
+        SELECT
+          DATE_FORMAT(ar.attendance_date, '%Y-%m-%d') AS attendance_date,
+          ar.worker_id,
+          ar.worker_type,
+          COALESCE(
+            pw.name,
+            rt.name,
+            cw.name,
+            'Unknown worker'
+          ) AS worker_name
+
+        FROM attendance_register ar
+
+        LEFT JOIN plantation_workers pw
+          ON ar.worker_id = pw.id
+          AND LOWER(TRIM(ar.worker_type)) = 'plantation'
+
+        LEFT JOIN rubber_tappers rt
+          ON ar.worker_id = rt.id
+          AND LOWER(TRIM(ar.worker_type)) = 'rubber'
+
+        LEFT JOIN casual_workers cw
+          ON ar.worker_id = cw.id
+          AND LOWER(TRIM(ar.worker_type)) = 'casual'
+
+        WHERE ar.plantation = ?
+          AND ar.attendance_date BETWEEN ? AND ?
+          AND ar.is_present = 1
+
+        ORDER BY ar.attendance_date, worker_name
+        `,
+        [plantation, startDate, endDate]
+      );
+
+
+      // 2. Machine labour
+      const [machine] = await db.promise().query(
+        `
+        SELECT
+          COUNT(*) AS total_days,
+          COUNT(DISTINCT worker_id) AS workers,
+          COALESCE(SUM(oil_cans), 0) AS oil_cans,
+          COALESCE(SUM(tanks), 0) AS tanks,
+          COALESCE(SUM(total), 0) AS total_amount
+        FROM machine_labour_attendance
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // 3. Income
+      const [income] = await db.promise().query(
+        `
+        SELECT category, amount, note, date
+        FROM income
+        WHERE plantation = ?
+        AND date BETWEEN ? AND ?
+        ORDER BY date, id
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Cumulative income up to the reporting end date
+      const [cumulativeIncomeRows] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(amount), 0) AS total_income
+        FROM income
+        WHERE plantation = ?
+          AND date <= ?
+        `,
+        [plantation, endDate]
+      );
+
+      // Cumulative money received up to the reporting end date
+      const [cumulativeReceivedRows] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(amount), 0) AS total_received
+        FROM expenditure
+        WHERE plantation = ?
+          AND date <= ?
+          AND transaction_type IN ('Money Received', 'Received')
+        `,
+        [plantation, endDate]
+      );
+
+      // 4. Money received
+      const [received] = await db.promise().query(
+        `
+        SELECT category, amount, note, date
+        FROM expenditure
+        WHERE plantation = ?
+        AND date BETWEEN ? AND ?
+        AND transaction_type IN ('Money Received', 'Received')
+        ORDER BY date, id
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // 5. Expenses
+      const [expenses] = await db.promise().query(
+        `
+        SELECT
+          category,
+          amount,
+          note,
+          date,
+          bank_account
+        FROM expenditure
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+          AND transaction_type = 'Expense'
+        ORDER BY date, id
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const totalIncome =
+        Number(cumulativeIncomeRows[0]?.total_income || 0) +
+        Number(cumulativeReceivedRows[0]?.total_received || 0);
+
+      const totalReceived = received.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      const totalExpenses = expenses.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      // Sampath Bank balance up to the reporting end date
+
+      const [sampathBalanceRows] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type = 'Opening Balance'
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS opening_balance,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type IN ('Received', 'Money Received')
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS money_received,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN transaction_type = 'Expense'
+                THEN amount
+                ELSE 0
+              END
+            ), 0
+          ) AS expenses
+
+        FROM expenditure
+        WHERE plantation = ?
+          AND LOWER(TRIM(bank_account)) = 'sampath'
+          AND date <= ?
+        `,
+        [plantation, endDate]
+      );
+
+      const sampathBalance =
+        Number(sampathBalanceRows[0]?.opening_balance || 0) +
+        Number(sampathBalanceRows[0]?.money_received || 0) -
+        Number(sampathBalanceRows[0]?.expenses || 0);
+
+      // Expenses during the selected reporting period
+
+      const sampathExpenses = expenses.reduce((sum, row) => {
+        const bank = String(row.bank_account || "").trim().toLowerCase();
+
+        return bank === "sampath"
+          ? sum + Number(row.amount || 0)
+          : sum;
+      }, 0);
+
+      const nationsTrustExpenses = expenses.reduce((sum, row) => {
+        const bank = String(row.bank_account || "").trim().toLowerCase();
+
+        return bank === "nations trust"
+          ? sum + Number(row.amount || 0)
+          : sum;
+      }, 0);
+
+      const money = value =>
+        `Rs. ${Number(value || 0).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+
+      const workerTypes = [
+  {
+    key: "plantation",
+    label: "තේ සේවකයින්"
+  },
+  {
+    key: "casual",
+    label: "දෛනික සේවකයින්"
+  },
+  {
+    key: "rubber",
+    label: "රබර් කිරි කපන්නන්"
+  }
+];
+
+const attendanceHTML = workerTypes.map(type => {
+  const row = attendance.find(
+    item =>
+      String(item.worker_type).trim().toLowerCase() === type.key
+  );
+
+  return `
+    <tr>
+      <td>${escapeHTML(type.label)}</td>
+      <td>${Number(row?.workers || 0)}</td>
+      <td>${Number(row?.total_attendance || 0).toFixed(1)}</td>
+    </tr>
+  `;
+}).join("");
+
+
+// WEEKLY DAILY ATTENDANCE BREAKDOWN
+const dailyAttendanceHTML = (() => {
+  if (reportPeriod !== "weekly") {
+    return "";
+  }
+
+  const weekdayNames = [
+    "ඉරිදා",
+    "සඳුදා",
+    "අඟහරුවාදා",
+    "බදාදා",
+    "බ්‍රහස්පතින්දා",
+    "සිකුරාදා",
+    "සෙනසුරාදා"
+  ];
+
+  // Count unique workers for each date
+  const attendanceByDate = {};
+
+  dailyAttendance.forEach(row => {
+    const dateKey = String(row.attendance_date).slice(0, 10);
+
+    if (!attendanceByDate[dateKey]) {
+      attendanceByDate[dateKey] = new Set();
+    }
+
+    attendanceByDate[dateKey].add(row.worker_id);
+  });
+
+  const headers = [];
+  const counts = [];
+
+  const currentDate = new Date(`${startDate}T00:00:00`);
+  const lastDate = new Date(`${endDate}T00:00:00`);
+
+  while (currentDate <= lastDate) {
+    const dateKey = [
+      currentDate.getFullYear(),
+      String(currentDate.getMonth() + 1).padStart(2, "0"),
+      String(currentDate.getDate()).padStart(2, "0")
+    ].join("-");
+
+    const weekday = weekdayNames[currentDate.getDay()];
+    const formattedDate = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
+
+    headers.push(`
+      <th>
+        ${escapeHTML(weekday)}<br>
+        ${escapeHTML(formattedDate)}
+      </th>
+    `);
+
+    const workerCount = attendanceByDate[dateKey]
+      ? attendanceByDate[dateKey].size
+      : 0;
+
+    counts.push(`<td>${workerCount}</td>`);
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return `
+    <div class="section">
+      <h2>දිනපතා සේවක පැමිණීම</h2>
+
+      <table>
+        <thead>
+          <tr>
+            ${headers.join("")}
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            ${counts.join("")}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+})();
+
+
+      const transactionRows = rows =>
+        rows.map(row => `
+          <tr>
+            <td>${escapeHTML(row.date)}</td>
+            <td>${escapeHTML(row.category)}</td>
+            <td>${money(row.amount)}</td>
+          </tr>
+        `).join("");
+
+      const fontPath = path.join(
+        __dirname,
+        "fonts",
+        "NotoSansSinhala-Regular.ttf"
+      );
+
+      if (!fs.existsSync(fontPath)) {
+        throw new Error("Sinhala font file not found.");
+      }
+
+      const fontBase64 =
+        fs.readFileSync(fontPath).toString("base64");
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="si">
+        <head>
+          <meta charset="UTF-8">
+
+          <style>
+            @font-face {
+              font-family: NotoSinhala;
+              src: url(data:font/ttf;base64,${fontBase64})
+                   format('truetype');
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
+            body {
+              font-family: NotoSinhala, sans-serif;
+              color: #000;
+              font-size: 10px;
+              margin: 0;
+            }
+
+            h1 {
+              text-align: center;
+              font-size: 20px;
+              margin: 0 0 5px;
+            }
+
+            h2 {
+              font-size: 13px;
+              margin: 12px 0 6px;
+            }
+
+            .subtitle {
+              text-align: center;
+              margin-bottom: 12px;
+            }
+
+            .period {
+              text-align: right;
+              margin-bottom: 10px;
+            }
+
+            .section {
+              border: 1px solid #000;
+              padding: 8px;
+              margin-bottom: 9px;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            th, td {
+              border: 1px solid #000;
+              padding: 5px;
+              text-align: left;
+            }
+
+            th {
+              font-weight: bold;
+            }
+
+            .notes {
+              min-height: 90px;
+              white-space: pre-wrap;
+              line-height: 1.7;
+              overflow-wrap: anywhere;
+            }
+
+            .financial-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+            }
+
+            .total {
+              font-weight: bold;
+              text-align: right;
+              margin-top: 6px;
+            }
+
+            .signature {
+              margin-top: 25px;
+              display: flex;
+              justify-content: space-between;
+            }
+
+            .signature div {
+              width: 40%;
+              border-top: 1px solid #000;
+              padding-top: 5px;
+              text-align: center;
+            }
+          </style>
+        </head>
+
+        <body>
+
+          <h1>
+            ${reportPeriod === "weekly"
+              ? "සතිපතා කළමනාකරණ වාර්තාව"
+              : "මාසික කළමනාකරණ වාර්තාව"}
+          </h1>
+
+          <div class="subtitle">
+            ${escapeHTML(plantation)}
+          </div>
+
+          <div class="period">
+            වාර්තා කාලය:
+            ${escapeHTML(startDate)} සිට ${escapeHTML(endDate)} දක්වා
+          </div>
+
+          <div class="section">
+            <h2>සේවක පැමිණීම</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>සේවක වර්ගය</th>
+                  <th>සේවකයින් ගණන</th>
+                  <th>පැමිණීම් එකතුව</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${attendanceHTML || `
+                  <tr><td colspan="3">දත්ත නොමැත</td></tr>
+                `}
+              </tbody>
+              </table>
+
+              ${dailyAttendanceHTML}
+
+              <h2>යන්ත්‍ර සේවකයින්</h2>
+
+            <table>
+              <tr>
+                <th>සේවකයින්</th>
+                <th>Oil Cans</th>
+                <th>Tanks</th>
+                <th>එකතුව</th>
+              </tr>
+
+              <tr>
+                <td>${Number(machine[0]?.workers || 0)}</td>
+                <td>${Number(machine[0]?.oil_cans || 0)}</td>
+                <td>${Number(machine[0]?.tanks || 0)}</td>
+                <td>${money(machine[0]?.total_amount)}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="section">
+            <h2>කළමනාකරණ සටහන්</h2>
+            <div class="notes">${escapeHTML(notes || "")}</div>
+          </div>
+
+                    <div class="section">
+            <h2>මූල්‍ය සාරාංශය (Financial Summary)</h2>
+
+            <table>
+              <tr>
+                <th>විස්තරය</th>
+                <th>මුදල</th>
+              </tr>
+
+              <tr>
+                <td>Sampath Bank Balance (Up to Report End Date)</td>
+                <td>${money(sampathBalance)}</td>
+              </tr>
+
+              <tr>
+                <td>Sampath Bank Expenses (Selected Period)</td>
+                <td>${money(sampathExpenses)}</td>
+              </tr>
+
+              <tr>
+                <td>Nations Trust Bank Expenses (Selected Period)</td>
+                <td>${money(nationsTrustExpenses)}</td>
+              </tr>
+
+              <tr>
+                <td>Total Income (Up to Report End Date)</td>
+                <td>${money(totalIncome)}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="financial-grid">
+
+            <div class="section">
+              <h2>ආදායම්</h2>
+
+              <table>
+                <tr>
+                  <th>දිනය</th>
+                  <th>විස්තරය</th>
+                  <th>මුදල</th>
+                </tr>
+
+                ${transactionRows(income)}
+              </table>
+
+            </div>
+
+            <div class="section">
+              <h2>වියදම්</h2>
+
+              <table>
+                <tr>
+                  <th>දිනය</th>
+                  <th>විස්තරය</th>
+                  <th>මුදල</th>
+                </tr>
+
+                ${transactionRows(expenses)}
+              </table>
+
+              <div class="total">
+                එකතුව: ${money(totalExpenses)}
+              </div>
+            </div>
+
+          </div>
+
+          <div class="section">
+            <h2>බැංකු මාරු / මුදල් ලැබීම්</h2>
+
+            <table>
+              <tr>
+                <th>දිනය</th>
+                <th>විස්තරය</th>
+                <th>මුදල</th>
+              </tr>
+
+              ${transactionRows(received)}
+            </table>
+
+            <div class="total">
+              එකතුව: ${money(totalReceived)}
+            </div>
+          </div>
+
+          <div class="signature">
+            <div>සකස් කළේ</div>
+            <div>අනුමත කළේ</div>
+          </div>
+
+        </body>
+        </html>
+      `;
+
+      browser = await puppeteer.launch({
+        headless: true
+      });
+
+      const page = await browser.newPage();
+
+      await page.setContent(html, {
+        waitUntil: "networkidle0"
+      });
+
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: {
+          top: "10mm",
+          bottom: "10mm",
+          left: "10mm",
+          right: "10mm"
+        }
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+
+     res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=management-summary-${startDate}-to-${endDate}.pdf`
+    );
+
+      const pdfData = Buffer.from(pdfBuffer);
+
+      console.log("Management PDF:", {
+        size: pdfData.length,
+        signature: pdfData.subarray(0, 5).toString()
+      });
+
+      res.setHeader("Content-Length", pdfData.length);
+      res.send(pdfData);
+
+    } catch (error) {
+      console.error("MANAGEMENT PDF ERROR:", error);
+
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
+  }
+);
 
 // ================= SERVER =================
 
