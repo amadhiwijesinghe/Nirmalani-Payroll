@@ -1,3 +1,4 @@
+
 import { TextField } from "@mui/material";
 
 export default function MobileInput({
@@ -6,6 +7,7 @@ export default function MobileInput({
   onChange,
   placeholder,
   type = "text",
+  children,
   ...props
 }) {
   return (
@@ -45,6 +47,8 @@ export default function MobileInput({
           color: "text.primary",
         },
       }}
-    />
+    >
+      {children}
+    </TextField>
   );
 }
