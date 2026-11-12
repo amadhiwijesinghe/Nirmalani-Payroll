@@ -14,7 +14,9 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  IconButton
+  IconButton,
+  TextField,
+  MenuItem
 } from "@mui/material";
 
 
@@ -380,15 +382,14 @@ return (
 
         {/* WORKER */}
 
-        <MobileInput
+        <TextField
+          select
+          fullWidth
           label="Select Worker"
           value={selectedWorker}
-          onChange={(e) =>
-            setSelectedWorker(e.target.value)
-          }
-          select
-          SelectProps={{
-            native: true
+          onChange={(e) => {
+            console.log("Selected Worker ID:", e.target.value);
+            setSelectedWorker(e.target.value);
           }}
           sx={{
             minWidth: {
@@ -397,23 +398,19 @@ return (
             }
           }}
         >
-
-          <option value="">
+          <MenuItem value="">
             Select Worker
-          </option>
+          </MenuItem>
 
           {workers.map((worker) => (
-
-            <option
+            <MenuItem
               key={worker.id}
-              value={worker.id}
+              value={String(worker.id)}
             >
               {worker.name}
-            </option>
-
+            </MenuItem>
           ))}
-
-        </MobileInput>
+        </TextField>
 
 
         {/* DATE */}
