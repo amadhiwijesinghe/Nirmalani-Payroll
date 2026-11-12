@@ -3840,6 +3840,45 @@ app.get("/coconut-collection", verifyToken, (req, res) => {
 
 });
 
+// UPDATE COCONUT COLLECTION
+app.put("/coconut-collection/:id", verifyToken, (req, res) => {
+
+  const { collection_date, quantity } = req.body;
+
+  if (!collection_date || quantity === undefined || Number(quantity) < 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Valid collection date and quantity are required"
+    });
+  }
+
+  db.query(
+    `UPDATE coconut_collection
+     SET collection_date = ?, quantity = ?
+     WHERE id = ?`,
+    [collection_date, quantity, req.params.id],
+    (err, result) => {
+
+      if (err) {
+        console.log("Coconut Collection Update Error:", err);
+        return res.status(500).json(err);
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Collection record not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Coconut collection updated successfully"
+      });
+    }
+  );
+});
+
 // DELETE COCONUT
 app.delete("/coconut-collection/:id", verifyToken, (req, res) => {
 
@@ -3927,6 +3966,45 @@ app.get("/coconut-sales", verifyToken, (req, res) => {
 
 });
 
+// UPDATE COCONUT SALE
+app.put("/coconut-sales/:id", verifyToken, (req, res) => {
+  const { sale_date, quantity_sold, price } = req.body;
+  const { id } = req.params;
+
+  db.query(
+    "UPDATE coconut_sales SET sale_date=?, quantity_sold=?, price=? WHERE id=?",
+    [sale_date, quantity_sold, price, id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Sale record not found" });
+      }
+
+      res.json({ message: "Coconut sale updated successfully" });
+    }
+  );
+});
+
+// DELETE COCONUT SALE
+app.delete("/coconut-sales/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "DELETE FROM coconut_sales WHERE id=?",
+    [id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Sale record not found" });
+      }
+
+      res.json({ message: "Coconut sale deleted successfully" });
+    }
+  );
+});
+
 // FREE GIVING
 app.post("/coconut-free-giving", verifyToken, (req, res) => {
 
@@ -3988,6 +4066,45 @@ app.get("/coconut-free-giving", verifyToken, (req, res) => {
     }
   );
 
+});
+
+// UPDATE FREE GIVING
+app.put("/coconut-free-giving/:id", verifyToken, (req, res) => {
+  const { free_date, quantity, note } = req.body;
+  const { id } = req.params;
+
+  db.query(
+    "UPDATE coconut_free_giving SET free_date=?, quantity=?, note=? WHERE id=?",
+    [free_date, quantity, note, id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Free giving record not found" });
+      }
+
+      res.json({ message: "Free giving record updated successfully" });
+    }
+  );
+});
+
+// DELETE FREE GIVING
+app.delete("/coconut-free-giving/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "DELETE FROM coconut_free_giving WHERE id=?",
+    [id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Free giving record not found" });
+      }
+
+      res.json({ message: "Free giving record deleted successfully" });
+    }
+  );
 });
 
 // ================ PADDY =======================
