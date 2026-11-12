@@ -21,8 +21,15 @@ import DownloadIcon from "@mui/icons-material/Download";
 const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-production.up.railway.app";
 
 export default function Reports({ plantation }) {
+  // Main report category
+  const [mainReportType, setMainReportType] = useState("payroll");
+
+  // Existing report selection — keep these values
   const [reportType, setReportType] = useState("plantation");
   const [reportPeriod, setReportPeriod] = useState("monthly");
+
+  // Used when the user clicks Apply
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
@@ -36,6 +43,10 @@ export default function Reports({ plantation }) {
   const [expenditureReportData, setExpenditureReportData] = useState([]);
 
   const [loading, setLoading] = useState(false);
+
+  // Monthly Management Summary
+    const [managementNotes, setManagementNotes] = useState("");
+    const [managementPdfLoading, setManagementPdfLoading] = useState(false);
 
   const [weeklyData, setWeeklyData] = useState([]);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
@@ -91,7 +102,8 @@ useEffect(() => {
   plantation,
   month,
   weekStart,
-  weekEnd
+  weekEnd,
+  refreshKey
 ]);
 
 
@@ -1972,6 +1984,118 @@ const generateReportHTML = () => {
     }, 500);
     };
 
+
+// =========================
+// DOWNLOAD MANAGEMENT SUMMARY PDF
+// =========================
+
+
+
+
+const handleManagementPdfDownload = async () => {
+  if (!plantation) {
+    alert("Please select a plantation.");
+    return;
+  }
+
+  let startDate;
+  let endDate;
+  let filePeriod;
+
+  if (reportPeriod === "weekly") {
+    if (!weekStart || !weekEnd) {
+      alert("Please select week start and week end.");
+      return;
+    }
+
+    if (weekStart > weekEnd) {
+      alert("Week start cannot be after week end.");
+      return;
+    }
+
+    startDate = weekStart;
+    endDate = weekEnd;
+    filePeriod = `Week-${weekStart}-to-${weekEnd}`;
+  } else {
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      alert("Please select a valid month.");
+      return;
+    }
+
+    const [year, monthNumber] = month.split("-").map(Number);
+
+    startDate = `${month}-01`;
+
+    const lastDay = new Date(year, monthNumber, 0).getDate();
+
+    endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
+
+    filePeriod = month;
+  }
+
+  try {
+    setManagementPdfLoading(true);
+
+    const response = await axios.post(
+      `${API}/management-summary-pdf`,
+      {
+        plantation,
+        startDate,
+        endDate,
+        reportPeriod,
+        notes: managementNotes
+      },
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      }
+    );
+
+    const blob = new Blob([response.data], {
+      type: "application/pdf"
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `Management-Summary-${plantation}-${filePeriod}.pdf`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+
+  } catch (error) {
+    console.error("Management PDF download error:", error);
+
+    let message = "Unable to generate the Management Summary PDF.";
+
+    if (error.response?.data instanceof Blob) {
+      try {
+        const errorText = await error.response.data.text();
+        const errorData = JSON.parse(errorText);
+        message = errorData.message || message;
+      } catch {
+        // Keep the default message.
+      }
+    } else {
+      message = error.response?.data?.message || message;
+    }
+
+    alert(message);
+
+  } finally {
+    setManagementPdfLoading(false);
+  }
+};
+
+
   // =========================
   // DOWNLOAD HTML
   // =========================
@@ -2694,217 +2818,397 @@ const fetchFinancialReportData = async () => {
         Generate, print and download plantation reports
       </Typography>
 
-      <Card>
+      
+<Card>
+  <CardContent>
+    <Typography
+      variant="h6"
+      fontWeight="bold"
+      sx={{ mb: 3 }}
+    >
+      Report Settings
+    </Typography>
 
-        <CardContent>
+    {/* MAIN REPORT CATEGORY */}
+    <FormControl fullWidth sx={{ mb: 3 }}>
+      <InputLabel>Report Category</InputLabel>
+      <Select
+        value={mainReportType}
+        label="Report Category"
+        onChange={(e) => setMainReportType(e.target.value)}
+      >
+        <MenuItem value="payroll">Payroll</MenuItem>
+        <MenuItem value="summary">Summary Reports</MenuItem>
+        <MenuItem value="other">Other Reports</MenuItem>
+      </Select>
+    </FormControl>
 
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            sx={{ mb: 3 }}
+    {/* 1. PAYROLL */}
+    {mainReportType === "payroll" && (
+      <>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+        >
+          <FormControl fullWidth>
+            <InputLabel>Worker Category</InputLabel>
+            <Select
+              value={reportType}
+              label="Worker Category"
+              onChange={(e) => setReportType(e.target.value)}
+            >
+              <MenuItem value="allworkers">All Workers</MenuItem>
+              <MenuItem value="plantation">Plantation Workers</MenuItem>
+              <MenuItem value="rubbertappers">Rubber Tappers</MenuItem>
+              <MenuItem value="casualworkers">Casual Workers</MenuItem>
+              <MenuItem value="machinelabour">Machine Labourers</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth>
+            <InputLabel>Month</InputLabel>
+            <Select
+              value={month}
+              label="Month"
+              onChange={(e) => setMonth(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, index) => {
+                const value = `${new Date().getFullYear()}-${String(
+                  index + 1
+                ).padStart(2, "0")}`;
+
+                return (
+                  <MenuItem key={value} value={value}>
+                    {new Date(
+                      new Date().getFullYear(),
+                      index,
+                      1
+                    ).toLocaleString("default", { month: "long" })}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        </Stack>
+
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => {
+            setReportPeriod("monthly");
+            setRefreshKey((prev) => prev + 1);
+          }}
+        >
+          Apply
+        </Button>
+      </>
+    )}
+
+    {/* 2. SUMMARY REPORTS */}
+    {mainReportType === "summary" && (
+      <>
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Report Period</InputLabel>
+          <Select
+            value={reportPeriod}
+            label="Report Period"
+            onChange={(e) => setReportPeriod(e.target.value)}
           >
-            Report Settings
-          </Typography>
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+          </Select>
+        </FormControl>
 
+        {reportPeriod === "weekly" ? (
           <Stack
-            direction={{
-              xs: "column",
-              md: "row"
-            }}
+            direction={{ xs: "column", md: "row" }}
             spacing={2}
           >
+            <TextField
+              fullWidth
+              label="Week Start"
+              type="date"
+              value={weekStart}
+              onChange={(e) => setWeekStart(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
 
-            <FormControl fullWidth>
-
-              <InputLabel>
-                Report Type
-              </InputLabel>
-
-              <Select
-                value={reportType}
-                label="Report Type"
-                onChange={(e) =>
-                  setReportType(e.target.value)
-                }
-              >
-
-                <MenuItem value="allworkers">All Workers Payroll</MenuItem>
-                <MenuItem value="plantation">Plantation Workers Payroll</MenuItem>
-                <MenuItem value="rubbertappers">Rubber Tappers Payroll</MenuItem>
-                <MenuItem value="casualworkers">Casual Workers Payroll</MenuItem>
-                <MenuItem value="machinelabour">Machine Labourers Payroll</MenuItem>
-                <MenuItem value="attendance">Attendance Register</MenuItem>
-                <MenuItem value="weeklyregister">Weekly Daily Register</MenuItem>
-                <MenuItem value="weeklyfinance">Weekly Income & Expenditure</MenuItem>
-
-              </Select>
-
-            </FormControl>
-
-            <FormControl fullWidth>
-                <InputLabel>Report Period</InputLabel>
-
-                <Select
-                    value={reportPeriod}
-                    label="Report Period"
-                    onChange={(e) =>
-                    setReportPeriod(e.target.value)
-                    }
-                >
-                    <MenuItem value="monthly">
-                    Monthly
-                    </MenuItem>
-
-                    <MenuItem value="weekly">
-                    Weekly
-                    </MenuItem>
-                </Select>
-                </FormControl>
-
-            {reportPeriod === "monthly" && (
-                <FormControl fullWidth>
-
-              <InputLabel>
-                Month
-              </InputLabel>
-
-              <Select
-                value={month}
-                label="Month"
-                onChange={(e) =>
-                  setMonth(e.target.value)
-                }
-              >
-
-                {[
-                  "January",
-                  "February",
-                  "March",
-                  "April",
-                  "May",
-                  "June",
-                  "July",
-                  "August",
-                  "September",
-                  "October",
-                  "November",
-                  "December"
-                ].map((name, index) => {
-
-                  const value =
-                    `${new Date().getFullYear()}-${String(
-                      index + 1
-                    ).padStart(2, "0")}`;
-
-                  return (
-                    <MenuItem
-                      key={value}
-                      value={value}
-                    >
-                      {name}
-                    </MenuItem>
-                  );
-
-                })}
-
-              </Select>
-
-            </FormControl>
-            )}
-
-            {reportPeriod === "weekly" && (
-                <>
-                    <TextField
-                    fullWidth
-                    label="Week Start"
-                    type="date"
-                    value={weekStart}
-                    onChange={(e) =>
-                        setWeekStart(e.target.value)
-                    }
-                    InputLabelProps={{
-                        shrink: true
-                    }}
-                    />
-
-                    <TextField
-                    fullWidth
-                    label="Week End"
-                    type="date"
-                    value={weekEnd}
-                    onChange={(e) =>
-                        setWeekEnd(e.target.value)
-                    }
-                    InputLabelProps={{
-                        shrink: true
-                    }}
-                    />
-                </>
-                )}
-
+            <TextField
+              fullWidth
+              label="Week End"
+              type="date"
+              value={weekEnd}
+              onChange={(e) => setWeekEnd(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
           </Stack>
+        ) : (
+          <FormControl fullWidth>
+            <InputLabel>Month</InputLabel>
+            <Select
+              value={month}
+              label="Month"
+              onChange={(e) => setMonth(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, index) => {
+                const value = `${new Date().getFullYear()}-${String(
+                  index + 1
+                ).padStart(2, "0")}`;
 
-          <Divider sx={{ my: 3 }} />
+                return (
+                  <MenuItem key={value} value={value}>
+                    {new Date(
+                      new Date().getFullYear(),
+                      index,
+                      1
+                    ).toLocaleString("default", { month: "long" })}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        )}
 
-          <Typography sx={{ mb: 1 }}>
-            <strong>Plantation:</strong>{" "}
-            {plantationName}
-            </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => {
+            if (
+              reportPeriod === "weekly" &&
+              (!weekStart || !weekEnd)
+            ) {
+              alert("Please select week start and week end.");
+              return;
+            }
 
-            <Typography sx={{ mb: 1 }}>
-            <strong>Report:</strong>{" "}
-            {reportType === "allworkers"
-                ? "All Workers Payroll"
-                : reportType === "plantation"
-                ? "Plantation Workers Payroll"
-                : reportType === "rubbertappers"
-                ? "Rubber Tappers Payroll"
-                : reportType === "casualworkers"
-                ? "Casual Workers Payroll"
-                : reportType === "attendance"
-                ? "Attendance Register"
-                : "Machine Labourers Payroll"}
-            </Typography>
+            if (
+              reportPeriod === "weekly" &&
+              weekStart > weekEnd
+            ) {
+              alert("Week start cannot be after week end.");
+              return;
+            }
 
-            <Typography sx={{ mb: 3 }}>
-            <strong>
-                {reportPeriod === "weekly" ? "Week:" : "Month:"}
-            </strong>{" "}
-            {reportPeriod === "weekly"
-                ? weekStart && weekEnd
-                ? `${weekStart} - ${weekEnd}`
-                : "Not selected"
-                : reportMonth}
-            </Typography>
+            setRefreshKey((prev) => prev + 1);
+          }}
+        >
+          Apply
+        </Button>
 
+        
+
+{(reportPeriod === "monthly" || reportPeriod === "weekly") && (
+  <Box sx={{ mt: 3 }}>
+    <Divider sx={{ mb: 3 }} />
+
+    <Typography variant="h6" fontWeight="bold" gutterBottom>
+      {reportPeriod === "weekly"
+        ? "Weekly Management Summary"
+        : "Monthly Management Summary"}
+    </Typography>
+
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ mb: 2 }}
+    >
+      Add any important management observations or notes for this{" "}
+      {reportPeriod === "weekly" ? "week" : "month"}.
+    </Typography>
+
+    <TextField
+      fullWidth
+      multiline
+      rows={5}
+      label="Management Notes"
+      placeholder={`Enter ${reportPeriod} management notes here...`}
+      value={managementNotes}
+      onChange={(e) => setManagementNotes(e.target.value)}
+    />
+
+    <Button
+      variant="contained"
+      color="primary"
+      startIcon={<DownloadIcon />}
+      fullWidth
+      sx={{ mt: 2 }}
+      onClick={handleManagementPdfDownload}
+      disabled={managementPdfLoading}
+    >
+      {managementPdfLoading
+        ? "Generating PDF..."
+        : `Download ${reportPeriod === "weekly" ? "Weekly" : "Monthly"} Management Summary PDF`}
+    </Button>
+  </Box>
+)}
+
+
+      </>
+    )}
+
+    {/* 3. OTHER REPORTS */}
+    {mainReportType === "other" && (
+      <>
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Other Report</InputLabel>
+          <Select
+            value={
+              ["attendance", "weeklyregister", "weeklyfinance"].includes(reportType)
+                ? reportType
+                : "attendance"
+            }
+            label="Other Report"
+            onChange={(e) => setReportType(e.target.value)}
+          >
+            <MenuItem value="attendance">
+              Attendance Register
+            </MenuItem>
+            <MenuItem value="weeklyregister">
+              Weekly Daily Register
+            </MenuItem>
+            <MenuItem value="weeklyfinance">
+              Weekly Income &amp; Expenditure
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Report Period</InputLabel>
+          <Select
+            value={reportPeriod}
+            label="Report Period"
+            onChange={(e) => setReportPeriod(e.target.value)}
+          >
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="weekly">Weekly</MenuItem>
+          </Select>
+        </FormControl>
+
+        {reportPeriod === "monthly" ? (
+          <FormControl fullWidth>
+            <InputLabel>Month</InputLabel>
+            <Select
+              value={month}
+              label="Month"
+              onChange={(e) => setMonth(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, index) => {
+                const value = `${new Date().getFullYear()}-${String(
+                  index + 1
+                ).padStart(2, "0")}`;
+
+                return (
+                  <MenuItem key={value} value={value}>
+                    {new Date(
+                      new Date().getFullYear(),
+                      index,
+                      1
+                    ).toLocaleString("default", { month: "long" })}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        ) : (
           <Stack
-            direction="row"
+            direction={{ xs: "column", md: "row" }}
             spacing={2}
           >
+            <TextField
+              fullWidth
+              label="Week Start"
+              type="date"
+              value={weekStart}
+              onChange={(e) => setWeekStart(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
 
-            <Button
-              variant="contained"
-              startIcon={<PrintIcon />}
-              onClick={handlePrint}
-              disabled={loading}
-            >
-              Print Report
-            </Button>
-
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={handleDownload}
-              disabled={loading}
-            >
-              Download Report
-            </Button>
-
+            <TextField
+              fullWidth
+              label="Week End"
+              type="date"
+              value={weekEnd}
+              onChange={(e) => setWeekEnd(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
           </Stack>
+        )}
 
-        </CardContent>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => {
+            if (
+              reportPeriod === "weekly" &&
+              (!weekStart || !weekEnd)
+            ) {
+              alert("Please select week start and week end.");
+              return;
+            }
 
-      </Card>
+            if (
+              reportPeriod === "weekly" &&
+              weekStart > weekEnd
+            ) {
+              alert("Week start cannot be after week end.");
+              return;
+            }
+
+            setRefreshKey((prev) => prev + 1);
+          }}
+        >
+          Apply
+        </Button>
+      </>
+    )}
+
+    <Divider sx={{ my: 3 }} />
+
+    <Typography sx={{ mb: 1 }}>
+      <strong>Plantation:</strong> {plantationName}
+    </Typography>
+
+    <Typography sx={{ mb: 3 }}>
+      <strong>Selected Category:</strong>{" "}
+      {mainReportType === "payroll"
+        ? "Payroll"
+        : mainReportType === "summary"
+        ? "Summary Reports"
+        : "Other Reports"}
+    </Typography>
+
+    <Stack direction="row" spacing={2}>
+      <Button
+        variant="contained"
+        startIcon={<PrintIcon />}
+        onClick={handlePrint}
+        disabled={loading || mainReportType === "summary"}
+      >
+        Print Report
+      </Button>
+
+      <Button
+        variant="outlined"
+        startIcon={<DownloadIcon />}
+        onClick={handleDownload}
+        disabled={loading || mainReportType === "summary"}
+      >
+        Download Report
+      </Button>
+    </Stack>
+
+    {mainReportType === "summary" && (
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: "block", mt: 2 }}
+      >
+        Summary report PDF generation will be connected in the next step.
+      </Typography>
+    )}
+  </CardContent>
+</Card>
+
 
     <Card sx={{ mt: 3 }}>
     <CardContent>
