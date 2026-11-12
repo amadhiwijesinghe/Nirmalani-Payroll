@@ -128,9 +128,15 @@ app.get("/test-sinhala-pdf", verifyToken, async (req, res) => {
 
     const fontBase64 = fs.readFileSync(fontPath).toString("base64");
 
+    
     browser = await puppeteer.launch({
-      headless: true
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox"
+      ]
     });
+
 
     const page = await browser.newPage();
 
@@ -7590,9 +7596,15 @@ const dailyAttendanceHTML = (() => {
         </html>
       `;
 
-      browser = await puppeteer.launch({
-        headless: true
-      });
+      
+        browser = await puppeteer.launch({
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox"
+          ]
+        });
+
 
       const page = await browser.newPage();
 
