@@ -151,11 +151,7 @@ if (!isLoggedIn) {
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  {plantation === "nirmalani" ? (
-                    <Dashboard plantation={plantation} />
-                  ) : (
-                    <IngurupaththalaDashboard plantation={plantation} />
-                  )}
+                  <Dashboard plantation={plantation} />
                 </motion.div>
               )}
 
