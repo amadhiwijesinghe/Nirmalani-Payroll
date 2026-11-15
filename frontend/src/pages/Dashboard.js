@@ -342,7 +342,7 @@ export default function Dashboard({ plantation }) {
           >
             {plantation === "nirmalani"
               ? "⚡ Nirmalani Plantation"
-              : "🌿 Ingurupaththala Plantation"}
+              : "🌿 Common Plantation"}
           </Typography>
 
 
