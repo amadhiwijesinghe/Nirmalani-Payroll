@@ -310,10 +310,10 @@ return (
       onClick={() => {
         if (plantation === "nirmalani") {
           setPlantation("ingurupaththala");
-          setPage("employees");
+          setPage("dashboard");
         } else {
           setPlantation("nirmalani");
-          setPage("employees");
+          setPage("dashboard");
         }
       }}
       sx={{

@@ -55,7 +55,7 @@ export default function Topbar({
           onClick={() => {
             if (plantation === "nirmalani") {
               setPlantation("ingurupaththala");
-              setPage("ingurupaththala");
+              setPage("dashboard");
             } else {
               setPlantation("nirmalani");
               setPage("employees");
