@@ -1047,79 +1047,203 @@ const warehouseTotalSticks =
             </Box>
 
 
-            {/* WORKER LIST */}
 
-            <Table>
+{/* WORKER LIST */}
 
-                <TableHead>
+{/* MOBILE VIEW */}
+<Box
+    sx={{
+        display: { xs: "block", sm: "none" }
+    }}
+>
+    {workerSearch.trim() !== "" &&
+        filteredWorkers.map((worker, index) => (
+            <Paper
+                key={worker.id}
+                sx={{
+                    p: 2,
+                    mb: 1.5,
+                    borderRadius: 3,
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.12)"
+                }}
+            >
+                <Typography
+                    sx={{
+                        color: "#aaa",
+                        fontSize: 12,
+                        mb: 1
+                    }}
+                >
+                    Worker #{index + 1}
+                </Typography>
 
-                  <TableRow>
+                {editingWorkerId === worker.id ? (
+                    <TextField
+                        fullWidth
+                        size="small"
+                        value={editWorkerName}
+                        onChange={(e) =>
+                            setEditWorkerName(e.target.value)
+                        }
+                        sx={{
+                            mb: 2,
+                            input: { color: "#fff" }
+                        }}
+                    />
+                ) : (
+                    <Typography
+                        sx={{
+                            color: "#fff",
+                            fontWeight: "bold",
+                            fontSize: 16,
+                            mb: 2
+                        }}
+                    >
+                        {worker.name}
+                    </Typography>
+                )}
 
-                      <TableCell sx={{ color: "#aaa" }}>
-                          #
-                      </TableCell>
+                <Box
+                    sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap"
+                    }}
+                >
+                    {editingWorkerId === worker.id ? (
+                        <>
+                            <Button
+                                fullWidth
+                                onClick={() => updateWorker(worker.id)}
+                                sx={{
+                                    background: "#22c55e",
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                    flex: 1
+                                }}
+                            >
+                                Save
+                            </Button>
 
-                      <TableCell sx={{ color: "#aaa" }}>
-                          Worker
-                      </TableCell>
+                            <Button
+                                fullWidth
+                                onClick={() => {
+                                    setEditingWorkerId(null);
+                                    setEditWorkerName("");
+                                }}
+                                sx={{
+                                    background: "#9ca3af",
+                                    color: "#000",
+                                    flex: 1
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                fullWidth
+                                onClick={() => {
+                                    setEditingWorkerId(worker.id);
+                                    setEditWorkerName(worker.name);
+                                }}
+                                sx={{
+                                    background: "#facc15",
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                    flex: 1
+                                }}
+                            >
+                                Edit
+                            </Button>
 
-                      <TableCell sx={{ color: "#aaa" }}>
-                          Total Weight
-                      </TableCell>
+                            <Button
+                                fullWidth
+                                onClick={() => deleteWorker(worker.id)}
+                                sx={{
+                                    background: "#ef4444",
+                                    color: "#fff",
+                                    fontWeight: "bold",
+                                    flex: 1
+                                }}
+                            >
+                                Delete
+                            </Button>
+                        </>
+                    )}
+                </Box>
+            </Paper>
+        ))
+    }
 
-                      <TableCell sx={{ color: "#aaa" }}>
-                          Actions
-                      </TableCell>
+    {workerSearch.trim() !== "" &&
+        filteredWorkers.length === 0 && (
+            <Typography
+                sx={{
+                    color: "#aaa",
+                    mt: 2,
+                    textAlign: "center"
+                }}
+            >
+                No Cinnamon Worker found.
+            </Typography>
+        )}
+</Box>
 
-                  </TableRow>
+{/* DESKTOP VIEW */}
+<Box
+    sx={{
+        display: { xs: "none", sm: "block" },
+        width: "100%",
+        overflowX: "auto"
+    }}
+>
+    <Table sx={{ minWidth: 500 }}>
+        <TableHead>
+            <TableRow>
+                <TableCell sx={{ color: "#aaa" }}>
+                    #
+                </TableCell>
 
-              </TableHead>
+                <TableCell sx={{ color: "#aaa" }}>
+                    Worker
+                </TableCell>
 
+                <TableCell sx={{ color: "#aaa" }}>
+                    Actions
+                </TableCell>
+            </TableRow>
+        </TableHead>
 
-                <TableBody>
+        <TableBody>
+            {workerSearch.trim() !== "" &&
+                filteredWorkers.map((worker, index) => (
+                    <TableRow key={worker.id}>
+                        <TableCell sx={{ color: "#fff" }}>
+                            {index + 1}
+                        </TableCell>
 
-                  {workerSearch.trim() !== "" &&
-                      filteredWorkers.map((worker, index) => (
+                        <TableCell sx={{ color: "#fff" }}>
+                            {editingWorkerId === worker.id ? (
+                                <TextField
+                                    size="small"
+                                    value={editWorkerName}
+                                    onChange={(e) =>
+                                        setEditWorkerName(e.target.value)
+                                    }
+                                />
+                            ) : (
+                                worker.name
+                            )}
+                        </TableCell>
 
-                        <TableRow key={worker.id}>
-
-                            <TableCell sx={{ color: "#fff" }}>
-                                {index + 1}
-                            </TableCell>
-
-
-                            <TableCell sx={{ color: "#fff" }}>
-
-                                {editingWorkerId === worker.id ? (
-
-                                    <TextField
-                                        size="small"
-                                        value={editWorkerName}
-                                        onChange={(e) =>
-                                            setEditWorkerName(
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-
-                                ) : (
-
-                                    worker.name
-
-                                )}
-
-                            </TableCell>
-
-
-                            <TableCell align="right">
-
-                                {editingWorkerId === worker.id ? (
-
+                        <TableCell>
+                            {editingWorkerId === worker.id ? (
                                 <>
                                     <Button
-                                        onClick={() =>
-                                            updateWorker(worker.id)
-                                        }
+                                        onClick={() => updateWorker(worker.id)}
                                         sx={{
                                             background: "#22c55e",
                                             color: "#000",
@@ -1128,23 +1252,26 @@ const warehouseTotalSticks =
                                     >
                                         Save
                                     </Button>
-                                </>
 
-                                ) : (
-
-                                  <>
-          
                                     <Button
                                         onClick={() => {
-
-                                            setEditingWorkerId(
-                                                worker.id
-                                            );
-
-                                            setEditWorkerName(
-                                                worker.name
-                                            );
-
+                                            setEditingWorkerId(null);
+                                            setEditWorkerName("");
+                                        }}
+                                        sx={{
+                                            background: "#9ca3af",
+                                            color: "#000"
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        onClick={() => {
+                                            setEditingWorkerId(worker.id);
+                                            setEditWorkerName(worker.name);
                                         }}
                                         sx={{
                                             background: "#facc15",
@@ -1155,50 +1282,25 @@ const warehouseTotalSticks =
                                         Edit
                                     </Button>
 
-                                
-
-
-                                <Button
-                                    onClick={() =>
-                                        deleteWorker(worker.id)
-                                    }
-                                    sx={{
-                                        background: "#ef4444",
-                                        color: "#fff"
-                                    }}
-                                >
-                                    Delete
-                                </Button>
-
+                                    <Button
+                                        onClick={() => deleteWorker(worker.id)}
+                                        sx={{
+                                            background: "#ef4444",
+                                            color: "#fff"
+                                        }}
+                                    >
+                                        Delete
+                                    </Button>
                                 </>
-                                )}
+                            )}
+                        </TableCell>
+                    </TableRow>
+                ))}
+        </TableBody>
+    </Table>
+</Box>
+</Paper>
 
-                                
-
-                            </TableCell>
-
-                        </TableRow>
-
-                    ))}
-
-                </TableBody>
-
-            </Table>
-
-              {workerSearch.trim() !== "" &&
-                filteredWorkers.length === 0 && (
-                    <Typography
-                        sx={{
-                            color: "#aaa",
-                            mt: 2,
-                            textAlign: "center"
-                        }}
-                    >
-                        No Cinnamon Worker found.
-                    </Typography>
-                )}
-
-        </Paper>
 
       {/* FORM */}
       <Paper
@@ -1228,10 +1330,7 @@ const warehouseTotalSticks =
                 onChange={(e) => {
                   setWorkerId(e.target.value);
               }}
-                sx={{
-                  color: "#fff",
-                  width: 250
-                }}
+                sx={{ color: "#fff", width: "100%" }}
               >
 
                 <MenuItem value="">
