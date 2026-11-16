@@ -21,6 +21,7 @@ const {
 } = require("@aws-sdk/s3-request-presigner");
 
 const PDFDocument = require("pdfkit");
+const puppeteer = require("puppeteer");
 const app = express();
 
 const s3 = new S3Client({
@@ -6559,6 +6560,694 @@ app.get("/machine-labour-summary/:month", verifyToken, (req, res) => {
   );
 
 });
+
+
+// =====================================================
+// MANAGEMENT SUMMARY PDF - WEEKLY & MONTHLY
+// =====================================================
+
+app.post(
+  "/management-summary-pdf",
+  verifyToken,
+  async (req, res) => {
+    let browser;
+
+    try {
+      const {
+        plantation,
+        notes,
+        startDate,
+        endDate,
+        reportPeriod
+      } = req.body;
+
+      const normalizedPlantation = String(plantation || "")
+        .trim()
+        .toLowerCase();
+
+      if (
+        !plantation ||
+        !startDate ||
+        !endDate ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
+        startDate > endDate
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid plantation or reporting dates."
+        });
+      }
+
+      const escapeHTML = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+          })[char]
+        );
+
+      const money = (value) =>
+        `Rs. ${Number(value || 0).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+
+      const formatDate = (value) =>
+        new Date(value).toLocaleDateString("en-GB");
+
+      // 1. WORKER ATTENDANCE
+      const [attendance] = await db.promise().query(
+        `
+        SELECT
+          worker_type,
+          COUNT(DISTINCT worker_id) AS workers,
+          SUM(attendance_value) AS total_attendance
+        FROM attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+          AND is_present = 1
+        GROUP BY worker_type
+        `,
+        [plantation, startDate, endDate]
+      );
+
+
+      // 1B. DAILY ATTENDANCE FOR WEEKLY SUMMARY
+      const [dailyAttendance] = await db.promise().query(
+        `
+        SELECT
+          DATE_FORMAT(attendance_date, '%Y-%m-%d') AS attendance_date,
+          worker_id,
+          worker_type
+        FROM attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+          AND is_present = 1
+        ORDER BY attendance_date
+        `,
+        [plantation, startDate, endDate]
+      );
+
+
+      // 2. MACHINE LABOUR
+      const [machine] = await db.promise().query(
+        `
+        SELECT
+          COUNT(DISTINCT worker_id) AS workers,
+          COALESCE(SUM(oil_cans), 0) AS oil_cans,
+          COALESCE(SUM(tanks), 0) AS tanks,
+          COALESCE(SUM(total), 0) AS total_amount
+        FROM machine_labour_attendance
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+
+      // 2B. COLLECTION & DISPATCH SUMMARY
+
+      // Tea Collection
+      const [teaCollection] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(kg), 0) AS total_kg
+        FROM tea_collection
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Cinnamon Collection
+      const [cinnamonCollection] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(cc.sticks), 0) AS total_sticks
+        FROM cinnamon_collection cc
+        JOIN cinnamon_workers cw
+          ON cw.id = cc.worker_id
+        WHERE cw.plantation = ?
+          AND cc.date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Rubber Dispatch
+      const [rubberDispatch] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(liters_sent), 0) AS total_litres
+        FROM rubber_dispatch
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+            // Rubber Latex Collection
+      const [rubberCollection] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(liters_collected), 0) AS total_litres
+        FROM rubber_collection
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Coconut Collection
+      const [coconutCollection] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(quantity), 0) AS total_quantity
+        FROM coconut_collection
+        WHERE plantation = ?
+          AND collection_date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Paddy Collection
+      const [paddyCollection] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(quantity), 0) AS total_quantity
+        FROM paddy_collection
+        WHERE plantation = ?
+          AND collection_date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // 3. INCOME
+      const [income] = await db.promise().query(
+        `
+        SELECT category, amount, note, date
+        FROM income
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+        ORDER BY date, id
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // 4. EXPENSES
+      const [expenses] = await db.promise().query(
+        `
+        SELECT
+          bank_account,
+          category,
+          amount,
+          note,
+          date
+        FROM expenditure
+        WHERE plantation = ?
+          AND date BETWEEN ? AND ?
+          AND transaction_type = 'Expense'
+        ORDER BY date, id
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // 5. BANK BALANCES AS AT REPORT END DATE
+      const [bankRows] = await db.promise().query(
+        `
+        SELECT
+          bank_account,
+          COALESCE(SUM(
+            CASE
+              WHEN transaction_type = 'Opening Balance'
+                THEN amount
+              WHEN transaction_type IN ('Received', 'Money Received')
+                THEN amount
+              WHEN transaction_type = 'Expense'
+                THEN -amount
+              ELSE 0
+            END
+          ), 0) AS balance
+        FROM expenditure
+        WHERE plantation = ?
+          AND date <= ?
+        GROUP BY bank_account
+        `,
+        [plantation, endDate]
+      );
+
+      const bankBalance = (name) => {
+        const row = bankRows.find(
+          item => item.bank_account === name
+        );
+        return Number(row?.balance || 0);
+      };
+
+      const totalIncome = income.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      const totalExpenses = expenses.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      const totalAttendance = attendance.reduce(
+        (sum, row) => sum + Number(row.total_attendance || 0),
+        0
+      );
+
+      
+      const workerTypes = [
+        {
+          key: "plantation",
+          label: "වතු සේවකයින්"
+        },
+        {
+          key: "rubber",
+          label: "රබර් කිරි කපන්නන්"
+        },
+        {
+          key: "casual",
+          label: "දෛනික සේවකයින්"
+        }
+      ];
+
+      // Main attendance summary - always show all three categories
+      const attendanceRows = workerTypes.map(type => {
+        const row = attendance.find(
+          item =>
+            String(item.worker_type).trim().toLowerCase() === type.key
+        );
+
+        return `
+          <tr>
+            <td>${escapeHTML(type.label)}</td>
+            <td>${Number(row?.workers || 0)}</td>
+            <td>${Number(row?.total_attendance || 0).toFixed(1)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      // Weekly attendance - count each category separately for every day
+      const dailyAttendanceHTML = (() => {
+        if (reportPeriod !== "weekly") {
+          return "";
+        }
+
+        const weekdayNames = [
+          "ඉරිදා",
+          "සඳුදා",
+          "අඟහරුවාදා",
+          "බදාදා",
+          "බ්‍රහස්පතින්දා",
+          "සිකුරාදා",
+          "සෙනසුරාදා"
+        ];
+
+        const currentDate = new Date(`${startDate}T00:00:00`);
+        const lastDate = new Date(`${endDate}T00:00:00`);
+
+        const dates = [];
+
+        while (currentDate <= lastDate) {
+          const dateKey = [
+            currentDate.getFullYear(),
+            String(currentDate.getMonth() + 1).padStart(2, "0"),
+            String(currentDate.getDate()).padStart(2, "0")
+          ].join("-");
+
+          dates.push({
+            key: dateKey,
+            label: `${weekdayNames[currentDate.getDay()]}<br>${currentDate.getDate()}/${currentDate.getMonth() + 1}`
+          });
+
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const rows = workerTypes.map(type => {
+          const counts = dates.map(date => {
+            const uniqueWorkers = new Set(
+              dailyAttendance
+                .filter(row =>
+                  String(row.attendance_date).slice(0, 10) === date.key &&
+                  String(row.worker_type).trim().toLowerCase() === type.key
+                )
+                .map(row => row.worker_id)
+            );
+
+            return `<td>${uniqueWorkers.size}</td>`;
+          }).join("");
+
+          return `
+            <tr>
+              <td>${escapeHTML(type.label)}</td>
+              ${counts}
+            </tr>
+          `;
+        }).join("");
+
+        return `
+          <div class="section">
+            <h2>දිනපතා සේවක පැමිණීම</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>සේවක වර්ගය</th>
+                  ${dates.map(date => `<th>${date.label}</th>`).join("")}
+                </tr>
+              </thead>
+
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      })();
+
+      const transactionRows = (rows) =>
+        rows.map(row => `
+          <tr>
+            <td>${escapeHTML(formatDate(row.date))}</td>
+            <td>${escapeHTML(row.note || row.category || "-")}</td>
+            <td>${money(row.amount)}</td>
+          </tr>
+        `).join("");
+
+      const fontPath = path.join(
+        __dirname,
+        "fonts",
+        "NotoSansSinhala-Regular.ttf"
+      );
+
+      if (!fs.existsSync(fontPath)) {
+        throw new Error("Sinhala font file not found.");
+      }
+
+      const fontBase64 = fs.readFileSync(fontPath).toString("base64");
+
+      const periodLabel =
+        reportPeriod === "weekly" ? "සතිපතා" : "මාසික";
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="si">
+        <head>
+          <meta charset="UTF-8">
+
+          <style>
+            @font-face {
+              font-family: NotoSinhala;
+              src: url(data:font/ttf;base64,${fontBase64})
+                   format('truetype');
+            }
+
+            * { box-sizing: border-box; }
+
+            body {
+              font-family: NotoSinhala, sans-serif;
+              color: #000;
+              font-size: 10px;
+              margin: 0;
+            }
+
+            h1 {
+              text-align: center;
+              font-size: 19px;
+              margin-bottom: 5px;
+            }
+
+            h2 {
+              font-size: 13px;
+              margin: 12px 0 6px;
+            }
+
+            .subtitle, .period {
+              text-align: center;
+              margin-bottom: 8px;
+            }
+
+            .section {
+              border: 1px solid #000;
+              padding: 8px;
+              margin-bottom: 10px;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            th, td {
+              border: 1px solid #000;
+              padding: 5px;
+              text-align: left;
+            }
+
+            .notes {
+              min-height: 65px;
+              white-space: pre-wrap;
+              line-height: 1.7;
+            }
+
+            .total {
+              font-weight: bold;
+              text-align: right;
+              margin-top: 7px;
+            }
+
+            .financial-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+            }
+
+            .signature {
+              margin-top: 35px;
+              display: flex;
+              justify-content: space-between;
+            }
+
+            .signature div {
+              width: 40%;
+              border-top: 1px solid #000;
+              padding-top: 5px;
+              text-align: center;
+            }
+          </style>
+        </head>
+
+        <body>
+          <h1>${periodLabel} කළමනාකරණ වාර්තාව</h1>
+
+          <div class="subtitle">
+            ${escapeHTML(plantation)}
+          </div>
+
+          <div class="period">
+            වාර්තා කාලය:
+            ${escapeHTML(formatDate(startDate))}
+            සිට
+            ${escapeHTML(formatDate(endDate))}
+          </div>
+
+          <div class="section">
+            <h2>කළමනාකරණ සටහන්</h2>
+            <div class="notes">${escapeHTML(notes || "")}</div>
+          </div>
+
+          <div class="section">
+            <h2>සේවක පැමිණීම</h2>
+            <table>
+              <tr>
+                <th>සේවක වර්ගය</th>
+                <th>සේවකයින් ගණන</th>
+                <th>පැමිණීම් එකතුව</th>
+              </tr>
+              ${attendanceRows || `
+                <tr><td colspan="3">දත්ත නොමැත</td></tr>
+              `}
+              <tr>
+                <th colspan="2">මුළු පැමිණීම්</th>
+                <th>${totalAttendance.toFixed(1)}</th>
+              </tr>
+            </table>
+            ${dailyAttendanceHTML}
+            <h2>යන්ත්‍ර සේවකයින්</h2>
+            <table>
+              <tr>
+                <th>සේවකයින්</th>
+                <th>Oil Cans</th>
+                <th>Tanks</th>
+                <th>එකතුව</th>
+              </tr>
+              <tr>
+                <td>${Number(machine[0]?.workers || 0)}</td>
+                <td>${Number(machine[0]?.oil_cans || 0)}</td>
+                <td>${Number(machine[0]?.tanks || 0)}</td>
+                <td>${money(machine[0]?.total_amount)}</td>
+              </tr>
+            </table>
+          </div>
+
+
+          <!-- COLLECTION & DISPATCH SUMMARY -->
+          <div class="section">
+            <h2>Collection & Dispatch Summary</h2>
+
+            <table>
+              <tr>
+                <th>Category</th>
+                <th>Total Quantity</th>
+              </tr>
+
+              <tr>
+                <td>Tea Collection</td>
+                <td>${Number(teaCollection[0]?.total_kg || 0).toLocaleString("en-US")} KG</td>
+              </tr>
+
+              <tr>
+                <td>Cinnamon Collection</td>
+                <td>${Number(cinnamonCollection[0]?.total_sticks || 0).toLocaleString("en-US")} Sticks</td>
+              </tr>
+
+              <tr>
+                <td>Rubber Latex Collection</td>
+                <td>${Number(rubberCollection[0]?.total_litres || 0).toLocaleString("en-US")} Litres</td>
+              </tr>
+
+              <tr>
+                <td>Rubber Dispatch</td>
+                <td>${Number(rubberDispatch[0]?.total_litres || 0).toLocaleString("en-US")} Litres</td>
+              </tr>
+
+              ${
+                normalizedPlantation !== "nirmalani"
+                  ? `
+                    <tr>
+                      <td>Coconut Collection</td>
+                      <td>${Number(coconutCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
+                    </tr>
+
+                    <tr>
+                      <td>Paddy Collection</td>
+                      <td>${Number(paddyCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
+                    </tr>
+                  `
+                  : ""
+              }
+            </table>
+          </div>
+
+          <div class="financial-grid">
+            <div class="section">
+              <h2>ආදායම්</h2>
+              <table>
+                <tr>
+                  <th>දිනය</th>
+                  <th>විස්තරය</th>
+                  <th>මුදල</th>
+                </tr>
+                ${transactionRows(income)}
+              </table>
+              <div class="total">එකතුව: ${money(totalIncome)}</div>
+            </div>
+
+            <div class="section">
+              <h2>වියදම්</h2>
+              <table>
+                <tr>
+                  <th>දිනය</th>
+                  <th>විස්තරය</th>
+                  <th>මුදල</th>
+                </tr>
+                ${transactionRows(expenses)}
+              </table>
+              <div class="total">එකතුව: ${money(totalExpenses)}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>බැංකු ශේෂය</h2>
+            <table>
+              <tr>
+                <th>බැංකුව</th>
+                <th>ශේෂය</th>
+              </tr>
+              <tr>
+                <td>Sampath Bank</td>
+                <td>${money(bankBalance("Sampath"))}</td>
+              </tr>
+              <tr>
+                <td>Nations Trust Bank</td>
+                <td>${money(bankBalance("Nations Trust"))}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="signature">
+            <div>සකස් කළේ</div>
+            <div>අනුමත කළේ</div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      browser = await puppeteer.launch({
+        headless: true
+      });
+
+      const page = await browser.newPage();
+
+      await page.setContent(html, {
+        waitUntil: "networkidle0"
+      });
+
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "10mm",
+          bottom: "10mm",
+          left: "10mm",
+          right: "10mm"
+        }
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Management-Summary-${reportPeriod}.pdf`
+      );
+
+      res.send(Buffer.from(pdfBuffer));
+
+    } catch (error) {
+      console.error("MANAGEMENT PDF ERROR:", error);
+
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
+  }
+);
 
 // ================= SERVER =================
 
