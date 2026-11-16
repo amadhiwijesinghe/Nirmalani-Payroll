@@ -115,9 +115,15 @@ export default function AttendanceRegister({ plantation }) {
 
 };
 
+
 // Load Attendance
 const loadAttendance = async () => {
 
+    // Clear previous month's/plantation's displayed data
+    setAttendance({});
+    setMachineAttendanceData({});
+
+    // 1. LOAD PLANTATION AND CASUAL ATTENDANCE
     try {
 
         const res = await axios.get(
@@ -131,7 +137,7 @@ const loadAttendance = async () => {
             }
         );
 
-        const attendanceObject = {};
+        const normalAttendance = {};
 
         res.data.forEach(row => {
 
@@ -141,9 +147,27 @@ const loadAttendance = async () => {
             const key =
                 `${row.worker_type}-${row.worker_id}-${date}`;
 
-            attendanceObject[key] = Number(row.attendance_value) || 0;
+            normalAttendance[key] =
+                Number(row.attendance_value) || 0;
 
         });
+
+        setAttendance(prev => ({
+            ...prev,
+            ...normalAttendance
+        }));
+
+    } catch (err) {
+
+        console.error(
+            "Plantation/Casual Attendance Loading Error:",
+            err.response?.data || err
+        );
+
+    }
+
+    // 2. LOAD RUBBER TAPPER ATTENDANCE
+    try {
 
         const rubberRes = await axios.get(
             `${API}/rubber-attendance-calendar`,
@@ -156,6 +180,38 @@ const loadAttendance = async () => {
             }
         );
 
+        const rubberAttendance = {};
+
+        rubberRes.data.forEach(row => {
+
+            const date = dayjs(row.attendance_date)
+                .format("YYYY-MM-DD");
+
+            const key =
+                `rubber-${row.worker_id}-${date}`;
+
+            rubberAttendance[key] =
+                Number(row.attendance_value) || 0;
+
+        });
+
+        setAttendance(prev => ({
+            ...prev,
+            ...rubberAttendance
+        }));
+
+    } catch (err) {
+
+        console.error(
+            "Rubber Attendance Loading Error:",
+            err.response?.data || err
+        );
+
+    }
+
+    // 3. LOAD MACHINE LABOUR ATTENDANCE
+    try {
+
         const machineRes = await axios.get(
             `${API}/machine-labour-attendance`,
             {
@@ -167,49 +223,38 @@ const loadAttendance = async () => {
             }
         );
 
-        rubberRes.data.forEach(row => {
+        const machineObject = {};
+
+        machineRes.data.forEach(row => {
 
             const date = dayjs(row.attendance_date)
                 .format("YYYY-MM-DD");
 
             const key =
-                `rubber-${row.worker_id}-${date}`;
+                `machine-${row.worker_id}-${date}`;
 
-            attendanceObject[key] =
-                Number(row.attendance_value) || 0;
+            machineObject[key] = {
+                oil_cans: Number(row.oil_cans) || 0,
+                tanks: Number(row.tanks) || 0,
+                rate: Number(row.rate) || 1000,
+                total: Number(row.total) || 0
+            };
 
         });
-
-        const machineObject = {};
-
-    machineRes.data.forEach(row => {
-
-        const date = dayjs(row.attendance_date)
-            .format("YYYY-MM-DD");
-
-        const key =
-            `machine-${row.worker_id}-${date}`;
-
-        machineObject[key] = {
-            oil_cans: Number(row.oil_cans) || 0,
-            tanks: Number(row.tanks) || 0,
-            rate: Number(row.rate) || 1000,
-            total: Number(row.total) || 0
-        };
-
-    });
-
-        setAttendance(attendanceObject);
 
         setMachineAttendanceData(machineObject);
 
     } catch (err) {
 
-        console.log(err);
+        console.error(
+            "Machine Labour Attendance Loading Error:",
+            err.response?.data || err
+        );
 
     }
 
 };
+
 
 // Toggle Attendance 
 const toggleAttendance = (worker, day) => {
@@ -358,16 +403,18 @@ const calculateKG = (liter, drc) => {
 
 };
 
-// Save Attendance
+
 const saveAttendance = async () => {
-
     try {
-
         const attendanceData = [];
 
         Object.entries(attendance).forEach(([key, value]) => {
-
             const parts = key.split("-");
+
+            // Rubber attendance is saved separately.
+            if (parts[0] === "rubber") {
+                return;
+            }
 
             attendanceData.push({
                 worker_type: parts[0],
@@ -377,27 +424,28 @@ const saveAttendance = async () => {
                 attendance_value: value,
                 is_present: value > 0 ? 1 : 0
             });
-
         });
 
-        await axios.post(
-            `${API}/attendance-register`,
-            attendanceData
-        );
+        if (attendanceData.length > 0) {
+            await axios.post(
+                `${API}/attendance-register`,
+                attendanceData
+            );
+        }
 
         setIsEditing(false);
-
         alert("Attendance Saved Successfully");
 
     } catch (err) {
-
-        console.log(err);
+        console.error(
+            "Attendance Save Error:",
+            err.response?.data || err
+        );
 
         alert("Error Saving Attendance");
-
     }
-
 };
+
 
 // Save Rubber Attendance
 const saveRubberAttendance = async () => {
@@ -1397,7 +1445,7 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                             setAttendanceValue(
                                                 worker,
                                                 selectedDay,
-                                                1
+                                                isSunday ? 1.5 : 1
                                             );
 
                                         }
@@ -1410,7 +1458,7 @@ const isMobile = useMediaQuery("(max-width:900px)");
                                 <MobileButton
                                     color="warning"
                                     fullWidth
-                                    disabled={!isEditing || isFinalized}
+                                    disabled={!isEditing || isFinalized || isSunday}
                                     onClick={() => {
 
                                         if (worker.worker_type === "rubber") {

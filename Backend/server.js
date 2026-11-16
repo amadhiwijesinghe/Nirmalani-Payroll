@@ -6426,8 +6426,11 @@ app.get("/machine-labour-attendance", verifyToken, (req, res) => {
   const {
     worker_id,
     month,
+    year,
     plantation
-  } = req.query;
+} = req.query;
+
+const selectedMonth = `${year}-${String(month).padStart(2, "0")}`;
 
   let sql = `
     SELECT
@@ -6452,8 +6455,8 @@ app.get("/machine-labour-attendance", verifyToken, (req, res) => {
 
   const params = [
     plantation,
-    month
-  ];
+    selectedMonth
+];
 
   // If a worker is selected,
   // return only that worker's records.
