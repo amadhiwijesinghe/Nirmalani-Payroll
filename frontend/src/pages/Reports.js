@@ -22,7 +22,9 @@ const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-producti
 
 export default function Reports({ plantation }) {
   const [reportType, setReportType] = useState("plantation");
+  const [mainReportType, setMainReportType] = useState("payroll");
   const [reportPeriod, setReportPeriod] = useState("monthly");
+  const [managementNotes, setManagementNotes] = useState("");
 
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
@@ -1288,6 +1290,10 @@ const generateReportHTML = () => {
   // =========================
 
     const handlePrint = async () => {
+        if (mainReportType === "summary") {
+            await handleManagementPdfPrint();
+            return;
+        }
         if (reportType === "allworkers") {
             if (allWorkersData.length === 0) {
             alert("No all workers payroll data found for this month.");
@@ -1972,11 +1978,164 @@ const generateReportHTML = () => {
     }, 500);
     };
 
+
+// =========================
+// MANAGEMENT SUMMARY PDF
+// =========================
+
+const handleManagementPdfDownload = async () => {
+  if (!plantation) {
+    alert("Please select a plantation.");
+    return;
+  }
+
+  let startDate;
+  let endDate;
+
+  if (reportPeriod === "weekly") {
+    if (!weekStart || !weekEnd) {
+      alert("Please select week start and week end.");
+      return;
+    }
+
+    startDate = weekStart;
+    endDate = weekEnd;
+  } else {
+    const [year, monthNumber] = month.split("-");
+    const lastDay = new Date(
+      Number(year),
+      Number(monthNumber),
+      0
+    ).getDate();
+
+    startDate = `${month}-01`;
+    endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await axios.post(
+      `${API}/management-summary-pdf`,
+      {
+        plantation,
+        startDate,
+        endDate,
+        reportPeriod,
+        notes: managementNotes
+      },
+      {
+        responseType: "blob"
+      }
+    );
+
+    const blob = new Blob([response.data], {
+      type: "application/pdf"
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `Management-Summary-${plantation}-${reportPeriod}.pdf`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Management Summary PDF error:", error);
+    alert("Unable to download Management Summary PDF.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+const handleManagementPdfPrint = async () => {
+  if (!plantation) {
+    alert("Please select a plantation.");
+    return;
+  }
+
+  let startDate;
+  let endDate;
+
+  if (reportPeriod === "weekly") {
+    if (!weekStart || !weekEnd) {
+      alert("Please select week start and week end.");
+      return;
+    }
+
+    startDate = weekStart;
+    endDate = weekEnd;
+  } else {
+    const [year, monthNumber] = month.split("-");
+    const lastDay = new Date(
+      Number(year),
+      Number(monthNumber),
+      0
+    ).getDate();
+
+    startDate = `${month}-01`;
+    endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
+  }
+
+  // Open a new tab immediately to avoid popup blocking
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    alert("Please allow pop-ups to print the report.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await axios.post(
+      `${API}/management-summary-pdf`,
+      {
+        plantation,
+        startDate,
+        endDate,
+        reportPeriod,
+        notes: managementNotes
+      },
+      {
+        responseType: "blob"
+      }
+    );
+
+    const blob = new Blob([response.data], {
+      type: "application/pdf"
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    // Display the PDF in the new tab
+    printWindow.location.href = url;
+
+  } catch (error) {
+    console.error("Management Summary Print error:", error);
+    printWindow.close();
+    alert("Unable to open Management Summary PDF for printing.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   // =========================
   // DOWNLOAD HTML
   // =========================
 
     const handleDownload = async () => {
+        if (mainReportType === "summary") {
+            await handleManagementPdfDownload();
+            return;
+            }
         if (reportType === "allworkers") {
             if (allWorkersData.length === 0) {
             alert("No all workers payroll data found for this month.");
@@ -2714,54 +2873,96 @@ const fetchFinancialReportData = async () => {
             spacing={2}
           >
 
+            {/* MAIN REPORT CATEGORY */}
             <FormControl fullWidth>
+            <InputLabel>Report Category</InputLabel>
+            <Select
+                value={mainReportType}
+                label="Report Category"
+                onChange={(e) => {
+                const value = e.target.value;
+                setMainReportType(value);
 
-              <InputLabel>
-                Report Type
-              </InputLabel>
-
-              <Select
-                value={reportType}
-                label="Report Type"
-                onChange={(e) =>
-                  setReportType(e.target.value)
+                if (value === "payroll") {
+                    setReportType("allworkers");
+                } else if (value === "summary") {
+                    setReportPeriod("weekly");
+                } else if (value === "other") {
+                    setReportType("attendance");
                 }
-              >
+                }}
+            >
+                <MenuItem value="payroll">Payroll</MenuItem>
+                <MenuItem value="summary">Summary Reports</MenuItem>
+                <MenuItem value="other">Other Reports</MenuItem>
+            </Select>
+            </FormControl>
 
+            {/* SECOND DROPDOWN: PAYROLL */}
+            {mainReportType === "payroll" && (
+            <FormControl fullWidth>
+                <InputLabel>Payroll Report</InputLabel>
+                <Select
+                value={reportType}
+                label="Payroll Report"
+                onChange={(e) => setReportType(e.target.value)}
+                >
                 <MenuItem value="allworkers">All Workers Payroll</MenuItem>
                 <MenuItem value="plantation">Plantation Workers Payroll</MenuItem>
                 <MenuItem value="rubbertappers">Rubber Tappers Payroll</MenuItem>
                 <MenuItem value="casualworkers">Casual Workers Payroll</MenuItem>
                 <MenuItem value="machinelabour">Machine Labourers Payroll</MenuItem>
+                </Select>
+            </FormControl>
+            )}
+
+            {/* SECOND DROPDOWN: SUMMARY REPORTS */}
+            {mainReportType === "summary" && (
+            <FormControl fullWidth>
+                <InputLabel>Summary Report</InputLabel>
+                <Select
+                value={reportPeriod}
+                label="Summary Report"
+                onChange={(e) => setReportPeriod(e.target.value)}
+                >
+                <MenuItem value="weekly">Weekly Summary</MenuItem>
+                <MenuItem value="monthly">Monthly Summary</MenuItem>
+                </Select>
+            </FormControl>
+            )}
+
+            {/* SECOND DROPDOWN: OTHER REPORTS */}
+            {mainReportType === "other" && (
+            <FormControl fullWidth>
+                <InputLabel>Other Report</InputLabel>
+                <Select
+                value={reportType}
+                label="Other Report"
+                onChange={(e) => setReportType(e.target.value)}
+                >
                 <MenuItem value="attendance">Attendance Register</MenuItem>
                 <MenuItem value="weeklyregister">Weekly Daily Register</MenuItem>
-                <MenuItem value="weeklyfinance">Weekly Income & Expenditure</MenuItem>
-
-              </Select>
-
+                <MenuItem value="weeklyfinance">Weekly Income &amp; Expenditure</MenuItem>
+                </Select>
             </FormControl>
+            )}
 
-            <FormControl fullWidth>
-                <InputLabel>Report Period</InputLabel>
+            {mainReportType === "other" && (
+                <FormControl fullWidth>
+                    <InputLabel>Report Period</InputLabel>
 
-                <Select
+                    <Select
                     value={reportPeriod}
                     label="Report Period"
-                    onChange={(e) =>
-                    setReportPeriod(e.target.value)
-                    }
-                >
-                    <MenuItem value="monthly">
-                    Monthly
-                    </MenuItem>
-
-                    <MenuItem value="weekly">
-                    Weekly
-                    </MenuItem>
-                </Select>
+                    onChange={(e) => setReportPeriod(e.target.value)}
+                    >
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    </Select>
                 </FormControl>
+                )}
 
-            {reportPeriod === "monthly" && (
+            {(mainReportType === "payroll" || reportPeriod === "monthly") && (
                 <FormControl fullWidth>
 
               <InputLabel>
@@ -2812,7 +3013,7 @@ const fetchFinancialReportData = async () => {
             </FormControl>
             )}
 
-            {reportPeriod === "weekly" && (
+            {mainReportType !== "payroll" && reportPeriod === "weekly" && (
                 <>
                     <TextField
                     fullWidth
@@ -2852,28 +3053,40 @@ const fetchFinancialReportData = async () => {
             </Typography>
 
             <Typography sx={{ mb: 1 }}>
-            <strong>Report:</strong>{" "}
-            {reportType === "allworkers"
-                ? "All Workers Payroll"
-                : reportType === "plantation"
-                ? "Plantation Workers Payroll"
-                : reportType === "rubbertappers"
-                ? "Rubber Tappers Payroll"
-                : reportType === "casualworkers"
-                ? "Casual Workers Payroll"
-                : reportType === "attendance"
-                ? "Attendance Register"
-                : "Machine Labourers Payroll"}
-            </Typography>
+                <strong>Report:</strong>{" "}
+                {mainReportType === "summary"
+                    ? reportPeriod === "weekly"
+                    ? "Weekly Management Summary"
+                    : "Monthly Management Summary"
+                    : reportType === "allworkers"
+                    ? "All Workers Payroll"
+                    : reportType === "plantation"
+                    ? "Plantation Workers Payroll"
+                    : reportType === "rubbertappers"
+                    ? "Rubber Tappers Payroll"
+                    : reportType === "casualworkers"
+                    ? "Casual Workers Payroll"
+                    : reportType === "machinelabour"
+                    ? "Machine Labourers Payroll"
+                    : reportType === "attendance"
+                    ? "Attendance Register"
+                    : reportType === "weeklyregister"
+                    ? "Weekly Daily Register"
+                    : reportType === "weeklyfinance"
+                    ? "Weekly Income & Expenditure"
+                    : "Selected Report"}
+                </Typography>
 
             <Typography sx={{ mb: 3 }}>
             <strong>
-                {reportPeriod === "weekly" ? "Week:" : "Month:"}
-            </strong>{" "}
-            {reportPeriod === "weekly"
+                {mainReportType !== "payroll" && reportPeriod === "weekly"
+                    ? "Week:"
+                    : "Month:"}
+                </strong>{" "}
+                {mainReportType !== "payroll" && reportPeriod === "weekly"
                 ? weekStart && weekEnd
-                ? `${weekStart} - ${weekEnd}`
-                : "Not selected"
+                    ? `${weekStart} - ${weekEnd}`
+                    : "Not selected"
                 : reportMonth}
             </Typography>
 
