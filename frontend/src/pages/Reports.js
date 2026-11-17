@@ -2025,8 +2025,11 @@ const handleManagementPdfDownload = async () => {
         notes: managementNotes
       },
       {
-        responseType: "blob"
-      }
+        responseType: "blob",
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+        }
     );
 
     const blob = new Blob([response.data], {
@@ -2104,8 +2107,11 @@ const handleManagementPdfPrint = async () => {
         notes: managementNotes
       },
       {
-        responseType: "blob"
-      }
+        responseType: "blob",
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+        }
     );
 
     const blob = new Blob([response.data], {
