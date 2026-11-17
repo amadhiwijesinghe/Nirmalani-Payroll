@@ -34,6 +34,7 @@ const API = process.env.REACT_APP_API_URL || "https://nirmalani-payroll-producti
 export default function CasualWorkers({plantation
   }) {
   const [workers, setWorkers] = useState([]);
+  const [workerStatusFilter, setWorkerStatusFilter] = useState("active");
   const [data, setData] = useState([]);
   const [selectedWorkerName, setSelectedWorkerName] = useState("");
 
@@ -62,9 +63,15 @@ export default function CasualWorkers({plantation
     }, [plantation]);
 
   const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/casual-workers?plantation=${plantation}`);
+  try {
+    const res = await axios.get(
+      `${API}/casual-workers?plantation=${plantation}&includeInactive=true`
+    );
     setWorkers(res.data);
-  };
+  } catch (err) {
+    console.error("Error fetching casual workers:", err);
+  }
+};
 
 const fetchData = async () => {
     try {
@@ -78,6 +85,12 @@ const fetchData = async () => {
         console.log(err);
     }
 };
+
+const filteredWorkers = workers.filter((worker) =>
+  workerStatusFilter === "active"
+    ? Number(worker.is_active) === 1
+    : Number(worker.is_active) === 0
+);
 
 const addWorker = async () => {
 
@@ -117,6 +130,63 @@ const addWorker = async () => {
     });
   }
 };
+
+
+const changeWorkerStatus = async (worker) => {
+  const isActive = Number(worker.is_active) === 1;
+
+  const result = await Swal.fire({
+    title: isActive
+      ? "Deactivate Casual Worker?"
+      : "Reactivate Casual Worker?",
+    text: isActive
+      ? `Are you sure you want to deactivate ${worker.name}?`
+      : `Do you want to reactivate ${worker.name}?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: isActive ? "#dc2626" : "#16a34a",
+    cancelButtonColor: "#64748b",
+    confirmButtonText: isActive
+      ? "Yes, Deactivate"
+      : "Yes, Reactivate"
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await axios.patch(
+      `${API}/casual-workers/${worker.id}/status`,
+      {
+        is_active: isActive ? 0 : 1
+      }
+    );
+
+    if (isActive && String(allowanceWorker) === String(worker.id)) {
+      setAllowanceWorker("");
+    }
+
+    await fetchWorkers();
+
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: isActive
+        ? "Worker deactivated successfully."
+        : "Worker reactivated successfully."
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Update Failed",
+      text: err.response?.data?.message ||
+        "Unable to update worker status."
+    });
+  }
+};
+
 
 const viewAttendance = async (workerId, month) => {
 
@@ -832,6 +902,81 @@ const deleteAttendance = async (id) => {
         </Grid>
       </ResponsiveCard>
 
+      
+      <ResponsiveCard>
+  <Typography
+    sx={{
+      color: "#fff",
+      fontWeight: 700,
+      mb: 2
+    }}
+  >
+    👷 Manage Casual Workers
+  </Typography>
+
+  {/* ACTIVE / INACTIVE FILTER */}
+  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+    <MobileButton
+      color={workerStatusFilter === "active" ? "success" : "secondary"}
+      onClick={() => setWorkerStatusFilter("active")}
+    >
+      Active Workers
+    </MobileButton>
+
+    <MobileButton
+      color={workerStatusFilter === "inactive" ? "warning" : "secondary"}
+      onClick={() => setWorkerStatusFilter("inactive")}
+    >
+      Inactive Workers
+    </MobileButton>
+  </Box>
+
+  {filteredWorkers.length === 0 && (
+    <Typography sx={{ color: "#94a3b8" }}>
+      No {workerStatusFilter} workers found.
+    </Typography>
+  )}
+
+  {filteredWorkers.map((w) => (
+    <Box
+      key={w.id}
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 2,
+        p: 2,
+        mb: 1,
+        borderRadius: 2,
+        background: "rgba(255,255,255,0.05)"
+      }}
+    >
+      <Box>
+        <Typography sx={{ color: "#fff", fontWeight: 600 }}>
+          {w.name}
+        </Typography>
+
+        <Typography
+          sx={{
+            color: Number(w.is_active) === 1 ? "#22c55e" : "#f87171",
+            fontSize: 13
+          }}
+        >
+          {Number(w.is_active) === 1 ? "Active" : "Inactive"}
+        </Typography>
+      </Box>
+
+      <MobileButton
+        color={Number(w.is_active) === 1 ? "error" : "success"}
+        fullWidth={false}
+        onClick={() => changeWorkerStatus(w)}
+      >
+        {Number(w.is_active) === 1 ? "Deactivate" : "Reactivate"}
+      </MobileButton>
+    </Box>
+  ))}
+</ResponsiveCard>
+
       <ResponsiveCard>
         <Typography
             sx={{
@@ -880,7 +1025,9 @@ const deleteAttendance = async (id) => {
                     }}
                   >
       
-                  {workers.map((w) => (
+                  {workers
+                    .filter((w) => Number(w.is_active) === 1)
+                    .map((w) => (
       
                     <MenuItem
                       key={w.id}

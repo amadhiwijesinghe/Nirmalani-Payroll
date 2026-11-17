@@ -1039,24 +1039,23 @@ app.get("/payroll/:month?", verifyToken, (req, res) => {
 
 
 // ================= PLANTATION WORKERS =================
-// 🌿 Plantation Workers
+// GET PLANTATION WORKERS
 app.get("/plantation-workers", verifyToken, async (req, res) => {
-
   const plantation = req.query.plantation;
+  const includeInactive = req.query.includeInactive === "true";
 
-  db.query(
-    "SELECT * FROM plantation_workers WHERE plantation = ?",
-    [plantation],
-    (err, result) => {
+  const sql = includeInactive
+    ? "SELECT * FROM plantation_workers WHERE plantation = ? ORDER BY id DESC"
+    : "SELECT * FROM plantation_workers WHERE plantation = ? AND is_active = 1 ORDER BY id DESC";
 
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
-
-      res.json(result);
+  db.query(sql, [plantation], (err, result) => {
+    if (err) {
+      console.log("Fetch plantation workers error:", err);
+      return res.status(500).json(err);
     }
-  );
+
+    res.json(result);
+  });
 });
 
 app.post("/plantation-workers", verifyToken, async (req, res) => {
@@ -1102,6 +1101,137 @@ app.put("/plantation-workers/:id", verifyToken, async (req, res) => {
       });
     }
   );
+});
+
+
+// DELETE PLANTATION WORKER
+app.delete("/plantation-workers/:id", verifyToken, async (req, res) => {
+  const workerId = Number(req.params.id);
+
+  if (!Number.isInteger(workerId) || workerId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid worker ID"
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.promise().getConnection();
+    await connection.beginTransaction();
+
+    const [worker] = await connection.execute(
+      "SELECT id FROM plantation_workers WHERE id = ? FOR UPDATE",
+      [workerId]
+    );
+
+    if (worker.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found"
+      });
+    }
+
+    // Check attendance history
+    const [[attendance]] = await connection.execute(
+      `SELECT COUNT(*) AS total
+       FROM attendance_register
+       WHERE worker_id = ?
+       AND worker_type = 'plantation'`,
+      [workerId]
+    );
+
+    // Check allowance history
+    const [[allowance]] = await connection.execute(
+      `SELECT COUNT(*) AS total
+       FROM plantation_allowance
+       WHERE worker_id = ?`,
+      [workerId]
+    );
+
+    if (Number(attendance.total) > 0 ||
+        Number(allowance.total) > 0) {
+
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Cannot delete this worker because attendance or payroll records exist."
+      });
+    }
+
+    await connection.execute(
+      "DELETE FROM plantation_workers WHERE id = ?",
+      [workerId]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Plantation worker deleted successfully"
+    });
+
+  } catch (err) {
+    if (connection) await connection.rollback();
+
+    console.error("DELETE PLANTATION WORKER ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete plantation worker"
+    });
+
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+    // DEACTIVATE / REACTIVATE PLANTATION WORKER
+app.patch("/plantation-workers/:id/status", verifyToken, async (req, res) => {
+  try {
+    const workerId = Number(req.params.id);
+    const status = req.body.is_active;
+
+    if (
+      !Number.isInteger(workerId) ||
+      workerId <= 0 ||
+      ![0, 1, "0", "1"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid worker ID or status"
+      });
+    }
+
+    const [result] = await db.promise().execute(
+      "UPDATE plantation_workers SET is_active = ? WHERE id = ?",
+      [Number(status), workerId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found or status unchanged"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: Number(status) === 1
+        ? "Worker reactivated successfully"
+        : "Worker deactivated successfully"
+    });
+
+  } catch (err) {
+    console.error("Plantation worker status error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Unable to update worker status"
+    });
+  }
 });
 
 // Plantation Workers Save Allowance
@@ -4325,50 +4455,22 @@ app.get("/paddy-free-giving", verifyToken, (req, res) => {
 });
 
 // ================= CASUAL WORKERS =========
-app.get("/casual-workers-data", verifyToken, (req, res) => {
-
+// GET CASUAL WORKERS
+app.get("/casual-workers", verifyToken, (req, res) => {
   const plantation = req.query.plantation;
+  const includeInactive = req.query.includeInactive === "true";
 
-  const sql = `
-    SELECT
-
-      MAX(cwa.id) AS id,
-
-      cw.id AS worker_id,
-
-      cw.name,
-
-      cwa.month,
-
-      COUNT(cwa.id) AS days_worked,
-
-      MAX(cwa.daily_rate) AS daily_rate,
-
-      SUM(cwa.allowance) AS allowance,
-
-      SUM(cwa.total_earning) AS total_earning
-
-    FROM casual_worker_attendance cwa
-
-    JOIN casual_workers cw
-    ON cw.id=cwa.worker_id
-
-    WHERE cw.plantation = ?
-
-    GROUP BY
-      cw.id,
-      cwa.month
-
-    ORDER BY
-      cwa.month DESC
-  `;
+  const sql = includeInactive
+    ? `SELECT * FROM casual_workers
+       WHERE plantation = ?
+       ORDER BY id DESC`
+    : `SELECT * FROM casual_workers
+       WHERE plantation = ? AND is_active = 1
+       ORDER BY id DESC`;
 
   db.query(sql, [plantation], (err, result) => {
-
     if (err) {
-
-      console.log("SQL ERROR:", err);
-
+      console.log("Fetch casual workers error:", err);
       return res.status(500).json(err);
     }
 
@@ -4478,6 +4580,147 @@ app.post("/casual-workers", verifyToken, (req, res) => {
     }
   );
 
+});
+
+
+// DELETE CASUAL WORKER
+app.delete("/casual-workers/:id", verifyToken, async (req, res) => {
+  const workerId = Number(req.params.id);
+
+  if (!Number.isInteger(workerId) || workerId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid worker ID"
+    });
+  }
+
+  let connection;
+
+  try {
+    connection = await db.promise().getConnection();
+    await connection.beginTransaction();
+
+    const [worker] = await connection.execute(
+      "SELECT id FROM casual_workers WHERE id = ? FOR UPDATE",
+      [workerId]
+    );
+
+    if (worker.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Casual worker not found"
+      });
+    }
+
+    // Check attendance register
+    const [[attendance]] = await connection.execute(
+      `SELECT COUNT(*) AS total
+       FROM attendance_register
+       WHERE worker_id = ?
+       AND worker_type = 'casual'`,
+      [workerId]
+    );
+
+    // Check allowance history
+    const [[allowance]] = await connection.execute(
+      `SELECT COUNT(*) AS total
+       FROM casual_allowance
+       WHERE worker_id = ?`,
+      [workerId]
+    );
+
+    // Check legacy attendance records
+    const [[oldAttendance]] = await connection.execute(
+      `SELECT COUNT(*) AS total
+       FROM casual_worker_attendance
+       WHERE worker_id = ?`,
+      [workerId]
+    );
+
+    if (
+      Number(attendance.total) > 0 ||
+      Number(allowance.total) > 0 ||
+      Number(oldAttendance.total) > 0
+    ) {
+      await connection.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: "Cannot delete this worker because attendance or payroll records exist."
+      });
+    }
+
+    await connection.execute(
+      "DELETE FROM casual_workers WHERE id = ?",
+      [workerId]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Casual worker deleted successfully"
+    });
+
+  } catch (err) {
+    if (connection) await connection.rollback();
+
+    console.error("DELETE CASUAL WORKER ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete casual worker"
+    });
+
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+    // DEACTIVATE / REACTIVATE CASUAL WORKER
+app.patch("/casual-workers/:id/status", verifyToken, async (req, res) => {
+  try {
+    const workerId = Number(req.params.id);
+    const status = req.body.is_active;
+
+    if (
+      !Number.isInteger(workerId) ||
+      workerId <= 0 ||
+      ![0, 1, "0", "1"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid worker ID or status"
+      });
+    }
+
+    const [result] = await db.promise().execute(
+      "UPDATE casual_workers SET is_active = ? WHERE id = ?",
+      [Number(status), workerId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found or status unchanged"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: Number(status) === 1
+        ? "Worker reactivated successfully"
+        : "Worker deactivated successfully"
+    });
+
+  } catch (err) {
+    console.error("Casual worker status error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Unable to update worker status"
+    });
+  }
 });
 
 // CASUAL WORKERS SAVE ALLOWANCE
@@ -4885,6 +5128,7 @@ app.get("/attendance-register/workers", verifyToken, async (req, res) => {
                 'plantation' AS worker_type
             FROM plantation_workers
             WHERE plantation = ?
+            AND is_active = 1
 
             UNION ALL
 
@@ -4905,6 +5149,7 @@ app.get("/attendance-register/workers", verifyToken, async (req, res) => {
                 'casual' AS worker_type
             FROM casual_workers
             WHERE plantation = ?
+            AND is_active = 1
 
             UNION ALL
 

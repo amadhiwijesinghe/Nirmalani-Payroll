@@ -39,6 +39,7 @@ export default function PlantationWorkers({
   plantation
 }) {
   const [workers, setWorkers] = useState([]);
+  const [workerStatusFilter, setWorkerStatusFilter] = useState("active");
   const [data, setData] = useState([]);
 
   const [name, setName] = useState("");
@@ -89,11 +90,17 @@ export default function PlantationWorkers({
 
   }, [plantation]);
 
+const fetchWorkers = async () => {
+  try {
+    const res = await axios.get(
+      `${API}/plantation-workers?plantation=${plantation}&includeInactive=true`
+    );
 
-  const fetchWorkers = async () => {
-    const res = await axios.get(`${API}/plantation-workers?plantation=${plantation}`);
     setWorkers(res.data);
-  };
+  } catch (err) {
+    console.error("Error fetching plantation workers:", err);
+  }
+};
 
 const fetchData = async () => {
   try {
@@ -104,6 +111,12 @@ const fetchData = async () => {
     console.error(err);
   }
 };
+
+const filteredWorkers = workers.filter((worker) =>
+  workerStatusFilter === "active"
+    ? Number(worker.is_active) === 1
+    : Number(worker.is_active) === 0
+);
 
 // Load the Rate
 const fetchDailyRate = async () => {
@@ -652,6 +665,57 @@ const updateWorker = async () => {
   }
 };
 
+
+const changeWorkerStatus = async (worker) => {
+  const isActive = Number(worker.is_active) === 1;
+
+  const result = await Swal.fire({
+    title: isActive
+      ? "Deactivate Plantation Worker?"
+      : "Reactivate Plantation Worker?",
+    text: isActive
+      ? `Are you sure you want to deactivate ${worker.name}?`
+      : `Do you want to reactivate ${worker.name}?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: isActive ? "#dc2626" : "#16a34a",
+    cancelButtonColor: "#64748b",
+    confirmButtonText: isActive ? "Yes, Deactivate" : "Yes, Reactivate"
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await axios.patch(`${API}/plantation-workers/${worker.id}/status`, {
+      is_active: isActive ? 0 : 1
+    });
+
+    if (isActive && String(allowanceWorker) === String(worker.id)) {
+      setAllowanceWorker("");
+    }
+
+    await fetchWorkers();
+
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: isActive
+        ? "Worker deactivated successfully."
+        : "Worker reactivated successfully."
+    });
+
+  } catch (err) {
+    console.error("Worker status update error:", err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Update Failed",
+      text: err.response?.data?.message || "Unable to update worker status."
+    });
+  }
+};
+
+
 const printWeeklyReport = async () => {
 
   if (!weekStart || !weekEnd) {
@@ -1124,8 +1188,23 @@ const reportMonth = new Date(filterMonth + "-01")
           onChange={(e) => setSearch(e.target.value)}
         />
 
+        <Box sx={{ display: "flex", gap: 1, my: 2 }}>
+          <MobileButton
+            color={workerStatusFilter === "active" ? "success" : "secondary"}
+            onClick={() => setWorkerStatusFilter("active")}
+          >
+            Active Workers
+          </MobileButton>
+
+          <MobileButton
+            color={workerStatusFilter === "inactive" ? "warning" : "secondary"}
+            onClick={() => setWorkerStatusFilter("inactive")}
+          >
+            Inactive Workers
+          </MobileButton>
+        </Box>
         {search.trim() !== "" &&
-        workers
+        filteredWorkers
           .filter((w) => {
 
             const searchText = search.toLowerCase();
@@ -1160,17 +1239,28 @@ const reportMonth = new Date(filterMonth + "-01")
                 </Typography>
               </Box>
 
-              <MobileButton
-                color="warning"
-                fullWidth={false}
-                onClick={() => {
-                  setEditingWorker(w);
-                  setEditName(w.name);
-                  setEditEpf(w.epf_no);
-                }}
-              >
-                Edit
-              </MobileButton>
+              
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <MobileButton
+                  color="warning"
+                  fullWidth={false}
+                  onClick={() => {
+                    setEditingWorker(w);
+                    setEditName(w.name);
+                    setEditEpf(w.epf_no);
+                  }}
+                >
+                  Edit
+                </MobileButton>
+
+                <MobileButton
+                  color={Number(w.is_active) === 1 ? "error" : "success"}
+                  fullWidth={false}
+                  onClick={() => changeWorkerStatus(w)}
+                >
+                  {Number(w.is_active) === 1 ? "Deactivate" : "Reactivate"}
+                </MobileButton>
+              </Box>
 
             </Box>
           ))}
@@ -1468,7 +1558,9 @@ const reportMonth = new Date(filterMonth + "-01")
                     }
                   >
 
-                    {workers.map((w) => (
+                    {workers
+                      .filter((w) => Number(w.is_active) === 1)
+                      .map((w) => (
 
                       <MenuItem
                         key={w.id}
