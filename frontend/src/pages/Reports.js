@@ -2057,6 +2057,7 @@ const handleManagementPdfDownload = async () => {
 };
 
 
+
 const handleManagementPdfPrint = async () => {
   if (!plantation) {
     alert("Please select a plantation.");
@@ -2086,14 +2087,6 @@ const handleManagementPdfPrint = async () => {
     endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
   }
 
-  // Open a new tab immediately to avoid popup blocking
-  const printWindow = window.open("", "_blank");
-
-  if (!printWindow) {
-    alert("Please allow pop-ups to print the report.");
-    return;
-  }
-
   try {
     setLoading(true);
 
@@ -2109,29 +2102,63 @@ const handleManagementPdfPrint = async () => {
       {
         responseType: "blob",
         headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         }
-        }
+      }
     );
 
     const blob = new Blob([response.data], {
       type: "application/pdf"
     });
 
-    const url = window.URL.createObjectURL(blob);
+    const file = new File(
+      [blob],
+      `Management-Summary-${plantation}-${reportPeriod}.pdf`,
+      { type: "application/pdf" }
+    );
 
-    // Display the PDF in the new tab
-    printWindow.location.href = url;
+    // Mobile: use the native sharing interface
+    if (
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      await navigator.share({
+        files: [file],
+        title: "Management Summary Report"
+      });
+
+      return;
+    }
+
+    // Desktop and browsers without file sharing
+    const url = window.URL.createObjectURL(blob);
+    const printWindow = window.open(url, "_blank");
+
+    if (!printWindow) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 60000);
 
   } catch (error) {
+    if (error.name === "AbortError") {
+      return;
+    }
+
     console.error("Management Summary Print error:", error);
-    printWindow.close();
-    alert("Unable to open Management Summary PDF for printing.");
+
+    alert("Unable to open Management Summary PDF. Please try again.");
   } finally {
     setLoading(false);
   }
 };
-
 
   // =========================
   // DOWNLOAD HTML
