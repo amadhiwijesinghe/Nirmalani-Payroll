@@ -1289,6 +1289,65 @@ const generateReportHTML = () => {
   // PRINT
   // =========================
 
+
+const handlePrint = async () => {
+  // Management Summary PDF
+  if (mainReportType === "summary") {
+    await handleManagementPdfPrint();
+    return;
+  }
+
+  let html = "";
+
+  if (reportType === "allworkers") {
+    if (allWorkersData.length === 0) {
+      alert("No all workers payroll data found for this month.");
+      return;
+    }
+    html = generateAllWorkersReportHTML();
+
+  } else if (reportType === "plantation") {
+    if (rows.length === 0) {
+      alert("No plantation workers payroll data found for this month.");
+      return;
+    }
+    html = generateReportHTML();
+
+  } else if (reportPeriod === "weekly") {
+    if (!weekStart || !weekEnd) {
+      alert("Please select week start and week end.");
+      return;
+    }
+
+    const success = await fetchWeeklyPlantationData();
+    if (!success) return;
+
+    alert("Please use Download Report for this weekly report.");
+    return;
+
+  } else {
+    alert("Please use Download Report for this report type.");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    alert("Please allow pop-ups to print the report.");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+  };
+};
+
+
    
 const handleManagementPdfPrint = async () => {
   if (!plantation) {
