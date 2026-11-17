@@ -1289,699 +1289,102 @@ const generateReportHTML = () => {
   // PRINT
   // =========================
 
-    const handlePrint = async () => {
-        if (mainReportType === "summary") {
-            await handleManagementPdfPrint();
-            return;
-        }
-        if (reportType === "allworkers") {
-            if (allWorkersData.length === 0) {
-            alert("No all workers payroll data found for this month.");
-            return;
-            }
-
-            const html = generateAllWorkersReportHTML();
-
-            const win = window.open("", "_blank");
-
-            if (!win) {
-            alert("Please allow pop-ups to print the report.");
-            return;
-            }
-
-            win.document.write(html);
-            win.document.close();
-
-            win.onload = () => {
-            win.focus();
-            win.print();
-            };
-
-                    return;
-        }
-
-        // MACHINE LABOUR PRINT REPORT
-        if (
-            reportType === "machinelabour" &&
-            reportPeriod === "monthly"
-        ) {
-            if (machineLabourData.length === 0) {
-                alert(
-                    "No machine labour payments found for this month."
-                );
-                return;
-            }
-
-            const rowsHTML = machineLabourData
-                .map((row) => {
-                    return `
-                        <tr>
-                            <td>
-                                ${
-                                    row.attendance_date
-                                        ? String(
-                                              row.attendance_date
-                                          ).split("T")[0]
-                                        : "-"
-                                }
-                            </td>
-
-                            <td class="name">
-                                ${row.name || "-"}
-                            </td>
-
-                            <td>
-                                ${Number(
-                                    row.oil_cans || 0
-                                )}
-                            </td>
-
-                            <td>
-                                ${Number(
-                                    row.tanks || 0
-                                ).toLocaleString()}
-                            </td>
-
-                            <td>
-                                Rs. ${Number(
-                                    row.rate || 0
-                                ).toLocaleString()}
-                            </td>
-
-                            <td>
-                                Rs. ${Number(
-                                    row.total || 0
-                                ).toLocaleString()}
-                            </td>
-                        </tr>
-                    `;
-                })
-                .join("");
-
-            const monthlyTotal = machineLabourData.reduce(
-                (sum, row) =>
-                    sum + Number(row.total || 0),
-                0
-            );
-
-            const html = `
-                <!DOCTYPE html>
-                <html>
-
-                <head>
-
-                    <title>
-                        ${plantationName}
-                        Machine Labour Payroll Report
-                    </title>
-
-                    <style>
-
-                        @page {
-                            size: A4 portrait;
-                            margin: 15mm;
-                        }
-
-                        body {
-                            font-family: Arial, sans-serif;
-                            margin: 0;
-                            padding: 0;
-                            color: #111;
-                            font-size: 12px;
-                        }
-
-                        .header {
-                            text-align: center;
-                            margin-bottom: 20px;
-                        }
-
-                        .plantation-name {
-                            font-size: 21px;
-                            font-weight: bold;
-                            margin-bottom: 6px;
-                        }
-
-                        .report-title {
-                            font-size: 16px;
-                            font-weight: bold;
-                        }
-
-                        .details {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 20px;
-                        }
-
-                        .details td {
-                            padding: 6px 8px;
-                        }
-
-                        .details td.label {
-                            font-weight: bold;
-                            width: 80px;
-                        }
-
-                        table.report {
-                            width: 100%;
-                            border-collapse: collapse;
-                        }
-
-                        table.report th,
-                        table.report td {
-                            border: 1px solid #000;
-                            padding: 7px 6px;
-                            text-align: center;
-                        }
-
-                        table.report th {
-                            font-weight: bold;
-                        }
-
-                        table.report td.name {
-                            text-align: left;
-                        }
-
-                        table.report tr.total {
-                            font-weight: bold;
-                        }
-
-                        .grand-total {
-                            margin-top: 20px;
-                            text-align: right;
-                            font-size: 15px;
-                            font-weight: bold;
-                        }
-
-                    </style>
-
-                </head>
-
-                <body>
-
-                    <div class="header">
-
-                        <div class="plantation-name">
-                            ${plantationName}
-                        </div>
-
-                        <div class="report-title">
-                            MONTHLY MACHINE LABOUR PAYROLL REPORT
-                        </div>
-
-                    </div>
-
-                    <table class="details">
-
-                        <tr>
-
-                            <td class="label">
-                                Plantation
-                            </td>
-
-                            <td>
-                                ${plantationName}
-                            </td>
-
-                            <td class="label">
-                                Period
-                            </td>
-
-                            <td>
-                                ${reportMonth}
-                            </td>
-
-                            <td class="label">
-                                Generated
-                            </td>
-
-                            <td>
-                                ${new Date().toLocaleDateString(
-                                    "en-GB"
-                                )}
-                            </td>
-
-                        </tr>
-
-                    </table>
-
-                    <table class="report">
-
-                        <thead>
-
-                            <tr>
-                                <th>Date</th>
-                                <th>Worker</th>
-                                <th>Oil Cans</th>
-                                <th>Tanks</th>
-                                <th>Rate</th>
-                                <th>Payment</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            ${rowsHTML}
-
-                            <tr class="total">
-
-                                <td colspan="5">
-                                    MONTHLY TOTAL
-                                </td>
-
-                                <td>
-                                    Rs.
-                                    ${monthlyTotal.toLocaleString()}
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                    <div class="grand-total">
-
-                        Total Machine Labour Payment:
-                        Rs. ${monthlyTotal.toLocaleString()}
-
-                    </div>
-
-                </body>
-
-                </html>
-            `;
-
-            const win = window.open(
-                "",
-                "_blank"
-            );
-
-            if (!win) {
-                alert(
-                    "Please allow pop-ups to print the report."
-                );
-                return;
-            }
-
-            win.document.write(html);
-            win.document.close();
-
-            setTimeout(() => {
-                win.focus();
-                win.print();
-            }, 500);
-
-            return;
-        }
-
-        if (
-            reportType === "rubbertappers" &&
-            reportPeriod === "monthly"
-        ) {
-            if (rubberRows.length === 0) {
-                alert(
-                    "No rubber tappers payroll data found for this month."
-                );
-                return;
-            }
-
-            const rowsHTML = rubberRows
-                .map((row) => {
-                    const c = calculateRubberSalary(row);
-
-                    return `
-                        <tr>
-                            <td>${row.epf_no || "-"}</td>
-                            <td class="name">${row.name || "-"}</td>
-                            <td>${row.worker_category || "-"}</td>
-                            <td>${c.workedDays}</td>
-                            <td>${c.kg.toFixed(2)}</td>
-                            <td>${c.rate.toFixed(2)}</td>
-                            <td>${c.gross.toFixed(2)}</td>
-                            <td>${c.allowance.toFixed(2)}</td>
-                            <td>${c.epf8.toFixed(2)}</td>
-                            <td>${c.epf12.toFixed(2)}</td>
-                            <td>${c.epf20.toFixed(2)}</td>
-                            <td>${c.etf.toFixed(2)}</td>
-                            <td>${c.netSalary.toFixed(2)}</td>
-                        </tr>
-                    `;
-                })
-                .join("");
-
-            const html = `
-                <!DOCTYPE html>
-                <html>
-
-                <head>
-
-                    <title>
-                        ${plantationName} Rubber Tappers Payroll Report
-                    </title>
-
-                    <style>
-
-                        @page {
-                            size: A4 landscape;
-                            margin: 12mm;
-                        }
-
-                        body {
-                            font-family: Arial, sans-serif;
-                            margin: 0;
-                            padding: 0;
-                            color: #111;
-                            font-size: 11px;
-                        }
-
-                        .header {
-                            text-align: center;
-                            margin-bottom: 18px;
-                        }
-
-                        .plantation-name {
-                            font-size: 21px;
-                            font-weight: bold;
-                            margin-bottom: 5px;
-                        }
-
-                        .report-title {
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 18px;
-                        }
-
-                        .details {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 18px;
-                        }
-
-                        .details td {
-                            padding: 5px 8px;
-                        }
-
-                        .details td.label {
-                            font-weight: bold;
-                            width: 80px;
-                        }
-
-                        table.report {
-                            width: 100%;
-                            border-collapse: collapse;
-                        }
-
-                        table.report th,
-                        table.report td {
-                            border: 1px solid #000;
-                            padding: 5px 4px;
-                            font-size: 9px;
-                            text-align: center;
-                            white-space: nowrap;
-                        }
-
-                        table.report th {
-                            font-weight: bold;
-                        }
-
-                        table.report td.name {
-                            text-align: left;
-                        }
-
-                        table.report tr.total {
-                            font-weight: bold;
-                        }
-
-                        .grand-total {
-                            margin-top: 18px;
-                            text-align: right;
-                            font-size: 15px;
-                            font-weight: bold;
-                        }
-
-
-                    </style>
-
-                </head>
-
-                <body>
-
-                    <div class="header">
-
-                        <div class="plantation-name">
-                            ${plantationName}
-                        </div>
-
-                        <div class="report-title">
-                            MONTHLY RUBBER TAPPERS PAYROLL REPORT
-                        </div>
-
-                    </div>
-
-                    <table class="details">
-
-                        <tr>
-
-                            <td class="label">
-                                Plantation
-                            </td>
-
-                            <td>
-                                ${plantationName}
-                            </td>
-
-                            <td class="label">
-                                Period
-                            </td>
-
-                            <td>
-                                ${reportMonth}
-                            </td>
-
-                            <td class="label">
-                                Generated
-                            </td>
-
-                            <td>
-                                ${new Date().toLocaleDateString("en-GB")}
-                            </td>
-
-                        </tr>
-
-                    </table>
-
-                    <table class="report">
-
-                        <thead>
-
-                            <tr>
-                                <th>EPF No</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Days</th>
-                                <th>KG</th>
-                                <th>Rate</th>
-                                <th>Gross Salary</th>
-                                <th>Allowance</th>
-                                <th>EPF 8%</th>
-                                <th>EPF 12%</th>
-                                <th>Total EPF</th>
-                                <th>ETF</th>
-                                <th>Net Salary</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            ${rowsHTML}
-
-                            <tr class="total">
-
-                                <td colspan="4">
-                                    TOTAL
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.kg.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    -
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.gross.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.allowance.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.epf8.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.epf12.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.epf20.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.etf.toFixed(2)}
-                                </td>
-
-                                <td>
-                                    ${rubberTotals.netSalary.toFixed(2)}
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                    <div class="grand-total">
-
-                        Net Salary / Cash Required:
-                        Rs. ${rubberTotals.netSalary.toFixed(2)}
-
-                    </div>
-
-                </body>
-
-                </html>
-            `;
-
-            const win = window.open(
-                "",
-                "_blank"
-            );
-
-            if (!win) {
-                alert(
-                    "Please allow pop-ups to print the report."
-                );
-                return;
-            }
-
-            win.document.write(html);
-            win.document.close();
-
-            setTimeout(() => {
-                win.focus();
-                win.print();
-            }, 500);
-
-            return;
-        }
-
-
-        if (reportType === "plantation") {
-            if (rows.length === 0) {
-                alert("No plantation workers payroll data found for this month.");
-                return;
-            }
-
-            const html = generateReportHTML();
-            const win = window.open("", "_blank");
-
-            if (!win) {
-                alert("Please allow pop-ups to print the report.");
-                return;
-            }
-
-            win.document.open();
-            win.document.write(html);
-            win.document.close();
-
-            win.onload = () => {
-                win.focus();
-                win.print();
-            };
-
-            return;
-        }
-
-
-        if (reportPeriod === "weekly") {
-        if (!weekStart || !weekEnd) {
-        alert("Please select week start and week end.");
-        return;
-        }
-
-        const success = await fetchWeeklyPlantationData();
-
-        if (!success) {
-        return;
-        }
-
-        if (weeklyData.length === 0) {
-        alert("No attendance found for this week.");
-        return;
-        }
-
-        const html = generateWeeklyReportHTML();
-
-        const win = window.open(
-        "",
-        "_blank"
-        );
-
-        if (!win) {
-        alert(
-            "Please allow pop-ups in your browser."
-        );
-        return;
-        }
-
-        win.document.write(html);
-        win.document.close();
-
-        setTimeout(() => {
-        win.print();
-        }, 500);
-
-        return;
+   
+const handleManagementPdfPrint = async () => {
+  if (!plantation) {
+    alert("Please select a plantation.");
+    return;
+  }
+
+  let startDate;
+  let endDate;
+
+  if (reportPeriod === "weekly") {
+    if (!weekStart || !weekEnd) {
+      alert("Please select week start and week end.");
+      return;
     }
 
-    if (rows.length === 0) {
-        alert(
-        "No payroll data found for this month."
-        );
-        return;
-    }
+    startDate = weekStart;
+    endDate = weekEnd;
+  } else {
+    const [year, monthNumber] = month.split("-");
+    const lastDay = new Date(
+      Number(year),
+      Number(monthNumber),
+      0
+    ).getDate();
 
-    const html = generateReportHTML();
+    startDate = `${month}-01`;
+    endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
+  }
 
-    const win = window.open(
-        "",
-        "_blank"
+  // Open the tab immediately while the button click is active
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    alert("Please allow pop-ups in your browser to open the PDF.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await axios.post(
+      `${API}/management-summary-pdf`,
+      {
+        plantation,
+        startDate,
+        endDate,
+        reportPeriod,
+        notes: managementNotes
+      },
+      {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      }
     );
 
-    if (!win) {
-        alert(
-        "Please allow pop-ups in your browser."
-        );
-        return;
+    const blob = new Blob([response.data], {
+      type: "application/pdf"
+    });
+
+    if (blob.size === 0) {
+      throw new Error("The generated PDF is empty.");
     }
 
-    win.document.write(html);
-    win.document.close();
+    const url = window.URL.createObjectURL(blob);
 
+    // Display the PDF in the browser's built-in PDF viewer
+    printWindow.location.href = url;
+
+    // Keep the PDF available while it is being viewed
     setTimeout(() => {
-        win.print();
-    }, 500);
-    };
+      window.URL.revokeObjectURL(url);
+    }, 10 * 60 * 1000);
+
+  } catch (error) {
+    console.error("Management Summary Print error:", error);
+
+    if (!printWindow.closed) {
+      printWindow.close();
+    }
+
+    alert("Unable to open Management Summary PDF. Please try again.");
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
 // =========================
 // MANAGEMENT SUMMARY PDF
 // =========================
+
 
 const handleManagementPdfDownload = async () => {
   if (!plantation) {
@@ -2012,80 +1415,14 @@ const handleManagementPdfDownload = async () => {
     endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
   }
 
-  try {
-    setLoading(true);
+  const isMobile =
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-    const response = await axios.post(
-      `${API}/management-summary-pdf`,
-      {
-        plantation,
-        startDate,
-        endDate,
-        reportPeriod,
-        notes: managementNotes
-      },
-      {
-        responseType: "blob",
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-        }
-    );
-
-    const blob = new Blob([response.data], {
-      type: "application/pdf"
-    });
-
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `Management-Summary-${plantation}-${reportPeriod}.pdf`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(url);
-
-  } catch (error) {
-    console.error("Management Summary PDF error:", error);
-    alert("Unable to download Management Summary PDF.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-const handleManagementPdfPrint = async () => {
-  if (!plantation) {
-    alert("Please select a plantation.");
-    return;
-  }
-
-  let startDate;
-  let endDate;
-
-  if (reportPeriod === "weekly") {
-    if (!weekStart || !weekEnd) {
-      alert("Please select week start and week end.");
-      return;
-    }
-
-    startDate = weekStart;
-    endDate = weekEnd;
-  } else {
-    const [year, monthNumber] = month.split("-");
-    const lastDay = new Date(
-      Number(year),
-      Number(monthNumber),
-      0
-    ).getDate();
-
-    startDate = `${month}-01`;
-    endDate = `${month}-${String(lastDay).padStart(2, "0")}`;
-  }
+  // Open immediately to avoid mobile popup blocking
+  const pdfWindow = isMobile
+    ? window.open("", "_blank")
+    : null;
 
   try {
     setLoading(true);
@@ -2111,54 +1448,54 @@ const handleManagementPdfPrint = async () => {
       type: "application/pdf"
     });
 
-    const file = new File(
-      [blob],
-      `Management-Summary-${plantation}-${reportPeriod}.pdf`,
-      { type: "application/pdf" }
-    );
-
-    // Mobile: use the native sharing interface
-    if (
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({
-        files: [file],
-        title: "Management Summary Report"
-      });
-
-      return;
+    if (blob.size === 0) {
+      throw new Error("The generated PDF is empty.");
     }
 
-    // Desktop and browsers without file sharing
     const url = window.URL.createObjectURL(blob);
-    const printWindow = window.open(url, "_blank");
 
-    if (!printWindow) {
+    const fileName =
+      `Management-Summary-${plantation}-${reportPeriod}.pdf`;
+
+    if (pdfWindow && !pdfWindow.closed) {
+      // Mobile: open PDF in the browser's PDF viewer
+      pdfWindow.location.href = url;
+
+      // Keep the URL available while the PDF is being viewed
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10 * 60 * 1000);
+
+    } else {
+      // Desktop or popup-blocked fallback: download PDF
       const link = document.createElement("a");
+
       link.href = url;
-      link.download = file.name;
+      link.download = fileName;
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    }
 
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-    }, 60000);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 60000);
+    }
 
   } catch (error) {
-    if (error.name === "AbortError") {
-      return;
+    console.error("Management Summary Download error:", error);
+
+    if (pdfWindow && !pdfWindow.closed) {
+      pdfWindow.close();
     }
 
-    console.error("Management Summary Print error:", error);
+    alert("Unable to download Management Summary PDF. Please try again.");
 
-    alert("Unable to open Management Summary PDF. Please try again.");
   } finally {
     setLoading(false);
   }
 };
+
 
   // =========================
   // DOWNLOAD HTML
