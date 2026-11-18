@@ -9,6 +9,7 @@ import {
   TextField,
   Button,
   Table,
+  TableContainer,
   TableBody,
   TableCell,
   TableHead,
@@ -53,15 +54,54 @@ export default function TeaCollection({
 
   }, [plantation]);
 
-  // FETCH WORKERS
-  const fetchWorkers = async () => {
 
-    const res = await axios.get(
-      `${API}/plantation-workers?plantation=${plantation}`
-    );
+// FETCH WORKERS
+const fetchWorkers = async () => {
+  const res = await axios.get(
+  `${API}/plantation-workers?plantation=${plantation}`,
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  }
+);
 
-    setWorkers(res.data);
-  };
+  const allWorkers = res.data || [];
+
+  // Show only selected workers in Common Plantation
+  if (plantation === "ingurupaththala") {
+
+    const allowedEpfs = ["300", "343", "363", "385"];
+
+    const allowedNames = [
+      "awkanthi",
+      "mgydamayanthi",
+      "gvswarnalatha",
+      "jpkanchanageethani",
+      "liyanagepriyadarshani"
+    ];
+
+    const filteredWorkers = allWorkers.filter((worker) => {
+      const epf = String(worker.epf_no || "").trim();
+
+      const name = String(worker.name || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+
+      return (
+        allowedEpfs.includes(epf) ||
+        allowedNames.includes(name)
+      );
+    });
+
+    setWorkers(filteredWorkers);
+
+  } else {
+    // Keep all Nirmalani workers unchanged
+    setWorkers(allWorkers);
+  }
+};
+
 
   // FETCH DATA
   const fetchData = async () => {
@@ -69,7 +109,12 @@ export default function TeaCollection({
   try {
 
     const res = await axios.get(
-      `${API}/tea-collection?plantation=${plantation}`
+      `${API}/tea-collection?plantation=${plantation}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      }
     );
 
     console.log("Tea Collection Data:", res.data);
@@ -95,7 +140,12 @@ export default function TeaCollection({
     try {
 
       const res = await axios.get(
-        `${API}/tea-distribution?plantation=${plantation}`
+        `${API}/tea-distribution?plantation=${plantation}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
       );
 
       setDistributionData(res.data);
@@ -764,10 +814,12 @@ const saveTeaCollection = async () => {
 
     <Box
       sx={{
-        p: 3,
+        p: { xs: 1, sm: 2, md: 3 },
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #0f172a, #1e293b)"
+        width: "100%",
+        boxSizing: "border-box",
+        overflowX: "hidden",
+        background: "linear-gradient(135deg, #0f172a, #1e293b)"
       }}
     >
 
@@ -951,8 +1003,8 @@ const saveTeaCollection = async () => {
   </Grid>
 </Paper>
 
-      {plantation === "ingurupaththala" && (
-        <>
+{plantation === "ingurupaththala" && (
+  <>
 
       <Paper sx={{
           p: 3,
@@ -973,11 +1025,23 @@ const saveTeaCollection = async () => {
             <TextField
               type="date"
               fullWidth
+              value={distributionDate}
+              onChange={(e) => setDistributionDate(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={4}>
-            <Select sx={{width: 200}}>
+            <Select
+              fullWidth
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              displayEmpty
+              sx={{ color: "#fff" }}
+            >
+              <MenuItem value="">
+                Select Company
+              </MenuItem>
+
               <MenuItem value="SAW">
                 SAW
               </MenuItem>
@@ -993,6 +1057,8 @@ const saveTeaCollection = async () => {
               label="KG"
               type="number"
               fullWidth
+              value={distributionKg}
+              onChange={(e) => setDistributionKg(e.target.value)}
             />
           </Grid>
 
@@ -1015,7 +1081,11 @@ const saveTeaCollection = async () => {
         </Grid>
 
       </Paper>
+        </>
+)}
 
+      {plantation === "ingurupaththala" && (
+        <>
       <Paper
         sx={{
           p: 3,
@@ -1130,8 +1200,9 @@ const saveTeaCollection = async () => {
         </Table>
 
       </Paper>
-      </>
-    )}
+
+        </>
+)}
 
       {/* TABLE */}
       <Paper
@@ -1249,7 +1320,14 @@ const saveTeaCollection = async () => {
           Monthly Report
         </Button>
 
-        <Table>
+        <TableContainer
+          sx={{
+            width: "100%",
+            overflowX: "auto",
+            borderRadius: 2
+          }}
+        >
+          <Table sx={{ minWidth: 550 }}>
 
           <TableHead>
 
@@ -1397,10 +1475,11 @@ const saveTeaCollection = async () => {
             <TableRow>
 
               <TableCell
-                colSpan={3}
+                colSpan={plantation === "ingurupaththala" ? 3 : 1}
                 sx={{
                   color: "#fff",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
+                  textAlign: "right"
                 }}
               >
                 TOTAL KG
@@ -1415,11 +1494,16 @@ const saveTeaCollection = async () => {
                 {totalKg.toFixed(2)}
               </TableCell>
 
+              {plantation === "ingurupaththala" && (
+                <TableCell />
+              )}
+
             </TableRow>
 
           </TableBody>
 
-        </Table>
+          </Table>
+        </TableContainer>
 
       </Paper>
 

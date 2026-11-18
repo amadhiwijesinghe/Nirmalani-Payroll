@@ -2886,9 +2886,9 @@ app.post("/tea-collection", verifyToken, (req, res) => {
   );
 });
 
+
 // GET TEA COLLECTION
 app.get("/tea-collection", verifyToken, (req, res) => {
-
   const { plantation } = req.query;
 
   const sql = `
@@ -2899,29 +2899,23 @@ app.get("/tea-collection", verifyToken, (req, res) => {
       tc.kg,
       pw.name,
       pw.epf_no
-
     FROM tea_collection tc
-
-    JOIN plantation_workers pw
+    LEFT JOIN plantation_workers pw
       ON pw.id = tc.worker_id
-
-    WHERE pw.plantation = ?
-
+    WHERE tc.plantation = ?
     ORDER BY tc.date DESC
   `;
 
   db.query(sql, [plantation], (err, result) => {
-
     if (err) {
       console.log("Tea Collection Load Error:", err);
       return res.status(500).json(err);
     }
 
     res.json(result);
-
   });
-
 });
+
 
 // UPDATE TEA COLLECTION
 app.put("/tea-collection/:id", verifyToken, (req, res) => {
