@@ -7186,7 +7186,7 @@ app.post(
       const fontPath = path.join(
         __dirname,
         "fonts",
-        "NotoSansSinhala-Regular.ttf"
+        "AbhayaLibre-Bold.ttf"
       );
 
       if (!fs.existsSync(fontPath)) {
@@ -7198,6 +7198,11 @@ app.post(
       const periodLabel =
         reportPeriod === "weekly" ? "සතිපතා" : "මාසික";
 
+        const plantationLabel =
+          normalizedPlantation === "ingurupaththala"
+            ? "Common"
+            : plantation;
+
       const html = `
         <!DOCTYPE html>
         <html lang="si">
@@ -7206,17 +7211,18 @@ app.post(
 
           <style>
             @font-face {
-              font-family: NotoSinhala;
+              font-family: AbhayaLibre;
               src: url(data:font/ttf;base64,${fontBase64})
-                   format('truetype');
+                  format('truetype');
             }
 
             * { box-sizing: border-box; }
 
             body {
-              font-family: NotoSinhala, sans-serif;
+              font-family: AbhayaLibre, sans-serif;
               color: #000;
-              font-size: 10px;
+              font-size: 11px;
+              line-height: 1.8;
               margin: 0;
             }
 
@@ -7231,7 +7237,14 @@ app.post(
               margin: 12px 0 6px;
             }
 
-            .subtitle, .period {
+            .subtitle {
+              text-align: center;
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 12px;
+            }
+
+            .period {
               text-align: center;
               margin-bottom: 8px;
             }
@@ -7249,8 +7262,10 @@ app.post(
 
             th, td {
               border: 1px solid #000;
-              padding: 5px;
+              padding: 7px 6px;
               text-align: left;
+              line-height: 1.8;
+              vertical-align: middle;
             }
 
             .notes {
@@ -7290,7 +7305,7 @@ app.post(
           <h1>${periodLabel} කළමනාකරණ වාර්තාව</h1>
 
           <div class="subtitle">
-            ${escapeHTML(plantation)}
+            ${escapeHTML(plantationLabel)}
           </div>
 
           <div class="period">
@@ -7340,53 +7355,55 @@ app.post(
           </div>
 
 
-          <!-- COLLECTION & DISPATCH SUMMARY -->
-          <div class="section">
-            <h2>Collection & Dispatch Summary</h2>
 
-            <table>
-              <tr>
-                <th>Category</th>
-                <th>Total Quantity</th>
-              </tr>
+<!-- COLLECTION & DISPATCH SUMMARY -->
+<div class="section">
+  <h2>එකතු කිරීමේ හා පිටත් කිරීමේ සාරාංශය</h2>
 
-              <tr>
-                <td>Tea Collection</td>
-                <td>${Number(teaCollection[0]?.total_kg || 0).toLocaleString("en-US")} KG</td>
-              </tr>
+  <table>
+    <tr>
+      <th>වර්ගය</th>
+      <th>මුළු ප්‍රමාණය</th>
+    </tr>
 
-              <tr>
-                <td>Cinnamon Collection</td>
-                <td>${Number(cinnamonCollection[0]?.total_sticks || 0).toLocaleString("en-US")} Sticks</td>
-              </tr>
+    <tr>
+      <td>තේ දළු එකතු කිරීම</td>
+      <td>${Number(teaCollection[0]?.total_kg || 0).toLocaleString("en-US")} කි.ග්‍රෑ.</td>
+    </tr>
 
-              <tr>
-                <td>Rubber Latex Collection</td>
-                <td>${Number(rubberCollection[0]?.total_litres || 0).toLocaleString("en-US")} Litres</td>
-              </tr>
+    <tr>
+      <td>කුරුඳු කූරු එකතු කිරීම</td>
+      <td>${Number(cinnamonCollection[0]?.total_sticks || 0).toLocaleString("en-US")} කූරු</td>
+    </tr>
 
-              <tr>
-                <td>Rubber Dispatch</td>
-                <td>${Number(rubberDispatch[0]?.total_litres || 0).toLocaleString("en-US")} Litres</td>
-              </tr>
+    <tr>
+      <td>රබර් කිරි එකතු කිරීම</td>
+      <td>${Number(rubberCollection[0]?.total_litres || 0).toLocaleString("en-US")} ලීටර්</td>
+    </tr>
 
-              ${
-                normalizedPlantation !== "nirmalani"
-                  ? `
-                    <tr>
-                      <td>Coconut Collection</td>
-                      <td>${Number(coconutCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
-                    </tr>
+    <tr>
+      <td>රබර් කිරි පිටත් කිරීම</td>
+      <td>${Number(rubberDispatch[0]?.total_litres || 0).toLocaleString("en-US")} ලීටර්</td>
+    </tr>
 
-                    <tr>
-                      <td>Paddy Collection</td>
-                      <td>${Number(paddyCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
-                    </tr>
-                  `
-                  : ""
-              }
-            </table>
-          </div>
+    ${
+      normalizedPlantation !== "nirmalani"
+        ? `
+          <tr>
+            <td>පොල් එකතු කිරීම</td>
+            <td>${Number(coconutCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
+          </tr>
+
+          <tr>
+            <td>වී එකතු කිරීම</td>
+            <td>${Number(paddyCollection[0]?.total_quantity || 0).toLocaleString("en-US")}</td>
+          </tr>
+        `
+        : ""
+    }
+  </table>
+</div>
+
 
           <div class="financial-grid">
             <div class="section">
