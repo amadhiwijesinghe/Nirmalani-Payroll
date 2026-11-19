@@ -11,7 +11,8 @@ import {
   MenuItem,
   Paper,
   Typography,
-  Box
+  Box,
+  useMediaQuery
 } from '@mui/material';
 import jsPDF from "jspdf";
 
@@ -22,6 +23,7 @@ export default function Payslips({
 }) {
   const [data, setData] = useState([]);
   const [month, setMonth] = useState("");
+  const isMobile = useMediaQuery("(max-width:1200px)");
 
   useEffect(() => {
     if (month) {
@@ -489,178 +491,327 @@ const totalMoneyRequired =
         </Box>
       </Paper>
 
-      {/* TABLE */}
-      <Paper sx={{
-        p: 2,
-        borderRadius: 5,
-        background: "rgba(255,255,255,0.05)"
-      }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
-              <TableCell sx={{ color: "#aaa" }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
 
-          <TableBody>
+{/* TABLE / MOBILE CARDS */}
+<Paper
+  sx={{
+    p: { xs: 1.5, sm: 2 },
+    borderRadius: 5,
+    background: "rgba(255,255,255,0.05)"
+  }}
+>
+  {isMobile ? (
 
-            {data.length > 0 ? (
+    /* MOBILE VIEW */
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 
-              data.map((emp, index) => {
+      {data.length > 0 ? (
 
-                const c = calculate(
-                  emp.basic_salary,
-                  emp.total_allowance
-                );
+        data.map((emp, index) => {
 
-                return (
+          const c = calculate(
+            emp.basic_salary,
+            emp.total_allowance
+          );
 
-                  <TableRow key={index}>
-
-                    <TableCell sx={{ color: "#fff" }}>
-                      {emp.name}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#fff" }}>
-                      {formatMemberId(emp.memberid)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#fff" }}>
-                      {emp.month}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#22c55e" }}>
-                      {c.amount.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#facc15" }}>
-                      {c.epf_8.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#f87171" }}>
-                      {c.deduction.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#a78bfa" }}>
-                      {c.epf_12.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#fb7185" }}>
-                      {c.epf_20.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#34d399" }}>
-                      {c.etf.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#14b8a6" }}>
-                      {emp.total_allowance}
-                    </TableCell>
-
-                    <TableCell sx={{ color: "#38bdf8", fontWeight: 700 }}>
-                      {c.netSalary.toFixed(2)}
-                    </TableCell>
-
-                    <TableCell>
-
-                      <Button
-                        onClick={() => generatePayslip(emp)}
-                        sx={{
-                          background: "#16a34a",
-                          color: "#fff",
-                          fontWeight: "bold"
-                        }}
-                      >
-                        PDF
-                      </Button>
-
-                    </TableCell>
-
-                  </TableRow>
-
-                );
-
-              })
-
-            ) : (
-
-              <TableRow>
-
-                <TableCell
-                  colSpan={12}
-                  sx={{ color: "#aaa" }}
-                >
-                  No data available
-                </TableCell>
-
-              </TableRow>
-
-            )}
-            <TableRow
+          return (
+            <Paper
+              key={emp.id || index}
               sx={{
-                background: "rgba(255,255,255,0.08)"
+                p: 2,
+                borderRadius: 3,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.1)"
               }}
             >
 
-              <TableCell
-                colSpan={3}
+              {/* EMPLOYEE DETAILS */}
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "1rem"
+                  }}
+                >
+                  {emp.name}
+                </Typography>
+
+                <Typography sx={{ color: "#aaa", fontSize: "0.8rem" }}>
+                  Member ID: {formatMemberId(emp.memberid)}
+                </Typography>
+
+                <Typography sx={{ color: "#aaa", fontSize: "0.8rem" }}>
+                  Month: {emp.month}
+                </Typography>
+              </Box>
+
+              {/* SALARY DETAILS */}
+              <Box
                 sx={{
-                  color: "#fff",
-                  fontWeight: "bold"
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 2
                 }}
               >
-                TOTAL
-              </TableCell>
+                {[
+                  {
+                    label: "Basic Salary",
+                    value: c.amount,
+                    color: "#22c55e"
+                  },
+                  {
+                    label: "Allowance",
+                    value: emp.total_allowance || 0,
+                    color: "#14b8a6"
+                  },
+                  {
+                    label: "EPF 8%",
+                    value: c.epf_8,
+                    color: "#facc15"
+                  },
+                  {
+                    label: "EPF 12%",
+                    value: c.epf_12,
+                    color: "#a78bfa"
+                  },
+                  {
+                    label: "EPF 20%",
+                    value: c.epf_20,
+                    color: "#fb7185"
+                  },
+                  {
+                    label: "ETF 3%",
+                    value: c.etf,
+                    color: "#34d399"
+                  },
+                  {
+                    label: "Deduction",
+                    value: c.deduction,
+                    color: "#f87171"
+                  },
+                  {
+                    label: "Net Salary",
+                    value: c.netSalary,
+                    color: "#38bdf8"
+                  }
+                ].map((item) => (
+                  <Box key={item.label}>
+                    <Typography
+                      sx={{
+                        color: "#aaa",
+                        fontSize: "0.75rem"
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
 
-              <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
-                {totals.amount.toFixed(2)}
-              </TableCell>
+                    <Typography
+                      sx={{
+                        color: item.color,
+                        fontWeight: 700,
+                        fontSize: "0.9rem"
+                      }}
+                    >
+                      Rs. {Number(item.value).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
 
-              <TableCell sx={{ color: "#facc15", fontWeight: "bold" }}>
-                {totals.epf_8.toFixed(2)}
-              </TableCell>
+              {/* DOWNLOAD BUTTON */}
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => generatePayslip(emp)}
+                sx={{
+                  mt: 2.5,
+                  py: 1.2,
+                  background: "#16a34a",
+                  color: "#fff",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  "&:hover": {
+                    background: "#15803d"
+                  }
+                }}
+              >
+                Download Payslip PDF
+              </Button>
 
-              <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
-                {totals.deduction.toFixed(2)}
-              </TableCell>
+            </Paper>
+          );
 
-              <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
-                {totals.epf_12.toFixed(2)}
-              </TableCell>
+        })
 
-              <TableCell sx={{ color: "#fb7185", fontWeight: "bold" }}>
-                {totals.epf_20.toFixed(2)}
-              </TableCell>
+      ) : (
+        <Typography sx={{ color: "#aaa", textAlign: "center", p: 3 }}>
+          No data available
+        </Typography>
+      )}
 
-              <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
-                {totals.etf.toFixed(2)}
-              </TableCell>
+    </Box>
 
-              <TableCell sx={{ color: "#14b8a6", fontWeight: "bold" }}>
-                {totals.allowance.toFixed(2)}
-              </TableCell>
+  ) : (
 
-              <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
-                {totals.netSalary.toFixed(2)}
-              </TableCell>
+    /* DESKTOP VIEW - EXISTING TABLE */
+    <Table sx={{ minWidth: 1000 }}>
 
-              <TableCell />
-            </TableRow>
+      <TableHead>
+        <TableRow>
+          <TableCell sx={{ color: "#aaa" }}>Name</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Member ID</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Month</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Amount</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>EPF 8%</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Deduction</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>EPF 12%</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>EPF 20%</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>ETF</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Allowance</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Net Salary</TableCell>
+          <TableCell sx={{ color: "#aaa" }}>Action</TableCell>
+        </TableRow>
+      </TableHead>
 
-          </TableBody>
-        </Table>
-      </Paper>
+      <TableBody>
+
+        {data.length > 0 ? (
+
+          data.map((emp, index) => {
+
+            const c = calculate(
+              emp.basic_salary,
+              emp.total_allowance
+            );
+
+            return (
+              <TableRow key={emp.id || index}>
+
+                <TableCell sx={{ color: "#fff" }}>
+                  {emp.name}
+                </TableCell>
+
+                <TableCell sx={{ color: "#fff" }}>
+                  {formatMemberId(emp.memberid)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#fff" }}>
+                  {emp.month}
+                </TableCell>
+
+                <TableCell sx={{ color: "#22c55e" }}>
+                  {c.amount.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#facc15" }}>
+                  {c.epf_8.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#f87171" }}>
+                  {c.deduction.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#a78bfa" }}>
+                  {c.epf_12.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#fb7185" }}>
+                  {c.epf_20.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#34d399" }}>
+                  {c.etf.toFixed(2)}
+                </TableCell>
+
+                <TableCell sx={{ color: "#14b8a6" }}>
+                  {emp.total_allowance}
+                </TableCell>
+
+                <TableCell sx={{ color: "#38bdf8", fontWeight: 700 }}>
+                  {c.netSalary.toFixed(2)}
+                </TableCell>
+
+                <TableCell>
+                  <Button
+                    onClick={() => generatePayslip(emp)}
+                    sx={{
+                      background: "#16a34a",
+                      color: "#fff",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    PDF
+                  </Button>
+                </TableCell>
+
+              </TableRow>
+            );
+
+          })
+
+        ) : (
+
+          <TableRow>
+            <TableCell colSpan={12} sx={{ color: "#aaa" }}>
+              No data available
+            </TableCell>
+          </TableRow>
+
+        )}
+
+        {/* TOTAL ROW */}
+        <TableRow sx={{ background: "rgba(255,255,255,0.08)" }}>
+
+          <TableCell colSpan={3} sx={{ color: "#fff", fontWeight: "bold" }}>
+            TOTAL
+          </TableCell>
+
+          <TableCell sx={{ color: "#22c55e", fontWeight: "bold" }}>
+            {totals.amount.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#facc15", fontWeight: "bold" }}>
+            {totals.epf_8.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#f87171", fontWeight: "bold" }}>
+            {totals.deduction.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#a78bfa", fontWeight: "bold" }}>
+            {totals.epf_12.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#fb7185", fontWeight: "bold" }}>
+            {totals.epf_20.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#34d399", fontWeight: "bold" }}>
+            {totals.etf.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#14b8a6", fontWeight: "bold" }}>
+            {totals.allowance.toFixed(2)}
+          </TableCell>
+
+          <TableCell sx={{ color: "#38bdf8", fontWeight: "bold" }}>
+            {totals.netSalary.toFixed(2)}
+          </TableCell>
+
+          <TableCell />
+
+        </TableRow>
+
+      </TableBody>
+    </Table>
+
+  )}
+</Paper>
+
 
     </Box>
   );

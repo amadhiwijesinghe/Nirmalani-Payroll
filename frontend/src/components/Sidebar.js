@@ -55,9 +55,7 @@ export default function Sidebar({
 
   const menu = [
     { label: "Dashboard", value: "dashboard", icon: <DashboardIcon /> },
-    { label: "Employees", value: "employees", icon: <PeopleIcon /> },
-    { label: "Allowance", value: "allowance", icon: <AccountBalanceWalletIcon /> },
-    { label: "Payslips", value: "payslips", icon: <ReceiptIcon /> },
+    { label: "Employee Management", value: "employee-management", icon: <PeopleIcon /> },
     { label: "Attendance Register", value: "attendanceregister", icon: <EventIcon />},
     { label: "Plantation Payroll", value: "plantation", icon: <AgricultureIcon /> },
     { label: "Rubber Tappers", value:"rubbertappers", icon: <HailIcon />},

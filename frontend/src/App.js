@@ -7,12 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 
-import Employees from './pages/Employees';
-import Payslips from './pages/Payslips';
+import PlantationEmployeeManagement from './pages/PlantationEmployeeManagement';
 import Login from './pages/login';
 import Attendance from './pages/Attendance';
 import Payroll from './pages/Payroll';
-import Allowance from './pages/Allowances';
 import PlantationPayroll from './pages/PlantationWorkers';
 import RubberTappers from './pages/RubberTappers';
 import TeaCollection from './pages/TeaCollection';
@@ -155,27 +153,17 @@ if (!isLoggedIn) {
                 </motion.div>
               )}
 
-              {page === "employees" && (
+              {page === "employee-management" && (
                 <motion.div
-                  key="employees"
+                  key="employee-management"
                   initial={{ opacity: 0, x: 80 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -80 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Employees plantation={plantation} />
-                </motion.div>
-              )}
-
-              {page === "payslips" && (
-                <motion.div
-                  key="payslips"
-                  initial={{ opacity: 0, x: 80 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -80 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Payslips plantation={plantation} />
+                  <PlantationEmployeeManagement
+                    plantation={plantation}
+                  />
                 </motion.div>
               )}
 
@@ -200,18 +188,6 @@ if (!isLoggedIn) {
                   transition={{ duration: 0.4 }}
                 >
                   <Payroll plantation={plantation} />
-                </motion.div>
-              )}
-
-              {page === "allowance" && (
-                <motion.div
-                  key="allowance"
-                  initial={{ opacity: 0, x: 80 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -80 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Allowance plantation={plantation} />
                 </motion.div>
               )}
 
