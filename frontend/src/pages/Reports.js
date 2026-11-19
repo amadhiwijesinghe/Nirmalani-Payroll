@@ -2474,6 +2474,20 @@ const fetchFinancialReportData = async () => {
 
           </Stack>
 
+
+        {mainReportType === "summary" && (
+        <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="කළමනාකරණ සටහන්"
+            placeholder="මෙහි කළමනාකරණ සටහන් ඇතුළත් කරන්න..."
+            value={managementNotes}
+            onChange={(e) => setManagementNotes(e.target.value)}
+            sx={{ mb: 2 }}
+        />
+        )}
+
           <Divider sx={{ my: 3 }} />
 
           <Typography sx={{ mb: 1 }}>
