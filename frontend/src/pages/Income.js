@@ -93,12 +93,11 @@ export default function Income({
   const addIncome = async () => {
 
     if (
-      (!category && !customCategory) ||
       !amount ||
-      !date
+      !date ||
+      (incomeType === "Income" && !category && !customCategory)
     ) {
       alert("Fill all fields");
-
       return;
     }
 
