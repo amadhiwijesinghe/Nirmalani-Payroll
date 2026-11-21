@@ -30,10 +30,37 @@ import Reports from "./pages/Reports";
 import AdminStaff from "./pages/AdminStaff";
 import ActivityLogs from "./pages/ActivityLogs";
 
+const getInitialLoginState = () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(
+      atob(
+        token.split(".")[1]
+          .replace(/-/g, "+")
+          .replace(/_/g, "/")
+      )
+    );
+
+    if (!payload.exp || payload.exp * 1000 <= Date.now()) {
+      throw new Error("Session expired");
+    }
+
+    return true;
+
+  } catch (error) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return false;
+  }
+};
+
 function App() {
   const [page, setPage] = useState("dashboard");
   const [isLoggedIn, setIsLoggedIn] = useState(
-    () => Boolean(localStorage.getItem('token'))
+    getInitialLoginState
   );
 
 

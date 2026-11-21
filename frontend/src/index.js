@@ -21,6 +21,28 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+axios.interceptors.response.use(
+  (response) => response,
+
+  (error) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || "";
+
+    if (
+      status === 401 &&
+      !requestUrl.includes("/login") &&
+      localStorage.getItem("token")
+    ) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      window.location.reload();
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
