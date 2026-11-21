@@ -6863,24 +6863,52 @@ app.post(
         new Date(value).toLocaleDateString("en-GB");
 
       // 1. WORKER ATTENDANCE
-      const [attendance] = await db.promise().query(
+
+      const [regularAttendance] = await db.promise().query(
         `
         SELECT
           worker_type,
           COUNT(DISTINCT worker_id) AS workers,
-          SUM(attendance_value) AS total_attendance
+          COALESCE(SUM(attendance_value), 0) AS total_attendance
         FROM attendance_register
         WHERE plantation = ?
           AND attendance_date BETWEEN ? AND ?
           AND is_present = 1
+          AND worker_type <> 'rubber'
         GROUP BY worker_type
         `,
         [plantation, startDate, endDate]
       );
 
+      const [rubberAttendance] = await db.promise().query(
+        `
+        SELECT
+          COUNT(DISTINCT worker_id) AS workers,
+          COALESCE(SUM(attendance_value), 0) AS total_attendance
+        FROM rubber_attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+          AND attendance_value > 0
+          AND status = 'finalized'
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Combine regular and rubber attendance
+      const attendance = [
+        ...regularAttendance,
+        {
+          worker_type: "rubber",
+          workers: Number(rubberAttendance[0]?.workers || 0),
+          total_attendance: Number(
+            rubberAttendance[0]?.total_attendance || 0
+          )
+        }
+      ];
 
       // 1B. DAILY ATTENDANCE FOR WEEKLY SUMMARY
-      const [dailyAttendance] = await db.promise().query(
+
+      const [regularDailyAttendance] = await db.promise().query(
         `
         SELECT
           DATE_FORMAT(attendance_date, '%Y-%m-%d') AS attendance_date,
@@ -6890,11 +6918,32 @@ app.post(
         WHERE plantation = ?
           AND attendance_date BETWEEN ? AND ?
           AND is_present = 1
+          AND worker_type <> 'rubber'
         ORDER BY attendance_date
         `,
         [plantation, startDate, endDate]
       );
 
+      const [rubberDailyAttendance] = await db.promise().query(
+        `
+        SELECT
+          DATE_FORMAT(attendance_date, '%Y-%m-%d') AS attendance_date,
+          worker_id,
+          'rubber' AS worker_type
+        FROM rubber_attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+          AND attendance_value > 0
+          AND status = 'finalized'
+        ORDER BY attendance_date
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      const dailyAttendance = [
+        ...regularDailyAttendance,
+        ...rubberDailyAttendance
+      ];
 
       // 2. MACHINE LABOUR
       const [machine] = await db.promise().query(
@@ -6951,8 +7000,7 @@ app.post(
         `,
         [plantation, startDate, endDate]
       );
-
-            // Rubber Latex Collection
+      // Rubber Latex Collection
       const [rubberCollection] = await db.promise().query(
         `
         SELECT
@@ -6960,6 +7008,21 @@ app.post(
         FROM rubber_collection
         WHERE plantation = ?
           AND date BETWEEN ? AND ?
+        `,
+        [plantation, startDate, endDate]
+      );
+
+      // Rubber Tapper Production
+      const [rubberTapperProduction] = await db.promise().query(
+        `
+        SELECT
+          COALESCE(SUM(kg), 0) AS total_kg,
+          COALESCE(SUM(liter), 0) AS total_litres
+        FROM rubber_attendance_register
+        WHERE plantation = ?
+          AND attendance_date BETWEEN ? AND ?
+          AND attendance_value > 0
+          AND status = 'finalized'
         `,
         [plantation, startDate, endDate]
       );
@@ -7379,6 +7442,16 @@ app.post(
     <tr>
       <td>රබර් කිරි එකතු කිරීම</td>
       <td>${Number(rubberCollection[0]?.total_litres || 0).toLocaleString("en-US")} ලීටර්</td>
+    </tr>
+
+    <tr>
+      <td>රබර් කිරි කපන්නන්ගේ නිෂ්පාදනය (KG)</td>
+      <td>${Number(rubberTapperProduction[0]?.total_kg || 0).toLocaleString("en-US")} KG</td>
+    </tr>
+
+    <tr>
+      <td>රබර් කිරි කපන්නන්ගේ නිෂ්පාදනය (Litres)</td>
+      <td>${Number(rubberTapperProduction[0]?.total_litres || 0).toLocaleString("en-US")} ලීටර්</td>
     </tr>
 
     <tr>
